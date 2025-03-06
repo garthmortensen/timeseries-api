@@ -5,18 +5,10 @@ import time  # stopwatch
 
 # handle relative directory imports for chronicler
 import logging as l
-from chronicler import init_chronicler
+from src.chronicler import init_chronicler
 
-from configurator import load_configuration
-from data_generator import generate_price_series
-from data_processor import (
-    fill_data,
-    scale_data,
-    stationarize_data,
-    test_stationarity,
-    log_stationarity,
-)
-from stats_model import run_arima, run_garch
+from src.configurator import load_configuration
+from generalized_timeseries import data_generator, data_processor, stats_model
 
 
 def main():
@@ -35,36 +27,36 @@ def main():
 
         # Generate price data
         l.info("\n\n+++++pipeline: generate_price_series()+++++")
-        price_dict, price_df = generate_price_series(config=config)
+        price_dict, price_df = data_generator.generate_price_series(config=config)
 
         # Fill data
         l.info("\n\n+++++pipeline: fill_data()+++++")
-        df_filled = fill_data(df=price_df, config=config)
+        df_filled = data_processor.fill_data(df=price_df, config=config)
 
         # Scale data
         l.info("\n\n+++++pipeline: scale_data()+++++")
-        df_scaled = scale_data(df=df_filled, config=config)
+        df_scaled = data_processor.scale_data(df=df_filled, config=config)
 
         # Stationarize data
         l.info("\n\n+++++pipeline: stationarize_data()+++++")
-        df_stationary = stationarize_data(df=df_scaled, config=config)
+        df_stationary = data_processor.stationarize_data(df=df_scaled, config=config)
 
         # Test stationarity
         l.info("\n\n+++++pipeline: test_stationarity()+++++")
-        adf_results = test_stationarity(df=df_stationary, config=config)
+        adf_results = data_processor.test_stationarity(df=df_stationary, config=config)
 
         # Log stationarity results
         l.info("\n\n+++++pipeline: log_stationarity()+++++")
-        log_stationarity(df=adf_results, config=config)
+        data_processor.log_stationarity(df=adf_results, config=config)
 
         l.info("\n\n+++++pipeline: modeling+++++")
         if config.stats_model.ARIMA.enabled:
             l.info("\n\n+++++pipeline: run_arima()+++++")
-            arima_fit, arima_forecast = run_arima(df_stationary, config)
+            arima_fit, arima_forecast = stats_model.run_arima(df_stationary, config)
 
         if config.stats_model.GARCH.enabled:
             l.info("\n\n+++++pipeline: run_garch()+++++")
-            garch_fit, garch_forecast = run_garch(df_stationary, config)
+            garch_fit, garch_forecast = stats_model.run_garch(df_stationary, config)
 
     except Exception as e:
         l.exception(f"\nError in pipeline:\n{e}")

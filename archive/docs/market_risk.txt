@@ -1,0 +1,486 @@
+I.1 Basic Calculus for Finance
+I.1.1 Introduction
+I.1.2 Functions and Graphs, Equations and Roots
+I.1.2.1 Linear and Quadratic Functions
+I.1.2.2 Continuous and Differentiable Real-Valued Functions
+I.1.2.3 Inverse Functions
+I.1.2.4 The Exponential Function
+I.1.2.5 The Natural Logarithm
+I.1.3 Differentiation and Integration
+I.1.3.1 Definitions
+I.1.3.2 Rules for Differentiation
+I.1.3.3 Monotonic, Concave and Convex Functions
+I.1.3.4 Stationary Points and Optimization
+I.1.3.5 Integration
+I.1.4 Analysis of Financial Returns
+I.1.4.1 Discrete and Continuous Time Notation
+I.1.4.2 Portfolio Holdings and Portfolio Weights
+I.1.4.3 Profit and Loss
+I.1.4.4 Percentage and Log Returns
+I.1.4.5 Geometric Brownian Motion
+I.1.4.6 Discrete and Continuous Compounding in Discrete Time
+I.1.4.7 Period Log Returns in Discrete Time
+I.1.4.8 Return on a Linear Portfolio
+I.1.4.9 Sources of Returns
+I.1.5 Functions of Several Variables
+I.1.5.1 Partial Derivatives: Function of Two Variables
+I.1.5.2 Partial Derivatives: Function of Several Variables
+I.1.5.3 Stationary Points
+I.1.5.4 Optimization
+I.1.5.5 Total Derivatives
+I.1.6 Taylor Expansion
+I.1.6.1 Definition and Examples
+I.1.6.2 Risk Factors and their Sensitivities
+I.1.6.3 Some Financial Applications of Taylor Expansion
+I.1.6.4 Multivariate Taylor Expansion
+I.1.7 Summary and Conclusions
+
+I.2 Essential Linear Algebra for Finance
+I.2.1 Introduction
+I.2.2 Matrix Algebra and its Mathematical Applications
+I.2.2.1 Basic Terminology
+I.2.2.2 Laws of Matrix Algebra
+I.2.2.3 Singular Matrices
+I.2.2.4 Determinants
+I.2.2.5 Matrix Inversion
+I.2.2.6 Solution of Simultaneous Linear Equations
+I.2.2.7 Quadratic Forms
+I.2.2.8 Definite Matrices
+I.2.3 Eigenvectors and Eigenvalues
+I.2.3.1 Matrices as Linear Transformations
+I.2.3.2 Formal Definitions
+I.2.3.3 The Characteristic Equation
+I.2.3.4 Eigenvalues and Eigenvectors of a 2 × 2 Correlation Matrix
+I.2.3.5 Properties of Eigenvalues and Eigenvectors
+I.2.3.6 Using Excel to Find Eigenvalues and Eigenvectors
+I.2.3.7 Eigenvalue Test for Definiteness
+I.2.4 Applications to Linear Portfolios
+I.2.4.1 Covariance and Correlation Matrices
+I.2.4.2 Portfolio Risk and Return in Matrix Notation
+I.2.4.3 Positive Definiteness of Covariance and Correlation Matrices
+I.2.4.4 Eigenvalues and Eigenvectors of Covariance and Correlation Matrices
+I.2.5 Matrix Decomposition
+I.2.5.1 Spectral Decomposition of a Symmetric Matrix
+I.2.5.2 Similarity Transforms
+I.2.5.3 Cholesky Decomposition
+I.2.5.4 LU Decomposition
+I.2.6 Principal Component Analysis
+I.2.6.1 Definition of Principal Components
+I.2.6.2 Principal Component Representation
+I.2.6.3 Case Study: PCA of European Equity Indices
+I.2.7 Summary and Conclusions
+
+I.3 Probability and Statistics
+I.3.1 Introduction
+I.3.2 Basic Concepts
+I.3.2.1 Classical versus Bayesian Approaches
+I.3.2.2 Laws of Probability
+I.3.2.3 Density and Distribution Functions
+I.3.2.4 Samples and Histograms
+I.3.2.5 Expected Value and Sample Mean
+I.3.2.6 Variance
+I.3.2.7 Skewness and Kurtosis
+I.3.2.8 Quantiles, Quartiles and Percentiles
+I.3.3 Univariate Distributions
+I.3.3.1 Binomial Distribution
+I.3.3.2 Poisson and Exponential Distributions
+I.3.3.3 Uniform Distribution
+I.3.3.4 Normal Distribution
+I.3.3.5 Lognormal Distribution
+I.3.3.6 Normal Mixture Distributions
+I.3.3.7 Student t Distributions
+I.3.3.8 Sampling Distributions
+I.3.3.9 Generalized Extreme Value Distributions
+I.3.3.10 Generalized Pareto Distribution
+I.3.3.11 Stable Distributions
+I.3.3.12 Kernels
+I.3.4 Multivariate Distributions
+I.3.4.1 Bivariate Distributions
+I.3.4.2 Independent Random Variables
+I.3.4.3 Covariance
+I.3.4.4 Correlation
+I.3.4.5 Multivariate Continuous Distributions
+I.3.4.6 Multivariate Normal Distributions
+I.3.4.7 Bivariate Normal Mixture Distributions
+I.3.4.8 Multivariate Student t Distributions
+I.3.5 Introduction to Statistical Inference
+I.3.5.1 Quantiles, Critical Values and Confidence Intervals
+I.3.5.2 Central Limit Theorem
+I.3.5.3 Confidence Intervals Based on Student t Distribution
+I.3.5.4 Confidence Intervals for Variance
+I.3.5.5 Hypothesis Tests
+I.3.5.6 Tests on Means
+I.3.5.7 Tests on Variances
+I.3.5.8 Non-Parametric Tests on Distributions
+I.3.6 Maximum Likelihood Estimation
+I.3.6.1 The Likelihood Function
+I.3.6.2 Finding the Maximum Likelihood Estimates
+I.3.6.3 Standard Errors on Mean and Variance Estimates
+I.3.7 Stochastic Processes in Discrete and Continuous Time
+I.3.7.1 Stationary and Integrated Processes in Discrete Time
+I.3.7.2 Mean Reverting Processes and Random Walks in Continuous Time
+I.3.7.3 Stochastic Models for Asset Prices and Returns
+I.3.7.4 Jumps and the Poisson Process
+I.3.8 Summary and Conclusions
+
+I.4 Introduction to Linear Regression
+I.4.1 Introduction
+I.4.2 Simple Linear Regression
+I.4.2.1 Simple Linear Model
+I.4.2.2 Ordinary Least Squares
+I.4.2.3 Properties of the Error Process
+I.4.2.4 ANOVA and Goodness of Fit
+I.4.2.5 Hypothesis Tests on Coefficients
+I.4.2.6 Reporting the Estimated Regression Model
+I.4.2.7 Excel Estimation of the Simple Linear Model
+I.4.3 Properties of OLS Estimators
+I.4.3.1 Estimates and Estimators
+I.4.3.2 Unbiasedness and Efficiency
+I.4.3.3 Gauss–Markov Theorem
+I.4.3.4 Consistency and Normality of OLS Estimators
+I.4.3.5 Testing for Normality
+I.4.4 Multivariate Linear Regression
+I.4.4.1 Simple Linear Model and OLS in Matrix Notation
+I.4.4.2 General Linear Model
+I.4.4.3 Case Study: A Multiple Regression
+I.4.4.4 Multiple Regression in Excel
+I.4.4.5 Hypothesis Testing in Multiple Regression
+I.4.4.6 Testing Multiple Restrictions
+I.4.4.7 Confidence Intervals
+I.4.4.8 Multicollinearity
+I.4.4.9 Case Study: Determinants of Credit Spreads
+I.4.4.10 Orthogonal Regression
+I.4.5 Autocorrelation and Heteroscedasticity
+I.4.5.1 Causes of Autocorrelation and Heteroscedasticity
+I.4.5.2 Consequences of Autocorrelation and Heteroscedasticity
+I.4.5.3 Testing for Autocorrelation
+I.4.5.4 Testing for Heteroscedasticity
+I.4.5.5 Generalized Least Squares
+I.4.6 Applications of Linear Regression in Finance
+I.4.6.1 Testing a Theory
+I.4.6.2 Analysing Empirical Market Behaviour
+I.4.6.3 Optimal Portfolio Allocation
+I.4.6.4 Regression-Based Hedge Ratios
+I.4.6.5 Trading on Regression Models
+I.4.7 Summary and Conclusions
+
+I.5 Numerical Methods in Finance
+I.5.1 Introduction
+I.5.2 Iteration
+I.5.2.1 Method of Bisection
+I.5.2.2 Newton–Raphson Iteration
+I.5.2.3 Gradient Methods
+I.5.3 Interpolation and Extrapolation
+I.5.3.1 Linear and Bilinear Interpolation
+I.5.3.2 Polynomial Interpolation: Application to Currency Options
+I.5.3.3 Cubic Splines: Application to Yield Curves
+I.5.4 Optimization
+I.5.4.1 Least Squares Problems
+I.5.4.2 Likelihood Methods
+I.5.4.3 The EM Algorithm
+I.5.4.4 Case Study: Applying the EM Algorithm to Normal Mixture Densities
+I.5.5 Finite Difference Approximations
+I.5.5.1 First and Second Order Finite Differences
+I.5.5.2 Finite Difference Approximations for the Greeks
+I.5.5.3 Finite Difference Solutions to Partial Differential Equations
+I.5.6 Binomial Lattices
+I.5.6.1 Constructing the Lattice
+I.5.6.2 Arbitrage Free Pricing and Risk Neutral Valuation
+I.5.6.3 Pricing European Options
+I.5.6.4 Lognormal Asset Price Distributions
+I.5.6.5 Pricing American Options
+I.5.7 Monte Carlo Simulation
+I.5.7.1 Random Numbers
+I.5.7.2 Simulations from an Empirical or a Given Distribution
+I.5.7.3 Case Study: Generating Time Series of Lognormal Asset Prices
+I.5.7.4 Simulations on a System of Two Correlated Normal Returns
+I.5.7.5 Multivariate Normal and Student t Distributed Simulations
+I.5.8 Summary and Conclusions
+
+I.6 Introduction to Portfolio Theory
+I.6.1 Introduction
+I.6.2 Utility Theory
+I.6.2.1 Properties of Utility Functions
+I.6.2.2 Risk Preference
+I.6.2.3 How to Determine the Risk Tolerance of an Investor
+I.6.2.4 Coefficients of Risk Aversion
+I.6.2.5 Some Standard Utility Functions
+I.6.2.6 Mean–Variance Criterion
+I.6.2.7 Extension of the Mean–Variance Criterion to Higher Moments
+I.6.3 Portfolio Allocation
+I.6.3.1 Portfolio Diversification
+I.6.3.2 Minimum Variance Portfolios
+I.6.3.3 The Markowitz Problem
+I.6.3.4 Minimum Variance Portfolios with Many Constraints
+I.6.3.5 Efficient Frontier
+I.6.3.6 Optimal Allocations Theory of Asset Pricing
+I.6.4.1 Capital Market Line
+I.6.4.2 Capital Asset Pricing Model
+I.6.4.3 Security Market Line
+I.6.4.4 Testing the CAPM
+I.6.4.5 Extensions to CAPM Risk Adjusted Performance Measures
+I.6.5.1 CAPM RAPMs
+I.6.5.2 Making Decisions Using the Sharpe Ratio
+I.6.5.3 Adjusting the Sharpe Ratio for Autocorrelation
+I.6.5.4 Adjusting the Sharpe Ratio for Higher Moments
+I.6.5.5 Generalized Sharpe Ratio
+I.6.5.6 Kappa Indices, Omega and Sortino Ratio Summary and Conclusions
+
+II.1 Factor Models
+II.1.1 Introduction
+II.1.2 Single Factor Models
+II.1.2.1 Single Index Model
+II.1.2.2 Estimating Portfolio Characteristics using OLS
+II.1.2.3 Estimating Portfolio Risk using EWMA
+II.1.2.4 Relationship between Beta, Correlation and Relative Volatility
+II.1.2.5 Risk Decomposition in a Single Factor Model
+II.1.3 Multi-Factor Models
+II.1.3.1 Multi-factor Models of Asset or Portfolio Returns
+II.1.3.2 Style Attribution Analysis
+II.1.3.3 General Formulation of Multi-factor Model
+II.1.3.4 Multi-factor Models of International Portfolios
+II.1.4 Case Study: Estimation of Fundamental Factor Models
+II.1.4.1 Estimating Systematic Risk for a Portfolio of US Stocks
+II.1.4.2 Multicollinearity: A Problem with Fundamental FactorModels
+II.1.4.3 Estimating Fundamental Factor Models by Orthogonal Regression
+II.1.5 Analysis of Barra Model
+II.1.5.1 Risk Indices, Descriptors and Fundamental Betas
+II.1.5.2 Model Specification and Risk Decomposition
+II.1.6 Tracking Error and Active Risk
+II.1.6.1 Ex Post versus Ex Ante Measurement of Risk and Return
+II.1.6.2 Definition of Active Returns
+II.1.6.3 Definition of Active Weights
+II.1.6.4 Ex Post Tracking Error
+II.1.6.5 Ex Post Mean-Adjusted Tracking Error
+II.1.6.6 Ex Ante Tracking Error
+II.1.6.7 Ex Ante Mean-Adjusted Tracking Error
+II.1.6.8 Clarification of the Definition of Active Risk
+II.1.7 Summary and Conclusions
+
+II.2 Principal Component Analysis
+II.2.1 Introduction
+II.2.2 Review of Principal Component Analysis
+II.2.2.1 Definition of Principal Components
+II.2.2.2 Principal Component Representation
+II.2.2.3 Frequently Asked Questions
+II.2.3 Case Study: PCA of UK Government Yield Curves
+II.2.3.1 Properties of UK Interest Rates
+II.2.3.2 Volatility and Correlation of UK Spot Rates
+II.2.3.3 PCA on UK Spot Rates Correlation Matrix
+II.2.3.4 Principal Component Representation
+II.2.3.5 PCA on UK Short Spot Rates Covariance Matrix
+II.2.4 Term Structure Factor Models
+II.2.4.1 Interest Rate Sensitive Portfolios
+II.2.4.2 Factor Models for Currency Forward Positions
+II.2.4.3 Factor Models for Commodity Futures Portfolios
+II.2.4.4 Application to Portfolio Immunization
+II.2.4.5 Application to Asset–Liability Management
+II.2.4.6 Application to Portfolio Risk Measurement
+II.2.4.7 Multiple Curve Factor Models
+II.2.5 Equity PCA Factor Models
+II.2.5.1 Model Structure
+II.2.5.2 Specific Risks and Dimension Reduction
+II.2.5.3 Case Study: PCA Factor Model for DJIA Portfolios II.2.6 Summary and Conclusions
+
+II.3 Classical Models of Volatility and Correlation
+II.3.1 Introduction
+II.3.2 Variance and Volatility
+II.3.2.1 Volatility and the Square-Root-of-Time Rule
+II.3.2.2 Constant Volatility Assumption
+II.3.2.3 Volatility when Returns are Autocorrelated
+II.3.2.4 Remarks about Volatility
+II.3.3 Covariance and Correlation
+II.3.3.1 Definition of Covariance and Correlation
+II.3.3.2 Correlation Pitfalls
+II.3.3.3 Covariance Matrices
+II.3.3.4 Scaling Covariance Matrices
+II.3.4 Equally Weighted Averages
+II.3.4.1 Unconditional Variance and Volatility
+II.3.4.2 Unconditional Covariance and Correlation
+II.3.4.3 Forecasting with Equally Weighted Averages
+II.3.5 Precision of Equally Weighted Estimates
+II.3.5.1 Confidence Intervals for Variance and Volatility
+II.3.5.2 Standard Error of Variance Estimator
+II.3.5.3 Standard Error of Volatility Estimator
+II.3.5.4 Standard Error of Correlation Estimator
+II.3.6 Case Study: Volatility and Correlation of US Treasuries
+II.3.6.1 Choosing the Data
+II.3.6.2 Our Data
+II.3.6.3 Effect of Sample Period
+II.3.6.4 How to Calculate Changes in Interest Rates
+II.3.7 Equally Weighted Moving Averages
+II.3.7.1 Effect of Volatility Clusters
+II.3.7.2 Pitfalls of the Equally Weighted Moving Average Method
+II.3.7.3 Three Ways to Forecast Long Term Volatility
+II.3.8 Exponentially Weighted Moving Averages
+II.3.8.1 Statistical Methodology
+II.3.8.2 Interpretation of Lambda
+II.3.8.3 Properties of EWMA Estimators
+II.3.8.4 Forecasting with EWMA
+II.3.8.5 Standard Errors for EWMA Forecasts
+II.3.8.6 RiskMetricsTM Methodology
+II.3.8.7 Orthogonal EWMA versus RiskMetrics EWMA
+II.3.9 Summary and Conclusions
+
+II.4 Introduction to GARCH Models
+II.4.1 Introduction
+II.4.2 The Symmetric Normal GARCH Model
+II.4.2.1 Model Specification
+II.4.2.2 Parameter Estimation
+II.4.2.3 Volatility Estimates
+II.4.2.4 GARCH Volatility Forecasts
+II.4.2.5 Imposing Long Term Volatility
+II.4.2.6 Comparison of GARCH and EWMA Volatility Models
+II.4.3 Asymmetric GARCH Models
+II.4.3.1 A-GARCH
+II.4.3.2 GJR-GARCH
+II.4.3.3 Exponential GARCH
+II.4.3.4 Analytic E-GARCH Volatility Term Structure Forecasts
+II.4.3.5 Volatility Feedback
+II.4.4 Non-Normal GARCH Models
+II.4.4.1 Student t GARCH Models
+II.4.4.2 Case Study: Comparison of GARCH Models for the FTSE 100
+II.4.4.3 Normal Mixture GARCH Models
+II.4.4.4 Markov Switching GARCH
+II.4.5 GARCH Covariance Matrices
+II.4.5.1 Estimation of Multivariate GARCH Models
+II.4.5.2 Constant and Dynamic Conditional Correlation GARCH
+II.4.5.3 Factor GARCH
+II.4.6 Orthogonal GARCH
+II.4.6.1 Model Specification
+II.4.6.2 Case Study: A Comparison of RiskMetrics and O-GARCH
+II.4.6.3 Splicing Methods for Constructing Large Covariance Matrices
+II.4.7 Monte Carlo Simulation with GARCH Models
+II.4.7.1 Simulation with Volatility Clustering
+II.4.7.2 Simulation with Volatility Clustering Regimes
+II.4.7.3 Simulation with Correlation Clustering
+II.4.8 Applications of GARCH Models
+II.4.8.1 Option Pricing with GARCH Diffusions
+II.4.8.2 Pricing Path-Dependent European Options
+II.4.8.3 Value-at-Risk Measurement
+II.4.8.4 Estimation of Time Varying Sensitivities
+II.4.8.5 Portfolio Optimization
+II.4.9 Summary and Conclusions
+
+II.5 Time Series Models and Cointegration
+II.5.1 Introduction
+II.5.2 Stationary Processes
+II.5.2.1 Time Series Models
+II.5.2.2 Inversion and the Lag Operator
+II.5.2.3 Response to Shocks
+II.5.2.4 Estimation
+II.5.2.5 Prediction
+II.5.2.6 Multivariate Models for Stationary Processes
+II.5.3 Stochastic Trends
+II.5.3.1 Random Walks and Efficient Markets
+II.5.3.2 Integrated Processes and Stochastic Trends
+II.5.3.3 Deterministic Trends
+II.5.3.4 Unit Root Tests
+II.5.3.5 Unit Roots in Asset Prices
+II.5.3.6 Unit Roots in Interest Rates, Credit Spreads and Implied Volatility
+II.5.3.7 Reconciliation of Time Series and Continuous Time Models
+II.5.3.8 Unit Roots in Commodity Prices
+II.5.4 Long Term Equilibrium
+II.5.4.1 Cointegration and Correlation Compared
+II.5.4.2 Common Stochastic Trends
+II.5.4.3 Formal Definition of Cointegration
+II.5.4.4 Evidence of Cointegration in Financial Markets
+II.5.4.5 Estimation and Testing in Cointegrated Systems
+II.5.4.6 Application to Benchmark Tracking
+II.5.4.7 Case Study: Cointegration Index Tracking in the Dow Jones Index
+II.5.5 Modelling Short Term Dynamics
+II.5.5.1 Error Correction Models
+II.5.5.2 Granger Causality
+II.5.5.3 Case Study: Pairs Trading Volatility Index Futures
+II.5.6 Summary and Conclusions
+
+II.6 Introduction to Copulas
+II.6.1 Introduction
+II.6.2 Concordance Metrics
+II.6.2.1 Concordance
+II.6.2.2 Rank Correlations
+II.6.3 Copulas and Associated Theoretical Concepts
+II.6.3.1 Simulation of a Single Random Variable
+II.6.3.2 Definition of a Copula
+II.6.3.3 Conditional Copula Distributions and their Quantile Curves
+II.6.3.4 Tail Dependence
+II.6.3.5 Bounds for Dependence
+II.6.4 Examples of Copulas
+II.6.4.1 Normal or Gaussian Copulas
+II.6.4.2 Student t Copulas
+II.6.4.3 Normal Mixture Copulas
+II.6.4.4 Archimedean Copulas
+II.6.5 Conditional Copula Distributions and Quantile Curves
+II.6.5.1 Normal or Gaussian Copulas
+II.6.5.2 Student t Copulas
+II.6.5.3 Normal Mixture Copulas
+II.6.5.4 Archimedean Copulas
+II.6.5.5 Examples
+II.6.6 Calibrating Copulas
+II.6.6.1 Correspondence between Copulas and Rank Correlations
+II.6.6.2 Maximum Likelihood Estimation
+II.6.6.3 How to Choose the Best Copula
+II.6.7 Simulation with Copulas
+II.6.7.1 Using Conditional Copulas for Simulation
+II.6.7.2 Simulation from Elliptical Copulas
+II.6.7.3 Simulation with Normal and Student t Copulas
+II.6.7.4 Simulation from Archimedean Copulas
+II.6.8 Market Risk Applications
+II.6.8.1 Value-at-Risk Estimation
+II.6.8.2 Aggregation and Portfolio Diversification
+II.6.8.3 Using Copulas for Portfolio Optimization
+II.6.9 Summary and Conclusions
+
+II.7 Advanced Econometric Models
+II.7.1 Introduction
+II.7.2 Quantile Regression
+II.7.2.1 Review of Standard Regression
+II.7.2.2 What is Quantile Regression?
+II.7.2.3 Parameter Estimation in Quantile Regression
+II.7.2.4 Inference on Linear Quantile Regressions
+II.7.2.5 Using Copulas for Non-linear Quantile Regression Case Studies on Quantile Regression
+II.7.3.1 Case Study 1: Quantile Regression of Vftse on FTSE 100 Index
+II.7.3.2 Case Study 2: Hedging with Copula Quantile Regression Other Non-Linear Regression Models
+II.7.4.1 Non-linear Least Squares
+II.7.4.2 Discrete Choice Models Markov Switching Models
+II.7.5.1 Testing for Structural Breaks
+II.7.5.2 Model Specification
+II.7.5.3 Financial Applications and Software Modelling Ultra High Frequency Data
+II.7.6.1 Data Sources and Filtering
+II.7.6.2 Modelling the Time between Trades
+II.7.6.3 Forecasting Volatility Summary and Conclusions
+
+II.8 Forecasting and Model Evaluation
+II.8.1 Introduction
+II.8.2 Returns Models
+II.8.2.1 Goodness of Fit
+II.8.2.2 Forecasting
+II.8.2.3 Simulating Critical Values for Test Statistics
+II.8.2.4 Specification Tests for Regime Switching Models
+II.8.3 Volatility Models
+II.8.3.1 Goodness of Fit of GARCH Models
+II.8.3.2 Forecasting with GARCH Volatility Models
+II.8.3.3 Moving Average Models
+II.8.4 Forecasting the Tails of a Distribution
+II.8.4.1 Confidence Intervals for Quantiles
+II.8.4.2 Coverage Tests
+II.8.4.3 Application of Coverage Tests to GARCH Models
+II.8.4.4 Forecasting Conditional Correlations
+II.8.5 Operational Evaluation
+II.8.5.1 General Backtesting Algorithm
+II.8.5.2 Alpha Models
+II.8.5.3 Portfolio Optimization
+II.8.5.4 Hedging with Futures
+II.8.5.5 Value-at-Risk Measurement
+II.8.5.6 Trading Implied Volatility
+II.8.5.7 Trading Realized Volatility
+II.8.5.8 Pricing and Hedging Options
+II.8.6 Summary and Conclusions
+
+
+
+
+
+
+
+
