@@ -20,12 +20,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # copy everything in souce into app working dir
 COPY ./ /app
 
-# Make port 5000 available to the host
-EXPOSE 5000
+# Make port 8000 available to the host
+EXPOSE 8000
 
-# docker build -t garch-app .
-# docker build --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) --no-cache -t garch-app .
-# docker run -it --user $(id -u):$(id -g) -v $(pwd):/app:Z -p 5000:5000 --name garch-container garch-app /bin/bash
+# run the FastAPI app with Uvicorn
+CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# docker build -t fastapi_pipeline .
+# docker build --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) --no-cache -t fastapi_pipeline-app .
+# docker run -it --user $(id -u):$(id -g) -v $(pwd):/app:Z -p 5000:5000 --name fastapi_pipeline-container fastapi_pipeline-app /bin/bash
 
 
 # list all containers

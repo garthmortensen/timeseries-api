@@ -122,5 +122,6 @@ def load_configuration(config_file: str) -> Config:
         Config: The validated configuration object.
     """
     l.info(f"# Loading config_file: {config_file}")
-    config_dict: Dict[str, Any] = read_config_from_fs(config_file)
+    # config_dict: Dict[str, Any] = read_config_from_fs(config_file)
+    config_dict = read_config_from_fs(config_file)
     return Config(**config_dict)  # ** unpacks the dictionary into keyword args
