@@ -94,14 +94,20 @@ def test_stationarity(input_data: StationarityTestInput):
 def run_arima_endpoint(input_data: ARIMAInput):
     try:
         df = pd.DataFrame(input_data.data)
-        fit, forecast = stats_model.run_arima(
-            df, {"p": input_data.p, "d": input_data.d, "q": input_data.q}
-        )
+        
+        # Create a temporary config with the right structure
+        from types import SimpleNamespace
+        temp_config = SimpleNamespace()
+        temp_config.stats_model = SimpleNamespace()
+        temp_config.stats_model.ARIMA = SimpleNamespace()
+        temp_config.stats_model.ARIMA.parameters_fit = {"p": input_data.p, "d": input_data.d, "q": input_data.q}
+        temp_config.stats_model.ARIMA.parameters_predict_steps = config.stats_model.ARIMA.parameters_predict_steps
+        
+        fit, forecast = stats_model.run_arima(df, temp_config)
         return {"fitted_model": str(fit.summary()), "forecast": forecast.tolist()}
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
         raise HTTPException(status_code=500, detail=f"Error running ARIMA model: {str(e)}")
-
 
 @app.post("/run_garch", summary="Run GARCH model on time series")
 def run_garch_endpoint(input_data: GARCHInput):
