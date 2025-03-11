@@ -73,6 +73,9 @@ def generate_data(input_data: DataGenerationInput):
 def scale_data(input_data: ScalingInput):
     try:
         df = pd.DataFrame(input_data.data)
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+        if df['price'].isnull().any():
+            raise HTTPException(status_code=400, detail="Invalid data: 'price' column contains non-numeric values.")
         df_scaled = data_processor.scale_data(df=df, method=input_data.method)
         return df_scaled.to_dict(orient="records")
     except Exception as e:
@@ -83,7 +86,8 @@ def scale_data(input_data: ScalingInput):
 def test_stationarity(input_data: StationarityTestInput):
     try:
         df = pd.DataFrame(input_data.data)
-        results = data_processor.test_stationarity(df, config=config)
+        results = data_processor.test_stationarity(df=df, config=config)
+        results = data_processor.test_stationarity(df=df, method=method)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
@@ -110,15 +114,22 @@ def run_arima_endpoint(input_data: ARIMAInput):
         )
 
 
+# FIXME: cannot curl -X POST this endpoint yet
 @app.post("/run_garch", summary="Run GARCH model on time series")
 def run_garch_endpoint(input_data: GARCHInput):
     try:
         df = pd.DataFrame(input_data.data)
+        forecast_steps = 5
         fit, forecast = stats_model.run_garch(
-            df, {"p": input_data.p, "q": input_data.q}
+            df_stationary=df,
+            p=input_data.p,
+            q=input_data.q,
+            dist=input_data.dist if hasattr(input_data, "dist") else "normal",
+            forecast_steps=forecast_steps
         )
         return {"fitted_model": str(fit.summary()), "forecast": forecast.tolist()}
     except Exception as e:
+        l.error(f"Error running GARCH model: {e}")
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
 
 
