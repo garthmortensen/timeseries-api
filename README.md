@@ -2,6 +2,12 @@
 
 ![Read the Docs](https://img.shields.io/readthedocs/garch)
 
+# Goals
+
+Code should be self documenting using function signatures, typehints, autodoc.
+
+
+
 
 # Productionalize Thesis Project
 

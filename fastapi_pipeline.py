@@ -57,12 +57,10 @@ class GARCHInput(BaseModel):
 @app.post("/generate_data", summary="Generate synthetic time series data")
 def generate_data(input_data: DataGenerationInput):
     try:
-        l.info("Generating synthetic data...")
-        config.data_generator.start_date = input_data.start_date
-        config.data_generator.end_date = input_data.end_date
-        config.data_generator.anchor_prices = input_data.anchor_prices
         _, price_df = data_generator.generate_price_series(
-            config=config
+            start_date=input_data.start_date,
+            end_date=input_data.end_date,
+            anchor_prices=input_data.anchor_prices
         )  # _ is shorthand for throwaway variable
         return price_df.to_dict(orient="records")
     except Exception as e:
@@ -73,8 +71,7 @@ def generate_data(input_data: DataGenerationInput):
 def scale_data(input_data: ScalingInput):
     try:
         df = pd.DataFrame(input_data.data)
-        config.data_processor.scaling.method = input_data.method
-        df_scaled = data_processor.scale_data(df=df, config=config)
+        df_scaled = data_processor.scale_data(df=df, method=input_data.method)
         return df_scaled.to_dict(orient="records")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
@@ -94,16 +91,15 @@ def test_stationarity(input_data: StationarityTestInput):
 def run_arima_endpoint(input_data: ARIMAInput):
     try:
         df = pd.DataFrame(input_data.data)
-        
-        # Create a temporary config with the right structure
-        from types import SimpleNamespace
-        temp_config = SimpleNamespace()
-        temp_config.stats_model = SimpleNamespace()
-        temp_config.stats_model.ARIMA = SimpleNamespace()
-        temp_config.stats_model.ARIMA.parameters_fit = {"p": input_data.p, "d": input_data.d, "q": input_data.q}
-        temp_config.stats_model.ARIMA.parameters_predict_steps = config.stats_model.ARIMA.parameters_predict_steps
-        
-        fit, forecast = stats_model.run_arima(df, temp_config)
+        # TODO: verify default comes from yml config
+        forecast_steps = 5  # Default or get from config if needed
+        fit, forecast = stats_model.run_arima(
+            df_stationary=df,
+            p=input_data.p,
+            d=input_data.d,
+            q=input_data.q,
+            forecast_steps=forecast_steps
+        )
         return {"fitted_model": str(fit.summary()), "forecast": forecast.tolist()}
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
