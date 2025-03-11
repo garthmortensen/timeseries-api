@@ -69,11 +69,16 @@ class DataProcessorConfig(BaseModel):
     scaling: ScalingConfig = Field(default_factory=ScalingConfig)
 
 
+class ARIMAParametersFitConfig(BaseModel):
+    p: int = Field(default=1)
+    d: int = Field(default=1)
+    q: int = Field(default=1)
+
+
 class ARIMAConfig(BaseModel):
-    # lambda used to set default dictionary values
     enabled: bool = Field(default=False)
-    parameters_fit: Dict[str, int] = Field(
-        default_factory=lambda: {"p": 1, "d": 1, "q": 1}
+    parameters_fit: ARIMAParametersFitConfig = Field(
+        default_factory=ARIMAParametersFitConfig
     )
     parameters_predict_steps: int = Field(default=5)
 

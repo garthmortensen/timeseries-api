@@ -6,7 +6,9 @@ from src.configurator import load_configuration
 from src.chronicler import init_chronicler
 from generalized_timeseries import data_generator, data_processor, stats_model
 
-from pydantic import BaseModel  # BaseModel is for input data validation, ensuring correct data types. helps fail fast and clearly
+from pydantic import (
+    BaseModel,
+)  # BaseModel is for input data validation, ensuring correct data types. helps fail fast and clearly
 from pydantic import Field  # field is for metadata. used here for description
 from fastapi import FastAPI, HTTPException  # FastAPI framework's error handling
 
@@ -60,7 +62,7 @@ def generate_data(input_data: DataGenerationInput):
         _, price_df = data_generator.generate_price_series(
             start_date=input_data.start_date,
             end_date=input_data.end_date,
-            anchor_prices=input_data.anchor_prices
+            anchor_prices=input_data.anchor_prices,
         )  # _ is shorthand for throwaway variable
         return price_df.to_dict(orient="records")
     except Exception as e:
@@ -98,12 +100,15 @@ def run_arima_endpoint(input_data: ARIMAInput):
             p=input_data.p,
             d=input_data.d,
             q=input_data.q,
-            forecast_steps=forecast_steps
+            forecast_steps=forecast_steps,
         )
         return {"fitted_model": str(fit.summary()), "forecast": forecast.tolist()}
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
-        raise HTTPException(status_code=500, detail=f"Error running ARIMA model: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error running ARIMA model: {str(e)}"
+        )
+
 
 @app.post("/run_garch", summary="Run GARCH model on time series")
 def run_garch_endpoint(input_data: GARCHInput):
@@ -120,13 +125,20 @@ def run_garch_endpoint(input_data: GARCHInput):
 # Endpoints: pipeline
 class PipelineInput(BaseModel):
     # captures all config fields in one place for readability and validation
-    start_date: str = Field(..., description="Start date for data generation (YYYY-MM-DD)")
+    start_date: str = Field(
+        ..., description="Start date for data generation (YYYY-MM-DD)"
+    )
     end_date: str = Field(..., description="End date for data generation (YYYY-MM-DD)")
     anchor_prices: dict = Field(..., description="Symbol-prices for data generation")
-    scaling_method: str = Field(default=config.data_processor.scaling.method, description="Scaling method")
-    arima_params: dict = Field(default=config.stats_model.ARIMA.parameters_fit, description="ARIMA parameters")
-    garch_params: dict = Field(default=config.stats_model.GARCH.parameters_fit, description="GARCH parameters")
-
+    scaling_method: str = Field(
+        default=config.data_processor.scaling.method, description="Scaling method"
+    )
+    arima_params: dict = Field(
+        default=config.stats_model.ARIMA.parameters_fit, description="ARIMA parameters"
+    )
+    garch_params: dict = Field(
+        default=config.stats_model.GARCH.parameters_fit, description="GARCH parameters"
+    )
 
 
 @app.post("/run_pipeline", summary="Execute the entire pipeline")
