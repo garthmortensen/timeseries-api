@@ -131,4 +131,5 @@ def init_chronicler() -> Chronicler:
         Chronicler: An instance of the Chronicler class.
     """
     current_script_path = os.path.abspath(__file__)  # "/myproject/run.py"
-    return Chronicler(current_script_path)
+    return Chronicler(current_script_path)  # Chronicler("/myproject/run.py")
+

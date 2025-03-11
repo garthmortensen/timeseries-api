@@ -5,9 +5,9 @@ import time  # stopwatch
 
 # handle relative directory imports for chronicler
 import logging as l
-from src.chronicler import init_chronicler
+from utilities.chronicler import init_chronicler
 
-from src.configurator import load_configuration
+from utilities.configurator import load_configuration
 from generalized_timeseries import data_generator, data_processor, stats_model
 
 

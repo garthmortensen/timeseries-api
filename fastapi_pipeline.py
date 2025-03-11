@@ -2,8 +2,8 @@ import logging as l
 import time  # stopwatch
 import pandas as pd
 
-from src.configurator import load_configuration
-from src.chronicler import init_chronicler
+from utilities.configurator import load_configuration
+from utilities.chronicler import init_chronicler
 from generalized_timeseries import data_generator, data_processor, stats_model
 
 from pydantic import (

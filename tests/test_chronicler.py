@@ -1,7 +1,7 @@
 # tests/test_chronicler.py
 
 import os
-from src.chronicler import init_chronicler, GitInfo
+from utilities.chronicler import init_chronicler, GitInfo
 
 
 def test_init_chronicler():

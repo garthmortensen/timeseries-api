@@ -2,7 +2,7 @@
 
 import pytest
 import yaml
-from src.configurator import (
+from utilities.configurator import (
     read_config_from_fs,
     MissingDataHandlerConfig,
     ScalingConfig,
