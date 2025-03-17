@@ -86,12 +86,12 @@ def scale_data(input_data: ScalingInput):
 def test_stationarity(input_data: StationarityTestInput):
     try:
         df = pd.DataFrame(input_data.data)
-        results = data_processor.test_stationarity(df=df, config=config)
+        # Get the method from config or use a default
+        method = config.data_processor.test_stationarity.method
         results = data_processor.test_stationarity(df=df, method=method)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
-
 
 @app.post("/run_arima", summary="Run ARIMA model on time series")
 def run_arima_endpoint(input_data: ARIMAInput):

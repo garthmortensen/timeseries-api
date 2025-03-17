@@ -1,8 +1,4 @@
-![CI/CD](https://github.com/garthmortensen/garch/actions/workflows/execute_pytest.yml/badge.svg)
-
 # Goals
-
-Code should be self documenting using function signatures, typehints, autodoc.
 
 TODO: pip install generalized-timeseries --upgrade
 
@@ -13,6 +9,8 @@ TODO: add Makefile
 TODO: update CICD
 
 TODO: publish swagger somewhere?
+
+TODO: upload logs to papertrail
 
 # Productionalize Thesis Project
 
@@ -199,3 +197,45 @@ Modeling
 
 Backtesting
 - coverage/backtesting of VaR to ensure realistic forecasts
+
+## Endpoint tests
+
+data_generation:
+
+```bash
+curl -X POST http://localhost:8000/generate_data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_date": "2023-01-01",
+    "end_date": "2023-01-10",
+    "anchor_prices": {
+      "GME": 150.0,
+      "BYND": 200.0,
+      "BP": 15.0
+    }
+  }'
+```
+
+scale_data:
+
+```bash
+curl -X POST http://localhost:8000/scale_data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "standardize",
+    "data": [
+      {"date": "2023-01-01", "price": 100},
+      {"date": "2023-01-02", "price": 101},
+      {"date": "2023-01-03", "price": 102},
+      {"date": "2023-01-04", "price": 103},
+      {"date": "2023-01-05", "price": 104}
+    ]
+  }'
+```
+
+test_stationarity:
+
+```bash
+
+
+```
