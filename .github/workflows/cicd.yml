@@ -11,8 +11,6 @@ on:
 jobs:
   test:
     name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
-    description: "Validates code quality and functionality across multiple Python versions and operating systems"
-    purpose: "Continuous Integration - Test code quality and functionality"
     inputs: "Source code from repo"
     outputs: "Test results and coverage reports"
     
