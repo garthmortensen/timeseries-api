@@ -75,9 +75,6 @@ jobs:
 
   docker:
     name: Build and Push Docker Image
-    purpose: "Continuous Deployment - Container delivery"
-    inputs: "Validated source code"
-    outputs: "Docker image on DockerHub"
     needs: test  # gate this behind successful tests
     runs-on: ubuntu-latest
     
