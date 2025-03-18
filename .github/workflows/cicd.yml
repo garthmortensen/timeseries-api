@@ -11,8 +11,6 @@ on:
 jobs:
   test:
     name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
-    inputs: "Source code from repo"
-    outputs: "Test results and coverage reports"
     
     # Test on multiple operating systems for better compatibility assurance
     runs-on: ${{ matrix.os }}
