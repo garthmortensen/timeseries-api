@@ -1,9 +1,5 @@
 # Goals
 
-TODO: add Makefile
-
-TODO: update CICD
-
 TODO: publish swagger somewhere?
 
 TODO: upload logs to papertrail
