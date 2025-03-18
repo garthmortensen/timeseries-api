@@ -23,7 +23,16 @@ except Exception as e:
 
 # individual endpoints for generate_data, scale_data, etc.
 # as well as end-to-end "run_pipeline" endpoint
-app = FastAPI(title="Timeseries Pipeline API", version="0.1.0")
+app = FastAPI(
+    title="Timeseries Pipeline API",
+    version="0.0.1",
+    description="Econometric time series modeling API with ARIMA and GARCH capabilities",
+    summary="A statistical time series analysis API for financial and econometric modeling",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/api/openapi.json",
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+)
 
 
 # Endpoints: modular

@@ -1,9 +1,5 @@
 # Goals
 
-TODO: pip install generalized-timeseries --upgrade
-
-TODO: update code
-
 TODO: add Makefile
 
 TODO: update CICD
@@ -197,4 +193,3 @@ Modeling
 
 Backtesting
 - coverage/backtesting of VaR to ensure realistic forecasts
-
