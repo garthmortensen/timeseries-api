@@ -1,5 +1,7 @@
 # Goals
 
+FIXME: pytest - https://github.com/garthmortensen/pipeline-timeseries/actions/runs/13914329867/job/38934500651
+
 TODO: publish swagger somewhere?
 
 TODO: upload logs to papertrail

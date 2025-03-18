@@ -11,3 +11,4 @@ generalized_timeseries>=0.1.7
 tabulate
 statsmodels
 arch
+httpx
