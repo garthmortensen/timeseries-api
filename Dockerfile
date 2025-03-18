@@ -15,7 +15,7 @@ RUN mkdir -p /app && chown timeseriespipelineapp:timeseriespipelineapp /app
 USER timeseriespipelineapp
 
 # Copy requirements file (as the user)
-COPY --chown=timeseriespipelineapp:timeseriespipelineapp requirements-docker.txt ./requirements.txt
+COPY --chown=timeseriespipelineapp:timeseriespipelineapp requirements-minimal.txt ./requirements.txt
 
 # Install dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
