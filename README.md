@@ -1,6 +1,8 @@
 # Goals
 
-FIXME: pytest - https://github.com/garthmortensen/pipeline-timeseries/actions/runs/13914329867/job/38934500651
+FIXME: pytest - https://github.com/garthmortensen/pipeline-timeseries/actions/runs/13914418256/job/38934746394
+
+TODO: check which additional github secrets are needed
 
 TODO: publish swagger somewhere?
 

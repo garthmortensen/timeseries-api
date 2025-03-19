@@ -1,6 +1,9 @@
 import logging as l
 import time  # stopwatch
 import pandas as pd
+import numpy as np
+import math  # rounding overcomes macOS json serialization issue
+import json
 
 from utilities.configurator import load_configuration
 from utilities.chronicler import init_chronicler
@@ -11,6 +14,8 @@ from pydantic import (
 )  # BaseModel is for input data validation, ensuring correct data types. helps fail fast and clearly
 from pydantic import Field  # field is for metadata. used here for description
 from fastapi import FastAPI, HTTPException  # FastAPI framework's error handling
+from fastapi.responses import JSONResponse
+
 
 chronicler = init_chronicler()
 
@@ -20,6 +25,47 @@ try:
 except Exception as e:
     l.error(f"error loading configuration: {e}")
     raise  # stop script
+
+# round values and handle special cases for json serialization
+# without this, tests will fail on macOS due to numpy float serialization
+def round_for_json(obj, decimals=6):
+    if isinstance(obj, dict):
+        # recursively round values in dict
+        return {k: round_for_json(v, decimals) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        # recursively round values in list
+        return [round_for_json(item, decimals) for item in obj]
+    elif isinstance(obj, np.ndarray):
+        # recursively round values in numpy array
+        return [round_for_json(x, decimals) for x in obj]
+    elif isinstance(obj, float):
+        # round floats to avoid json serialization issues
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        # round to specified decimal places
+        return round(obj, decimals)
+    else:
+        return obj
+
+# Create a custom JSON encoder, which handles NaN and Inf values
+# this is necessary for macOS, where NaN and Inf values are not serializable to JSON
+class RoundingJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+            return None
+        return super().default(obj)
+
+# Create a custom JSON response class, which uses the custom encoder
+class RoundingJSONResponse(JSONResponse):
+    """All endpoints automatically use the custom response class,
+    which rounds all float values and handles special values like NaN and infinity without
+    requiring changing individual endpoints.
+    """
+    def render(self, content):
+        # round all values
+        rounded_content = round_for_json(content)
+        # use the custom encoder for serialization
+        return json.dumps(rounded_content, cls=RoundingJSONEncoder).encode()
 
 # individual endpoints for generate_data, scale_data, etc.
 # as well as end-to-end "run_pipeline" endpoint
@@ -32,6 +78,7 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/api/openapi.json",
     swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+    default_response_class=RoundingJSONResponse  # custom response class for rounding
 )
 
 
@@ -95,12 +142,12 @@ def scale_data(input_data: ScalingInput):
 def test_stationarity(input_data: StationarityTestInput):
     try:
         df = pd.DataFrame(input_data.data)
-        # Get the method from config or use a default
         method = config.data_processor.test_stationarity.method
         results = data_processor.test_stationarity(df=df, method=method)
         return results
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))  # internal server error
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/run_arima", summary="Run ARIMA model on time series")
 def run_arima_endpoint(input_data: ARIMAInput):
