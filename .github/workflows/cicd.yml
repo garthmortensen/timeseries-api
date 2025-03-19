@@ -95,7 +95,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
         with:
-          images: goattheprofessionalmeower/generalized-timeseries
+          images: goattheprofessionalmeower/pipeline-timeseries
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

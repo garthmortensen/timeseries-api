@@ -1,8 +1,10 @@
 # Goals
 
-FIXME: pytest - https://github.com/garthmortensen/pipeline-timeseries/actions/runs/13914418256/job/38934746394
+TODO: toss vertically into air for the full up and down crash pad effect
 
-TODO: check which additional github secrets are needed
+TODO: Add README.md badges
+
+TODO: How do i publish to dockerhub again?
 
 TODO: publish swagger somewhere?
 
