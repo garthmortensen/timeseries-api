@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-minimal.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       
@@ -47,7 +47,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flake8 pytest pytest-cov
-          if [ -f requirements-minimal.txt ]; then pip install -r requirements-minimal.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         shell: bash  # ensure consistent shell across all OS
       
       - name: Lint with flake8
