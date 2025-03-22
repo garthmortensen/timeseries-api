@@ -24,6 +24,8 @@ from pydantic import Field  # field is for metadata. used here for description
 from fastapi import FastAPI, HTTPException  # FastAPI framework's error handling
 from fastapi.responses import JSONResponse
 
+import uvicorn  # ASGI server (async server gateway interface, for async web frameworks, like FastAPI)
+
 
 chronicler = init_chronicler()
 
@@ -175,9 +177,19 @@ def run_arima_endpoint(input_data: ARIMAInput):
         model_summary = str(model_fits[column_name].summary())
         forecast_values = forecasts[column_name]
         
+        # Convert forecast values to a standard list format
+        forecast_list = []
+        if hasattr(forecast_values, 'tolist'):  # check if object has tolist() method, like numpy array or pandas series
+            # If it's a numpy array or pandas series
+            forecast_list = forecast_values.tolist()
+        else:
+            # If it's another iterable type
+            for value in forecast_values:  # manually convert each value to float
+                forecast_list.append(float(value))
+        
         return {
             "fitted_model": model_summary,
-            "forecast": forecast_values.tolist() if hasattr(forecast_values, 'tolist') else [float(x) for x in forecast_values]
+            "forecast": forecast_list
         }
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
@@ -214,15 +226,25 @@ def run_garch_endpoint(input_data: GARCHInput):
         )
         
         # Extract the summary from the first column's model
-        column_name = list(model_fits.keys())[0]  # Get the first column name
-        model_summary = str(model_fits[column_name].summary())
+        column_name = list(model_fits.keys())[0]  # from model_fits, get the first column name
+        model_summary = str(model_fits[column_name].summary())  # Get the model summary
         
         # Get forecast for the first column
         forecast_values = forecasts[column_name]
         
+        # Convert forecast values to a standard list format
+        forecast_list = []
+        if hasattr(forecast_values, 'tolist'):
+            # If it's a numpy array or pandas series
+            forecast_list = forecast_values.tolist()
+        else:
+            # If it's another iterable type
+            for value in forecast_values:
+                forecast_list.append(float(value))
+        
         return {
             "fitted_model": model_summary,
-            "forecast": forecast_values.tolist() if hasattr(forecast_values, 'tolist') else [float(x) for x in forecast_values]
+            "forecast": forecast_list
         }
     except Exception as e:
         l.error(f"Error running GARCH model: {e}")
@@ -231,6 +253,8 @@ def run_garch_endpoint(input_data: GARCHInput):
 # Endpoints: pipeline
 class PipelineInput(BaseModel):
     # captures all config fields in one place for readability and validation
+    # In pydantic, ... is shorthand for required field. because of Field, this field is required
+    # its like making a required field in a schema or html form
     start_date: str = Field(
         ..., description="Start date for data generation (YYYY-MM-DD)"
     )
@@ -246,6 +270,134 @@ class PipelineInput(BaseModel):
         default=config.stats_model.GARCH.parameters_fit, description="GARCH parameters"
     )
 
+# Step functions - each handles one part of the pipeline
+def generate_data_step(pipeline_input, config):
+    """Generate synthetic data step"""
+    if not config.data_generator.enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="Data generation is disabled in the configuration.",
+        )
+    
+    _, df = data_generator.generate_price_series(
+        start_date=pipeline_input.start_date,
+        end_date=pipeline_input.end_date,
+        anchor_prices=pipeline_input.anchor_prices,
+    )
+    return df
+
+def fill_missing_data_step(df, config):
+    """Fill missing data step"""
+    if config.data_processor.handle_missing_values.enabled:
+        return data_processor.fill_data(
+            df=df, 
+            strategy=config.data_processor.handle_missing_values.strategy
+        )
+    return df
+
+def scale_data_step(df, config):
+    """Scale data step"""
+    if config.data_processor.scaling.enabled:
+        return data_processor.scale_data(
+            df=df, 
+            method=config.data_processor.scaling.method
+        )
+    return df
+
+def stationarize_data_step(df, config):
+    """Stationarize data step"""
+    if config.data_processor.make_stationary.enabled:
+        return data_processor.stationarize_data(
+            df=df, 
+            method=config.data_processor.make_stationary.method
+        )
+    return df
+
+def test_stationarity_step(df, config):
+    """Test stationarity step"""
+    stationarity_results = data_processor.test_stationarity(
+        df=df, 
+        method=config.data_processor.test_stationarity.method
+    )
+    
+    # Log stationarity results
+    data_processor.log_stationarity(
+        adf_results=stationarity_results,
+        p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+    )
+    
+    return stationarity_results
+
+def run_arima_step(df_stationary, config):
+    """Run ARIMA model step"""
+    if not config.stats_model.ARIMA.enabled:
+        return "ARIMA not enabled", []
+    
+    arima_fits, arima_forecasts = stats_model.run_arima(
+        df_stationary=df_stationary,
+        p=config.stats_model.ARIMA.parameters_fit.p,
+        d=config.stats_model.ARIMA.parameters_fit.d,
+        q=config.stats_model.ARIMA.parameters_fit.q,
+        forecast_steps=config.stats_model.ARIMA.parameters_predict_steps
+    )
+    
+    if not arima_fits or len(arima_fits) <= 0:
+        return "No ARIMA models fitted", []
+    
+    # Get the first column's model summary
+    column_name = list(arima_fits.keys())[0]
+    arima_summary = str(arima_fits[column_name].summary())
+    
+    # Get forecast for the first column
+    forecast_values = arima_forecasts[column_name]
+    
+    # Convert forecast values to a list in a more readable way
+    if hasattr(forecast_values, 'tolist'):
+        # If it's a numpy array or similar object with tolist() method
+        arima_forecast_values = forecast_values.tolist()
+    else:
+        # Otherwise, manually convert each value to float and build a list
+        arima_forecast_values = []
+        for x in forecast_values:
+            arima_forecast_values.append(float(x))
+    
+    return arima_summary, arima_forecast_values
+
+def run_garch_step(df_stationary, config):
+    """Run GARCH model step"""
+    if not config.stats_model.GARCH.enabled:
+        return "GARCH not enabled", []
+    
+    garch_fits, garch_forecasts = stats_model.run_garch(
+        df_stationary=df_stationary,
+        p=config.stats_model.GARCH.parameters_fit.p,
+        q=config.stats_model.GARCH.parameters_fit.q,
+        dist=config.stats_model.GARCH.parameters_fit.dist,
+        forecast_steps=config.stats_model.GARCH.parameters_predict_steps
+    )
+    
+    if not garch_fits or len(garch_fits) <= 0:
+        return "No GARCH models fitted", []
+    
+    # Get the first column's model summary
+    column_name = list(garch_fits.keys())[0]
+    garch_summary = str(garch_fits[column_name].summary())
+    
+    # Get forecast for the first column
+    forecast_values = garch_forecasts[column_name]
+    
+    # Convert forecast values to a list in a more readable way
+    if hasattr(forecast_values, 'tolist'):
+        # If it's a numpy array or similar object with tolist() method
+        garch_forecast_values = forecast_values.tolist()
+    else:
+        # Otherwise, manually convert each value to float and build a list
+        garch_forecast_values = []
+        for x in forecast_values:
+            garch_forecast_values.append(float(x))
+    
+    return garch_summary, garch_forecast_values
+
 
 @app.post("/run_pipeline", summary="Execute the entire pipeline")
 def run_pipeline(pipeline_input: PipelineInput):
@@ -255,102 +407,18 @@ def run_pipeline(pipeline_input: PipelineInput):
     t1 = time.perf_counter()
 
     try:
-        # Step 1: Generate synthetic data
-        if config.data_generator.enabled:
-            _, df = data_generator.generate_price_series(
-                start_date=pipeline_input.start_date,
-                end_date=pipeline_input.end_date,
-                anchor_prices=pipeline_input.anchor_prices,
-            )
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Data generation is disabled in the configuration.",
-            )
-
-        # Step 2: Fill missing data
-        if config.data_processor.handle_missing_values.enabled:
-            df_filled = data_processor.fill_data(
-                df=df, 
-                strategy=config.data_processor.handle_missing_values.strategy
-            )
-        else:
-            df_filled = df
-
-        # Step 3: Scale data
-        if config.data_processor.scaling.enabled:
-            df_scaled = data_processor.scale_data(
-                df=df_filled, 
-                method=config.data_processor.scaling.method
-            )
-        else:
-            df_scaled = df_filled
-
-        # Step 4: Stationarize data
-        if config.data_processor.make_stationary.enabled:
-            df_stationary = data_processor.stationarize_data(
-                df=df_scaled, 
-                method=config.data_processor.make_stationary.method
-            )
-        else:
-            df_stationary = df_scaled
-
-        # Step 5: Test stationarity
-        stationarity_results = data_processor.test_stationarity(
-            df=df_stationary, 
-            method=config.data_processor.test_stationarity.method
-        )
-
-        # Step 6: Log stationarity results
-        data_processor.log_stationarity(
-            adf_results=stationarity_results,
-            p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
-        )
-
-        # Step 7: ARIMA
-        arima_summary = "ARIMA not enabled"
-        arima_forecast_values = []
+        # Execute pipeline steps sequentially
+        df = generate_data_step(pipeline_input, config)
+        df_filled = fill_missing_data_step(df, config)
+        df_scaled = scale_data_step(df_filled, config)
+        df_stationary = stationarize_data_step(df_scaled, config)
+        stationarity_results = test_stationarity_step(df_stationary, config)
         
-        if config.stats_model.ARIMA.enabled:
-            arima_fits, arima_forecasts = stats_model.run_arima(
-                df_stationary=df_stationary,
-                p=config.stats_model.ARIMA.parameters_fit.p,
-                d=config.stats_model.ARIMA.parameters_fit.d,
-                q=config.stats_model.ARIMA.parameters_fit.q,
-                forecast_steps=config.stats_model.ARIMA.parameters_predict_steps
-            )
-            
-            if arima_fits and len(arima_fits) > 0:
-                # Get the first column's model summary
-                column_name = list(arima_fits.keys())[0]
-                arima_summary = str(arima_fits[column_name].summary())
-                
-                # Get forecast for the first column
-                forecast_values = arima_forecasts[column_name]
-                arima_forecast_values = forecast_values.tolist() if hasattr(forecast_values, 'tolist') else [float(x) for x in forecast_values]
+        # Run models
+        arima_summary, arima_forecast = run_arima_step(df_stationary, config)
+        garch_summary, garch_forecast = run_garch_step(df_stationary, config)
 
-        # Step 8: GARCH
-        garch_summary = "GARCH not enabled"
-        garch_forecast_values = []
-        
-        if config.stats_model.GARCH.enabled:
-            garch_fits, garch_forecasts = stats_model.run_garch(
-                df_stationary=df_stationary,
-                p=config.stats_model.GARCH.parameters_fit.p,
-                q=config.stats_model.GARCH.parameters_fit.q,
-                dist=config.stats_model.GARCH.parameters_fit.dist,
-                forecast_steps=config.stats_model.GARCH.parameters_predict_steps
-            )
-            
-            if garch_fits and len(garch_fits) > 0:
-                # Get the first column's model summary
-                column_name = list(garch_fits.keys())[0]
-                garch_summary = str(garch_fits[column_name].summary())
-                
-                # Get forecast for the first column
-                forecast_values = garch_forecasts[column_name]
-                garch_forecast_values = forecast_values.tolist() if hasattr(forecast_values, 'tolist') else [float(x) for x in forecast_values]
-
+        # Record execution time
         execution_time = time.perf_counter() - t1
         hours, remainder = divmod(execution_time, 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -358,12 +426,13 @@ def run_pipeline(pipeline_input: PipelineInput):
             f"\nexecution time (HH:MM:SS): {int(hours):02}:{int(minutes):02}:{int(seconds):02}"
         )
 
+        # Return results
         return {
             "stationarity_results": stationarity_results,
             "arima_summary": arima_summary,
-            "arima_forecast": arima_forecast_values,
+            "arima_forecast": arima_forecast,
             "garch_summary": garch_summary,
-            "garch_forecast": garch_forecast_values,
+            "garch_forecast": garch_forecast,
         }
     except Exception as e:
         l.error(f"Pipeline error: {e}")
@@ -373,6 +442,5 @@ def run_pipeline(pipeline_input: PipelineInput):
 
 
 if __name__ == "__main__":
-    import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
