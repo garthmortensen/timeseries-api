@@ -59,7 +59,7 @@ jobs:
       
       - name: Test with pytest and collect coverage
         run: |
-          pytest --cov=pipeline-timeseries --cov-report=xml --cov-report=term
+          pytest --cov=utilities --cov=. --cov-report=xml --cov-report=term
       
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@3440e5ef70c638a9f44602a80ab017feee1309fe

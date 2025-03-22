@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 # Add the parent directory to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from fastapi_pipeline import app
+from api.fastapi_pipeline import app
 
 client = TestClient(app)
 

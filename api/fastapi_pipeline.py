@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# fastapi_pipeline.py
+
+# import parent directory modules
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import logging as l
 import time  # stopwatch
 import pandas as pd
