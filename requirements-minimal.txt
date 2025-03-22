@@ -12,3 +12,4 @@ tabulate
 statsmodels
 arch
 httpx
+uvicorn
