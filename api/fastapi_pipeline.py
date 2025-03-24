@@ -183,7 +183,7 @@ def run_arima_endpoint(input_data: ARIMAInput):
             forecast_steps=5,
         )
         
-                # Handle results for API response
+        # Handle results for API response
         column_name = list(model_fits.keys())[0]
         model_fit = model_fits[column_name]
         
@@ -195,7 +195,11 @@ def run_arima_endpoint(input_data: ARIMAInput):
         forecast_values = forecasts[column_name]
         forecast_list = forecast_values.tolist() if hasattr(forecast_values, 'tolist') else [float(value) for value in forecast_values]
         
+        # Extract model summary as string
+        model_summary = str(model_fit.summary())
+        
         results = {
+            "fitted_model": model_summary,  # Added model fit summary
             "parameters": params,
             "p_values": pvalues,
             "forecast": forecast_list
@@ -206,6 +210,7 @@ def run_arima_endpoint(input_data: ARIMAInput):
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
         raise HTTPException(status_code=500, detail=f"Error running ARIMA model: {str(e)}")
+
 
 
 @app.post("/run_garch", summary="Run GARCH model on time series")
