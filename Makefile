@@ -1,9 +1,12 @@
 print-% : ; @echo $* = $($*)
 
-PROJECT_NAME = pipeline-timeseries
+PROJECT_NAME = timeseries-pipeline
 SHELL = /bin/bash
 PYTHON ?= $(shell command -v python3 || command -v python)
 COMMIT_HASH = $(shell git log -1 --format=%h || echo "dev")
+
+# Replace default port of 8000 with 8001 to make way for django runserver
+API_PORT ?= 8001
 
 .PHONY: docker-clean
 docker-clean:
@@ -17,11 +20,11 @@ docker-build:
 
 .PHONY: docker-run
 docker-run:
-	docker run -d -p 8000:8000 --name $(PROJECT_NAME)-container $(PROJECT_NAME):latest
+	docker run -d -p $(API_PORT):$(API_PORT) --name $(PROJECT_NAME)-container $(PROJECT_NAME):latest
 
 .PHONY: docker-run-interactive
 docker-run-interactive:
-	docker run -it --user $(shell id -u):$(shell id -g) -v $(shell pwd):/app:Z -p 8000:8000 --name $(PROJECT_NAME)-interactive $(PROJECT_NAME):latest /bin/bash
+	docker run -it --user $(shell id -u):$(shell id -g) -v $(shell pwd):/app:Z -p $(API_PORT):$(API_PORT) --name $(PROJECT_NAME)-interactive $(PROJECT_NAME):latest /bin/bash
 
 .PHONY: docker-stop
 docker-stop:
@@ -35,11 +38,11 @@ docker-rm:
 .PHONY: run-local
 run-local:
 	$(PYTHON) -m pip install -q fastapi uvicorn
-	uvicorn fastapi_pipeline:app --host 0.0.0.0 --port 8000 --reload
+	uvicorn api.fastapi_pipeline:app --host 0.0.0.0 --port $(API_PORT) --reload
 
 .PHONY: run-cli
 run-cli:
-	$(PYTHON) cli_pipeline.py
+	$(PYTHON) api/cli_pipeline.py
 
 # Convenience targets
 .PHONY: rebuild

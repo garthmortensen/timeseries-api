@@ -8,7 +8,8 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-BASE_URL="http://localhost:8000"
+API_PORT=8001
+BASE_URL="http://localhost:${API_PORT}"
 
 echo -e "${YELLOW}=== Time Series Pipeline API Smoke Test ===${NC}"
 echo -e "${YELLOW}Running tests against: ${BASE_URL}${NC}\n"
@@ -180,3 +181,4 @@ else
   echo -e "${RED}Some tests failed. Check the logs above for details.${NC}"
   exit 1
 fi
+

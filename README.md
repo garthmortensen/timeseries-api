@@ -1,24 +1,26 @@
-# Pipeline Timeseries
+# Timeseries Pipeline
 
-![CI/CD](https://github.com/garthmortensen/pipeline-timeseries/actions/workflows/cicd.yml/badge.svg)
-[![codecov](https://codecov.io/gh/garthmortensen/pipeline-timeseries/graph/badge.svg?token=L1L5OBSF3Z)](https://codecov.io/gh/garthmortensen/pipeline-timeseries)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/pipeline-timeseries/dashboard)
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-pipeline--timeseries-blue)](https://hub.docker.com/r/goattheprofessionalmeower/pipeline-timeseries)
+![CI/CD](https://github.com/garthmortensen/timeseries-pipeline/actions/workflows/cicd.yml/badge.svg)
+[![codecov](https://codecov.io/gh/garthmortensen/timeseries-pipeline/graph/badge.svg?token=L1L5OBSF3Z)](https://codecov.io/gh/garthmortensen/timeseries-pipeline)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/dashboard)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-pipeline--timeseries-blue)](https://hub.docker.com/r/goattheprofessionalmeower/timeseries-pipeline)
 
 ```ascii
-         ▗▄▄▖▗▄▄▄▖▗▄▄▖ ▗▄▄▄▖▗▖   ▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖           
-         ▐▌ ▐▌ █  ▐▌ ▐▌▐▌   ▐▌     █  ▐▛▚▖▐▌▐▌              
-         ▐▛▀▘  █  ▐▛▀▘ ▐▛▀▀▘▐▌     █  ▐▌ ▝▜▌▐▛▀▀▘           
-         ▐▌  ▗▄█▄▖▐▌   ▐▙▄▄▖▐▙▄▄▖▗▄█▄▖▐▌  ▐▌▐▙▄▄▖           
    ▗▄▄▄▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖ ▗▄▄▖▗▄▄▄▖▗▄▄▖ ▗▄▄▄▖▗▄▄▄▖ ▗▄▄▖
      █    █  ▐▛▚▞▜▌▐▌   ▐▌   ▐▌   ▐▌ ▐▌  █  ▐▌   ▐▌   
      █    █  ▐▌  ▐▌▐▛▀▀▘ ▝▀▚▖▐▛▀▀▘▐▛▀▚▖  █  ▐▛▀▀▘ ▝▀▚▖
      █  ▗▄█▄▖▐▌  ▐▌▐▙▄▄▖▗▄▄▞▘▐▙▄▄▖▐▌ ▐▌▗▄█▄▖▐▙▄▄▖▗▄gm▘
+         ▗▄▄▖▗▄▄▄▖▗▄▄▖ ▗▄▄▄▖▗▖   ▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖
+         ▐▌ ▐▌ █  ▐▌ ▐▌▐▌   ▐▌     █  ▐▛▚▖▐▌▐▌   
+         ▐▛▀▘  █  ▐▛▀▘ ▐▛▀▀▘▐▌     █  ▐▌ ▝▜▌▐▛▀▀▘
+         ▐▌  ▗▄█▄▖▐▌   ▐▙▄▄▖▐▙▄▄▖▗▄█▄▖▐▌  ▐▌▐▙▄▄▖
 ```
 
 TODO: toss vertically into air for the full up and down crash pad effect
 
-FIXME: [Detected subprocess function '$FUNC' without a static string. If this data can be controlled by a malicious actor, it may be an instance of command injection. Audit the use of this call to ensure it is not controllable by an external resource. You may consider using 'shlex.escape()'.](https://app.codacy.com/gh/garthmortensen/pipeline-timeseries/issues/current)
+FIXME: [Detected subprocess function '$FUNC' without a static string. If this data can be controlled by a malicious actor, it may be an instance of command injection. Audit the use of this call to ensure it is not controllable by an external resource. You may consider using 'shlex.escape()'.](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/issues/current)
+
+TODO: Explore better approach to API vs CLI. can i create 1 pipeline and attach endpoints and cli together in one underlying script?
 
 Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
 
@@ -38,13 +40,13 @@ Take pdf writings and convert entirely. Then add supplementary generalized code.
 Pull the Docker image:
 
 ```bash
-docker pull goattheprofessionalmeower/pipeline-timeseries
+docker pull goattheprofessionalmeower/timeseries-pipeline
 ```
 
 Run the container:
 
 ```bash
-docker run -d -p 8000:8000 --name pipeline-timeseries-container goattheprofessionalmeower/pipeline-timeseries:latest
+docker run -d -p 8000:8000 --name timeseries-pipeline-container goattheprofessionalmeower/timeseries-pipeline:latest
 ```
 
 ## API Endpoints
@@ -70,8 +72,8 @@ docker run -d -p 8000:8000 --name pipeline-timeseries-container goattheprofessio
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/garthmortensen/pipeline-timeseries.git
-   cd pipeline-timeseries
+   git clone https://github.com/garthmortensen/timeseries-pipeline.git
+   cd timeseries-pipeline
    ```
 
 2. Create a virtual environment:
@@ -145,7 +147,7 @@ make docker-run-interactive
 ## Project Structure
 
 ```
-pipeline-timeseries/
+timeseries-pipeline/
 ├── api/                    # API implementation
 │   ├── cli_pipeline.py     # Command-line interface
 │   └── fastapi_pipeline.py # FastAPI implementation

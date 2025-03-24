@@ -1,4 +1,4 @@
-name: pipeline-timeseries CI/CD
+name: timeseries-pipeline CI/CD
 
 # Run workflow on push
 on: 
@@ -65,7 +65,7 @@ jobs:
         uses: codecov/codecov-action@3440e5ef70c638a9f44602a80ab017feee1309fe
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: garthmortensen/pipeline-timeseries
+          slug: garthmortensen/timeseries-pipeline
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
@@ -95,7 +95,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
         with:
-          images: goattheprofessionalmeower/pipeline-timeseries
+          images: goattheprofessionalmeower/timeseries-pipeline
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
