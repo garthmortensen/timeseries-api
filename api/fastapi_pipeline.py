@@ -183,23 +183,21 @@ def run_arima_endpoint(input_data: ARIMAInput):
             forecast_steps=5,
         )
         
-        # Handle results for API response
+                # Handle results for API response
         column_name = list(model_fits.keys())[0]
-        model_summary = str(model_fits[column_name].summary())
-        forecast_values = forecasts[column_name]
+        model_fit = model_fits[column_name]
+        
+        # Extract model parameters and their p-values
+        params = model_fit.params.to_dict()
+        pvalues = model_fit.pvalues.to_dict()
         
         # Convert forecast values to a standard list format
-        forecast_list = []
-        if hasattr(forecast_values, 'tolist'):  # check if object has tolist() method, like numpy array or pandas series
-            # If it's a numpy array or pandas series
-            forecast_list = forecast_values.tolist()
-        else:
-            # If it's another iterable type
-            for value in forecast_values:  # manually convert each value to float
-                forecast_list.append(float(value))
+        forecast_values = forecasts[column_name]
+        forecast_list = forecast_values.tolist() if hasattr(forecast_values, 'tolist') else [float(value) for value in forecast_values]
         
         results = {
-            "fitted_model": model_summary,
+            "parameters": params,
+            "p_values": pvalues,
             "forecast": forecast_list
         }
         l.info(f"run_arima_endpoint() returning:\n{results}")

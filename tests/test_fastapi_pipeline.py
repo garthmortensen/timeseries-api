@@ -81,7 +81,7 @@ def test_generate_data(data_generation_input):
     response = client.post("/generate_data", json=data_generation_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
-    assert isinstance(data, list)
+    assert isinstance(data, dict)
     assert len(data) > 0
 
 def test_scale_data(test_scale_data_input):
@@ -89,7 +89,7 @@ def test_scale_data(test_scale_data_input):
     response = client.post("/scale_data", json=test_scale_data_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
-    assert isinstance(data, list)
+    assert isinstance(data, dict)
     assert len(data) == len(test_scale_data_input["data"])
 
 def test_test_stationarity(test_stationarity_input):

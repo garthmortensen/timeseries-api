@@ -12,7 +12,7 @@ data_generator:
   anchor_prices:
     GME: 150.0
     BYND: 200.0
-    BP: 15.0
+    BYD: 15.0
 
 # TODO: add enabled to each step
 data_processor:
