@@ -130,7 +130,11 @@ def generate_data(input_data: DataGenerationInput):
             end_date=input_data.end_date,
             anchor_prices=input_data.anchor_prices,
         )  # _ is shorthand for throwaway variable
-        return price_df.to_dict(orient="records")
+
+        return_data = price_df.to_dict(orient="index")
+        l.info(f"generate_data() returning:\n{return_data}")
+        return return_data
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
 
@@ -143,7 +147,11 @@ def scale_data(input_data: ScalingInput):
         if df['price'].isnull().any():
             raise HTTPException(status_code=400, detail="Invalid data: 'price' column contains non-numeric values.")
         df_scaled = data_processor.scale_data(df=df, method=input_data.method)
-        return df_scaled.to_dict(orient="records")
+        
+        return_data = df_scaled.to_dict(orient="index")
+        l.info(f"scale_data() returning:\n{return_data}")
+        return return_data
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
 
@@ -154,7 +162,10 @@ def test_stationarity(input_data: StationarityTestInput):
         df = pd.DataFrame(input_data.data)
         method = config.data_processor.test_stationarity.method
         results = data_processor.test_stationarity(df=df, method=method)
+
+        l.info(f"test_stationarity() returning:\n{results}")
         return results
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -187,10 +198,13 @@ def run_arima_endpoint(input_data: ARIMAInput):
             for value in forecast_values:  # manually convert each value to float
                 forecast_list.append(float(value))
         
-        return {
+        results = {
             "fitted_model": model_summary,
             "forecast": forecast_list
         }
+        l.info(f"run_arima_endpoint() returning:\n{results}")
+        return results
+    
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
         raise HTTPException(status_code=500, detail=f"Error running ARIMA model: {str(e)}")
@@ -242,10 +256,13 @@ def run_garch_endpoint(input_data: GARCHInput):
             for value in forecast_values:
                 forecast_list.append(float(value))
         
-        return {
+        results = {
             "fitted_model": model_summary,
             "forecast": forecast_list
         }
+        l.info(f"run_garch_endpoint() returning:\n{results}")
+        return results
+
     except Exception as e:
         l.error(f"Error running GARCH model: {e}")
         raise HTTPException(status_code=500, detail=str(e))
