@@ -18,6 +18,57 @@
 
 TODO: toss vertically into air for the full up and down crash pad effect
 
+TODO: version the endpoints:
+
+```py
+@app.post("/v1/run_arima", response_model=ARIMAResponseV1)
+def run_arima_v1(input_data: ARIMAInput): ...
+```
+
+TODO: rate limiter. no pagination
+
+```py
+@app.post(
+    "/run_garch",
+    response_model=GARCHResponse,
+    openapi_extra={
+        "x-rate-limit": {
+            "calls": 10,
+            "period": "minute"
+        },
+        "x-computational-cost": "high"
+    }
+)
+```
+
+TODO: creaet "API specification" or "API contract" to serve as the formal agreement between front-end and back-end communication. I spent the entire day debugging how to consume api data into django (i was reading it as a list, not a dict). wait. that's `openapi.json`. Next, update the OpenAPI specification to include fastapi response_model.
+
+```py
+response_model
+```
+
+Add `response_model` to show how you request, which will feed into openapi.json (/docs, /redoc). also validates response. 
+  1. define a Pydantic model for response
+  2. apply it to an endpoint
+`config.yml`: default request
+
+TODO: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens.
+
+When a model takes minutes or hours to run, you don't want to keep an HTTP connection open that long. Instead:
+
+1. The client (Django) makes a request to start processing.
+1. Your API immediately returns a job ID and status "processing".
+1. When processing completes, your API calls a webhook URL provided by the client.
+1. The Django application receives the webhook with the results.
+
+Benefits
+
+Django can provide immediate feedback to users
+Users don't have to keep browser tabs open during processing
+Processing continues even if users close their browser
+The UI can update dynamically when results arrive
+Failed jobs can be properly handled and reported
+
 FIXME: [Detected subprocess function '$FUNC' without a static string. If this data can be controlled by a malicious actor, it may be an instance of command injection. Audit the use of this call to ensure it is not controllable by an external resource. You may consider using 'shlex.escape()'.](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/issues/current)
 
 TODO: Explore better approach to API vs CLI. can i create 1 pipeline and attach endpoints and cli together in one underlying script?
@@ -99,8 +150,8 @@ docker run -d -p 8000:8000 --name timeseries-pipeline-container goattheprofessio
 
 5. Access the API documentation:
 
-   - Swagger UI: http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
+   - Swagger UI: http://localhost:8001/docs
+   - ReDoc: http://localhost:8001/redoc
 
 ### Configuration
 
