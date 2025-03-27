@@ -18,29 +18,6 @@
 
 TODO: toss vertically into air for the full up and down crash pad effect
 
-TODO: version the endpoints:
-
-```py
-@app.post("/v1/run_arima", response_model=ARIMAResponseV1)
-def run_arima_v1(input_data: ARIMAInput): ...
-```
-
-TODO: rate limiter. no pagination
-
-```py
-@app.post(
-    "/run_garch",
-    response_model=GARCHResponse,
-    openapi_extra={
-        "x-rate-limit": {
-            "calls": 10,
-            "period": "minute"
-        },
-        "x-computational-cost": "high"
-    }
-)
-```
-
 TODO: creaet "API specification" or "API contract" to serve as the formal agreement between front-end and back-end communication. I spent the entire day debugging how to consume api data into django (i was reading it as a list, not a dict). wait. that's `openapi.json`. Next, update the OpenAPI specification to include fastapi response_model.
 
 ```py
@@ -70,8 +47,6 @@ The UI can update dynamically when results arrive
 Failed jobs can be properly handled and reported
 
 FIXME: [Detected subprocess function '$FUNC' without a static string. If this data can be controlled by a malicious actor, it may be an instance of command injection. Audit the use of this call to ensure it is not controllable by an external resource. You may consider using 'shlex.escape()'.](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/issues/current)
-
-TODO: Explore better approach to API vs CLI. can i create 1 pipeline and attach endpoints and cli together in one underlying script?
 
 Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
 

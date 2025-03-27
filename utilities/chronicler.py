@@ -38,7 +38,7 @@ class GitInfo:
             str: Output from the Git command or an error message if the command fails.
         """
         try:
-            return subprocess.check_output(command, cwd=self.repo_path).strip().decode()
+            return subprocess.check_output(command, cwd=self.repo_path, shell=False).strip().decode()  # shell False to avoid shell injection
         except subprocess.CalledProcessError:
             return "Not a repo"
         except FileNotFoundError:
