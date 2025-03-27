@@ -18,22 +18,7 @@
 
 TODO: toss vertically into air for the full up and down crash pad effect
 
-TODO: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens.
-
-When a model takes minutes or hours to run, you don't want to keep an HTTP connection open that long. Instead:
-
-1. The client (Django) makes a request to start processing.
-1. Your API immediately returns a job ID and status "processing".
-1. When processing completes, your API calls a webhook URL provided by the client.
-1. The Django application receives the webhook with the results.
-
-Benefits
-
-Django can provide immediate feedback to users
-Users don't have to keep browser tabs open during processing
-Processing continues even if users close their browser
-The UI can update dynamically when results arrive
-Failed jobs can be properly handled and reported
+TODO NOT: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens. I'm not doing this because of increased complexity and project scope.
 
 Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
 
