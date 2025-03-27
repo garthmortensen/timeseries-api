@@ -27,7 +27,6 @@ response_model
 Add `response_model` to show how you request, which will feed into openapi.json (/docs, /redoc). also validates response. 
   1. define a Pydantic model for response
   2. apply it to an endpoint
-`config.yml`: default request
 
 TODO: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens.
 
@@ -45,8 +44,6 @@ Users don't have to keep browser tabs open during processing
 Processing continues even if users close their browser
 The UI can update dynamically when results arrive
 Failed jobs can be properly handled and reported
-
-FIXME: [Detected subprocess function '$FUNC' without a static string. If this data can be controlled by a malicious actor, it may be an instance of command injection. Audit the use of this call to ensure it is not controllable by an external resource. You may consider using 'shlex.escape()'.](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/issues/current)
 
 Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
 
