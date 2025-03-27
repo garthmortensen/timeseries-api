@@ -419,8 +419,8 @@ def run_garch_step(df_stationary, config):
     return garch_summary, garch_forecast_values
 
 
-@app.post("/run_pipeline", summary="Execute the entire pipeline")
-def run_pipeline(pipeline_input: PipelineInput):
+@app.post("/v1/run_pipeline", summary="Execute the entire pipeline")
+def run_pipeline_v1(pipeline_input: PipelineInput):
     """Generate data, scale it, test stationarity, then run ARIMA and GARCH.
     Functionality is logic gated by config file."""
 
