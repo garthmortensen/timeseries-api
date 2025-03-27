@@ -19,8 +19,9 @@ from generalized_timeseries import data_generator, data_processor, stats_model
 
 from pydantic import (
     BaseModel,
-)  # BaseModel is for input data validation, ensuring correct data types. helps fail fast and clearly
-from pydantic import Field  # field is for metadata. used here for description
+    Field
+)  # BaseModel is for input data validation, Field is for metadata
+from typing import Dict, List, Optional, Any, Union
 from fastapi import FastAPI, HTTPException  # FastAPI framework's error handling
 from fastapi.responses import JSONResponse
 
@@ -77,6 +78,61 @@ class RoundingJSONResponse(JSONResponse):
         # use the custom encoder for serialization
         return json.dumps(rounded_content, cls=RoundingJSONEncoder).encode()
 
+# =====================================================
+# Response Models - Added for OpenAPI documentation and response validation
+# =====================================================
+
+class TimeSeriesDataResponse(BaseModel):
+    """Response model for time series data endpoints."""
+    data: Dict[str, Dict[str, Any]] = Field(
+        ..., 
+        description="Time series data indexed by date"
+    )
+
+
+class StationarityTestResponse(BaseModel):
+    """Response model for stationarity test results."""
+    adf_statistic: float = Field(..., description="ADF test statistic")
+    p_value: float = Field(..., description="P-value of the test")
+    critical_values: Dict[str, float] = Field(
+        ..., 
+        description="Critical values at different significance levels"
+    )
+    is_stationary: bool = Field(
+        ..., 
+        description="Whether the time series is considered stationary"
+    )
+
+
+class ARIMAModelResponse(BaseModel):
+    """Response model for ARIMA model results."""
+    fitted_model: str = Field(..., description="Summary of the fitted ARIMA model")
+    parameters: Dict[str, float] = Field(..., description="Model parameters")
+    p_values: Dict[str, float] = Field(..., description="P-values for model parameters")
+    forecast: List[float] = Field(..., description="Forecasted values")
+
+
+class GARCHModelResponse(BaseModel):
+    """Response model for GARCH model results."""
+    fitted_model: str = Field(..., description="Summary of the fitted GARCH model")
+    forecast: List[float] = Field(..., description="Forecasted volatility values")
+
+
+class PipelineResponse(BaseModel):
+    """Response model for the complete pipeline."""
+    stationarity_results: StationarityTestResponse = Field(
+        ..., 
+        description="Results of stationarity tests"
+    )
+    arima_summary: str = Field(..., description="ARIMA model summary")
+    arima_forecast: List[float] = Field(..., description="ARIMA model forecast")
+    garch_summary: str = Field(..., description="GARCH model summary")
+    garch_forecast: List[float] = Field(..., description="GARCH model forecast")
+
+# =====================================================
+# FastAPI App initialization
+# =====================================================
+
 # individual endpoints for generate_data, scale_data, etc.
 # as well as end-to-end "run_pipeline" endpoint
 app = FastAPI(
@@ -87,12 +143,14 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/api/openapi.json",
-    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1},  # collapse all models by default
     default_response_class=RoundingJSONResponse  # custom response class for rounding
 )
 
+# =====================================================
+# Input Models
+# =====================================================
 
-# Endpoints: modular
 class DataGenerationInput(BaseModel):
     start_date: str
     end_date: str
@@ -119,10 +177,36 @@ class GARCHInput(BaseModel):
     p: int
     q: int
     data: list
+    dist: Optional[str] = "normal"
 
 
-# Modular endpoints
-@app.post("/generate_data", summary="Generate synthetic time series data")
+# Endpoints: pipeline
+class PipelineInput(BaseModel):
+    # captures all config fields in one place for readability and validation
+    # In pydantic, ... is shorthand for required field. because of Field, this field is required
+    # its like making a required field in a schema or html form
+    start_date: str = Field(
+        ..., description="Start date for data generation (YYYY-MM-DD)"
+    )
+    end_date: str = Field(..., description="End date for data generation (YYYY-MM-DD)")
+    anchor_prices: dict = Field(..., description="Symbol-prices for data generation")
+    scaling_method: str = Field(
+        default=config.data_processor.scaling.method, description="Scaling method"
+    )
+    arima_params: dict = Field(
+        default=config.stats_model.ARIMA.parameters_fit, description="ARIMA parameters"
+    )
+    garch_params: dict = Field(
+        default=config.stats_model.GARCH.parameters_fit, description="GARCH parameters"
+    )
+
+# =====================================================
+# API Endpoints with Response Models
+# =====================================================
+
+@app.post("/generate_data", 
+          summary="Generate synthetic time series data", 
+          response_model=TimeSeriesDataResponse)
 def generate_data(input_data: DataGenerationInput):
     try:
         _, price_df = data_generator.generate_price_series(
@@ -131,7 +215,7 @@ def generate_data(input_data: DataGenerationInput):
             anchor_prices=input_data.anchor_prices,
         )  # _ is shorthand for throwaway variable
 
-        return_data = price_df.to_dict(orient="index")
+        return_data = {"data": price_df.to_dict(orient="index")}
         l.info(f"generate_data() returning:\n{return_data}")
         return return_data
 
@@ -139,7 +223,9 @@ def generate_data(input_data: DataGenerationInput):
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
 
 
-@app.post("/scale_data", summary="Scale time series data")
+@app.post("/scale_data", 
+          summary="Scale time series data", 
+          response_model=TimeSeriesDataResponse)
 def scale_data(input_data: ScalingInput):
     try:
         df = pd.DataFrame(input_data.data)
@@ -148,7 +234,7 @@ def scale_data(input_data: ScalingInput):
             raise HTTPException(status_code=400, detail="Invalid data: 'price' column contains non-numeric values.")
         df_scaled = data_processor.scale_data(df=df, method=input_data.method)
         
-        return_data = df_scaled.to_dict(orient="index")
+        return_data = {"data": df_scaled.to_dict(orient="index")}
         l.info(f"scale_data() returning:\n{return_data}")
         return return_data
 
@@ -156,7 +242,9 @@ def scale_data(input_data: ScalingInput):
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
 
 
-@app.post("/test_stationarity", summary="Test for stationarity")
+@app.post("/test_stationarity", 
+          summary="Test for stationarity", 
+          response_model=StationarityTestResponse)
 def test_stationarity(input_data: StationarityTestInput):
     try:
         df = pd.DataFrame(input_data.data)
@@ -170,7 +258,9 @@ def test_stationarity(input_data: StationarityTestInput):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/run_arima", summary="Run ARIMA model on time series")
+@app.post("/run_arima", 
+          summary="Run ARIMA model on time series", 
+          response_model=ARIMAModelResponse)
 def run_arima_endpoint(input_data: ARIMAInput):
     try:
         df = pd.DataFrame(input_data.data)
@@ -199,7 +289,7 @@ def run_arima_endpoint(input_data: ARIMAInput):
         model_summary = str(model_fit.summary())
         
         results = {
-            "fitted_model": model_summary,  # Added model fit summary
+            "fitted_model": model_summary,
             "parameters": params,
             "p_values": pvalues,
             "forecast": forecast_list
@@ -212,8 +302,9 @@ def run_arima_endpoint(input_data: ARIMAInput):
         raise HTTPException(status_code=500, detail=f"Error running ARIMA model: {str(e)}")
 
 
-
-@app.post("/run_garch", summary="Run GARCH model on time series")
+@app.post("/run_garch", 
+          summary="Run GARCH model on time series", 
+          response_model=GARCHModelResponse)
 def run_garch_endpoint(input_data: GARCHInput):
     try:
         # Create DataFrame from input data
@@ -238,7 +329,7 @@ def run_garch_endpoint(input_data: GARCHInput):
             df_stationary=numeric_df,
             p=input_data.p,
             q=input_data.q,
-            dist=input_data.dist if hasattr(input_data, "dist") else "normal",
+            dist=input_data.dist,
             forecast_steps=forecast_steps
         )
         
@@ -270,25 +361,9 @@ def run_garch_endpoint(input_data: GARCHInput):
         l.error(f"Error running GARCH model: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Endpoints: pipeline
-class PipelineInput(BaseModel):
-    # captures all config fields in one place for readability and validation
-    # In pydantic, ... is shorthand for required field. because of Field, this field is required
-    # its like making a required field in a schema or html form
-    start_date: str = Field(
-        ..., description="Start date for data generation (YYYY-MM-DD)"
-    )
-    end_date: str = Field(..., description="End date for data generation (YYYY-MM-DD)")
-    anchor_prices: dict = Field(..., description="Symbol-prices for data generation")
-    scaling_method: str = Field(
-        default=config.data_processor.scaling.method, description="Scaling method"
-    )
-    arima_params: dict = Field(
-        default=config.stats_model.ARIMA.parameters_fit, description="ARIMA parameters"
-    )
-    garch_params: dict = Field(
-        default=config.stats_model.GARCH.parameters_fit, description="GARCH parameters"
-    )
+# =====================================================
+# Pipeline Step Functions
+# =====================================================
 
 # Step functions - each handles one part of the pipeline
 def generate_data_step(pipeline_input, config):
@@ -419,7 +494,9 @@ def run_garch_step(df_stationary, config):
     return garch_summary, garch_forecast_values
 
 
-@app.post("/v1/run_pipeline", summary="Execute the entire pipeline")
+@app.post("/v1/run_pipeline", 
+          summary="Execute the entire pipeline",
+          response_model=PipelineResponse)
 def run_pipeline_v1(pipeline_input: PipelineInput):
     """Generate data, scale it, test stationarity, then run ARIMA and GARCH.
     Functionality is logic gated by config file."""
@@ -462,5 +539,4 @@ def run_pipeline_v1(pipeline_input: PipelineInput):
 
 
 if __name__ == "__main__":
-
     uvicorn.run(app, host="0.0.0.0", port=8000)

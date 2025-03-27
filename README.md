@@ -18,16 +18,6 @@
 
 TODO: toss vertically into air for the full up and down crash pad effect
 
-TODO: creaet "API specification" or "API contract" to serve as the formal agreement between front-end and back-end communication. I spent the entire day debugging how to consume api data into django (i was reading it as a list, not a dict). wait. that's `openapi.json`. Next, update the OpenAPI specification to include fastapi response_model.
-
-```py
-response_model
-```
-
-Add `response_model` to show how you request, which will feed into openapi.json (/docs, /redoc). also validates response. 
-  1. define a Pydantic model for response
-  2. apply it to an endpoint
-
 TODO: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens.
 
 When a model takes minutes or hours to run, you don't want to keep an HTTP connection open that long. Instead:
@@ -52,6 +42,7 @@ Take pdf writings and convert entirely. Then add supplementary generalized code.
 ## Features
 
 - FastAPI endpoints for time series analysis
+- OpenAPI response model for illustrating API contract
 - ARIMA and GARCH modeling capabilities
 - Data generation, scaling, and stationarity testing
 - Docker containerization
@@ -122,8 +113,9 @@ docker run -d -p 8000:8000 --name timeseries-pipeline-container goattheprofessio
 
 5. Access the API documentation:
 
-   - Swagger UI: http://localhost:8001/docs
+   - Swagger: http://localhost:8001/docs
    - ReDoc: http://localhost:8001/redoc
+   - OpenAPI spec: http://localhost:8001/api/openapi.json
 
 ### Configuration
 
