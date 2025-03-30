@@ -171,6 +171,21 @@ The project uses GitHub Actions for:
 - Building and pushing Docker images
 - Code coverage reporting
 
+## Architecture Decisions
+
+Statistical interpretations could be added to either:
+1. Core computational python package
+   pros: centralized statistical logic, interpretation close to logic making them consistent and sound
+   cons: package scope creep
+2. API layer
+   pros: seperates domain/business logic from computation and presentation logic, centralized for all downstream. 
+   cons: depedency on package, api is more than just data handoff
+3. Frontend
+   pros: -
+   cons: bigger gap between computation and interpretation -> drift. Added frontend complexity.
+
+Hence, maintain seperation of concerns and place interpretation in API. Data layer -> Business layer -> Presentation layer. API is a service that provides complete, consumable info.
+
 ## License
 
 [MIT License](LICENSE). Have at it.
