@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# chronicler.py
+# timeseries-pipeline/utilities/chronicler.py
 
 import logging
 import time

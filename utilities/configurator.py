@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# configurator.py
+# timeseries-pipeline/utilities/configurator.py
 
 import os
 import yaml
