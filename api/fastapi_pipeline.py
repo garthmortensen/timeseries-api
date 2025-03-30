@@ -15,7 +15,16 @@ import json
 
 from utilities.configurator import load_configuration
 from utilities.chronicler import init_chronicler
+
 from generalized_timeseries import data_generator, data_processor, stats_model
+from utilities.interpretation import (
+    interpret_stationarity_test,
+    interpret_arima_results,
+    interpret_garch_results,
+    interpret_conditional_correlation,
+    interpret_conditional_volatility,
+    interpret_portfolio_risk
+)
 
 from pydantic import (
     BaseModel,
@@ -102,6 +111,7 @@ class StationarityTestResponse(BaseModel):
         ..., 
         description="Whether the time series is considered stationary"
     )
+    interpretation: str = Field(..., description="Human-readable interpretation of results")
 
 
 class ARIMAModelResponse(BaseModel):
@@ -241,17 +251,25 @@ def scale_data(input_data: ScalingInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # internal server error
 
-
 @app.post("/test_stationarity", 
           summary="Test for stationarity", 
           response_model=StationarityTestResponse)
 def test_stationarity(input_data: StationarityTestInput):
     try:
+        # Existing code to process data and run tests
         df = pd.DataFrame(input_data.data)
         method = config.data_processor.test_stationarity.method
         results = data_processor.test_stationarity(df=df, method=method)
-
-        l.info(f"test_stationarity() returning:\n{results}")
+        
+        # Add interpretation
+        interpretation = interpret_stationarity_test(
+            results, 
+            p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+        )
+        
+        # Add interpretation to results
+        results["interpretation"] = interpretation
+        
         return results
 
     except Exception as e:
@@ -421,6 +439,15 @@ def test_stationarity_step(df, config):
         p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
     )
     
+    # Add interpretation
+    interpretation = interpret_stationarity_test(
+        stationarity_results, 
+        p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+    )
+    
+    # Add interpretation to results
+    stationarity_results["interpretation"] = interpretation
+    
     return stationarity_results
 
 def run_arima_step(df_stationary, config):
@@ -540,3 +567,4 @@ def run_pipeline_v1(pipeline_input: PipelineInput):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
