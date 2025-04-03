@@ -1,45 +1,43 @@
 # timeseries-pipeline/config/config.yml
 
-metadata:
-  version: 1.0
-  environment: "dev"
+# Metadata
+metadata_version: 1.0
+metadata_environment: "dev"
 
-data_generator:
-  enabled: True
-  random_seed: 1
-  start_date: "2023-01-01"
-  end_date: "2023-02-01"
-  anchor_prices:
-    GME: 150.0
-    BYND: 200.0
-    BYD: 15.0
+# Data Generator
+data_generator_enabled: true
+data_generator_random_seed: 1
+data_generator_start_date: "2023-01-01"
+data_generator_end_date: "2023-02-01"
+data_generator_anchor_prices_GME: 150.0
+data_generator_anchor_prices_BYND: 200.0
+data_generator_anchor_prices_BYD: 15.0
 
-# TODO: add enabled to each step
-data_processor:
-  handle_missing_values:
-    enabled: True
-    strategy: "drop"  # options: drop, forward_fill
-  make_stationary:
-    enabled: True
-    method: "difference"  # options: difference, log
-  test_stationarity:
-    method: "ADF"
-    p_value_threshold: 0.05  # Significance level: p-value below this means the series is stationary
-  scaling:
-    method: "standardize"  # options: standardize, minmax
+# Data Processor - Missing Values
+data_processor_missing_values_enabled: true
+data_processor_missing_values_strategy: "drop"  # options: drop, forward_fill
 
-stats_model:
-  ARIMA:
-    enabled: True
-    parameters_fit:
-      p: 2
-      d: 1
-      q: 4
-    parameters_predict_steps: 3
-  GARCH:
-    enabled: True
-    parameters_fit:
-      p: 1
-      q: 1
-      dist: "t"  # options: normal, t
-    parameters_predict_steps: 3
+# Data Processor - Stationary
+data_processor_stationary_enabled: true
+data_processor_stationary_method: "difference"  # options: difference, log
+
+# Data Processor - Stationarity Test
+data_processor_stationarity_test_method: "ADF"
+data_processor_stationarity_test_p_value_threshold: 0.05
+
+# Data Processor - Scaling
+data_processor_scaling_method: "standardize"  # options: standardize, minmax
+
+# ARIMA Model
+stats_model_ARIMA_enabled: true
+stats_model_ARIMA_fit_p: 2
+stats_model_ARIMA_fit_d: 1
+stats_model_ARIMA_fit_q: 4
+stats_model_ARIMA_predict_steps: 3
+
+# GARCH Model
+stats_model_GARCH_enabled: true
+stats_model_GARCH_fit_p: 1
+stats_model_GARCH_fit_q: 1
+stats_model_GARCH_fit_dist: "t"  # options: normal, t
+stats_model_GARCH_predict_steps: 3
