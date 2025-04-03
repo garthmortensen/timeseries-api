@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# # timeseries-pipeline/api/routers/data.py
+"""Data generation and transformation API endpoints.
+This module contains the API endpoints for generating synthetic time series data, scaling time series data, and testing for stationarity.
+"""
+
+import logging as l
+import pandas as pd
+from fastapi import APIRouter, HTTPException
+
+from generalized_timeseries import data_generator, data_processor
+from api.models.input import DataGenerationInput, ScalingInput, StationarityTestInput
+from api.models.response import TimeSeriesDataResponse, StationarityTestResponse
+from api.services.interpretations import interpret_stationarity_test
+
+# Get the application configuration
+from utilities.configurator import load_configuration
+config = load_configuration("config.yml")
+
+router = APIRouter(tags=["Data Operations"])
+
+
+@router.post("/generate_data", 
+          summary="Generate synthetic time series data", 
+          response_model=TimeSeriesDataResponse)
+async def generate_data(input_data: DataGenerationInput):
+    """Generate synthetic time series data based on input parameters."""
+    try:
+        _, price_df = data_generator.generate_price_series(
+            start_date=input_data.start_date,
+            end_date=input_data.end_date,
+            anchor_prices=input_data.anchor_prices,
+        )  # _ is shorthand for throwaway variable
+
+        return_data = {"data": price_df.to_dict(orient="index")}
+        l.info(f"generate_data() returning {len(return_data['data'])} data points")
+        return return_data
+
+    except Exception as e:
+        l.error(f"Error generating data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/scale_data", 
+          summary="Scale time series data", 
+          response_model=TimeSeriesDataResponse)
+async def scale_data(input_data: ScalingInput):
+    """Scale time series data using specified method."""
+    try:
+        df = pd.DataFrame(input_data.data)
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+        if df['price'].isnull().any():
+            raise HTTPException(
+                status_code=400, 
+                detail="Invalid data: 'price' column contains non-numeric values."
+            )
+        
+        df_scaled = data_processor.scale_data(df=df, method=input_data.method)
+        
+        return_data = {"data": df_scaled.to_dict(orient="index")}
+        l.info(f"scale_data() returning {len(return_data['data'])} data points")
+        return return_data
+
+    except Exception as e:
+        l.error(f"Error scaling data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/test_stationarity", 
+          summary="Test for stationarity", 
+          response_model=StationarityTestResponse)
+async def test_stationarity(input_data: StationarityTestInput):
+    """Test stationarity of time series data."""
+    try:
+        # Process data and run tests
+        df = pd.DataFrame(input_data.data)
+        method = config.data_processor.test_stationarity.method
+        results = data_processor.test_stationarity(df=df, method=method)
+        
+        # Add interpretation
+        interpretation = interpret_stationarity_test(
+            results, 
+            p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+        )
+        
+        # Add interpretation to results
+        results["interpretation"] = interpretation
+        
+        l.info(f"test_stationarity() returning results with interpretation")
+        return results
+
+    except Exception as e:
+        l.error(f"Error testing stationarity: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

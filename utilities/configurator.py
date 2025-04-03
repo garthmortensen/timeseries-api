@@ -4,11 +4,9 @@
 import os
 import yaml
 import logging as l
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 from typing import Dict, Any
 
-
-# Dict[str, Any] bc the config file's structure is unknown
 def read_config_from_fs(config_filename: str) -> Dict[str, Any]:
     """
     Load a YAML configuration file from the config directory.
@@ -24,97 +22,54 @@ def read_config_from_fs(config_filename: str) -> Dict[str, Any]:
         try:
             contents = yaml.safe_load(f)
             l.info(f"yml contents:\n{contents}")
-        except ValidationError as e:  # if the yml is not valid
-            l.info(f"Validation error: {e}")
-        return contents
-
-
-class DataGeneratorConfig(BaseModel):
-    enabled: bool = Field(default=True)  # New field to capture "enabled" parameter
-    start_date: str = Field(default="2023-01-01")
-    end_date: str = Field(default="2023-12-31")
-    anchor_prices: Dict[str, float] = Field(default_factory=dict)
-
-
-class MissingDataHandlerConfig(BaseModel):
-    enabled: bool = Field(default=True)
-    strategy: str = Field(default="forward_fill")
-
-
-class ScalingConfig(BaseModel):
-    enabled: bool = Field(default=True)
-    method: str = Field(default="standardize")
-
-
-class MakeStationarityConfig(BaseModel):
-    enabled: bool = Field(default=True)
-    method: str = Field(default="difference")
-
-
-class TestStationarityConfig(BaseModel):
-    method: str = Field(default="ADF")
-    p_value_threshold: float = Field(default=0.05)
-
-
-class DataProcessorConfig(BaseModel):
-    handle_missing_values: MissingDataHandlerConfig = Field(
-        default_factory=MissingDataHandlerConfig
-    )
-    make_stationary: MakeStationarityConfig = Field(
-        default_factory=MakeStationarityConfig
-    )
-    test_stationarity: TestStationarityConfig = Field(
-        default_factory=TestStationarityConfig
-    )
-    scaling: ScalingConfig = Field(default_factory=ScalingConfig)
-
-
-class ARIMAParametersFitConfig(BaseModel):
-    p: int = Field(default=1)
-    d: int = Field(default=1)
-    q: int = Field(default=1)
-
-
-class ARIMAConfig(BaseModel):
-    enabled: bool = Field(default=False)
-    parameters_fit: ARIMAParametersFitConfig = Field(
-        default_factory=ARIMAParametersFitConfig
-    )
-    parameters_predict_steps: int = Field(default=5)
-
-
-# because this section is nested in the json, we need to define a separate class for it
-class GARCHParametersFitConfig(BaseModel):
-    p: int = Field(default=1)
-    q: int = Field(default=1)
-    dist: str = Field(default="normal")
-
-
-class GARCHConfig(BaseModel):
-    enabled: bool = Field(default=False)
-    parameters_fit: GARCHParametersFitConfig = Field(
-        default_factory=GARCHParametersFitConfig
-    )
-    parameters_predict_steps: int = Field(default=5)
-
-
-class StatsModelConfig(BaseModel):
-    ARIMA: ARIMAConfig = Field(default_factory=ARIMAConfig)
-    GARCH: GARCHConfig = Field(default_factory=GARCHConfig)
-
+            return contents
+        except Exception as e:
+            l.error(f"Error loading config: {e}")
+            raise
 
 class Config(BaseModel):
-    """
-    This class defines the configuration file structure.
-    It's instantiated and returned by the load_configuration function.
-    `data_generator` becomes part of the drill down to access the start_date, end_date, and anchor_prices.
-    `default_factory` is pydantic field simpy for specifying default values.
-    """
-
-    data_generator: DataGeneratorConfig = Field(default_factory=DataGeneratorConfig)
-    data_processor: DataProcessorConfig = Field(default_factory=DataProcessorConfig)
-    stats_model: StatsModelConfig = Field(default_factory=StatsModelConfig)
-
+    """Flat configuration structure using Pydantic for validation."""
+    # Metadata
+    metadata_version: float = Field(default=1.0)
+    metadata_environment: str = Field(default="dev")
+    
+    # Data Generator
+    data_generator_enabled: bool = Field(default=True)
+    data_generator_random_seed: int = Field(default=1)
+    data_generator_start_date: str = Field(default="2023-01-01")
+    data_generator_end_date: str = Field(default="2023-12-31")
+    data_generator_anchor_prices_GME: float = Field(default=150.0)
+    data_generator_anchor_prices_BYND: float = Field(default=200.0)
+    data_generator_anchor_prices_BYD: float = Field(default=15.0)
+    
+    # Data Processor - Missing Values
+    data_processor_missing_values_enabled: bool = Field(default=True)
+    data_processor_missing_values_strategy: str = Field(default="forward_fill")
+    
+    # Data Processor - Stationary
+    data_processor_stationary_enabled: bool = Field(default=True)
+    data_processor_stationary_method: str = Field(default="difference")
+    
+    # Data Processor - Stationarity Test
+    data_processor_stationarity_test_method: str = Field(default="ADF")
+    data_processor_stationarity_test_p_value_threshold: float = Field(default=0.05)
+    
+    # Data Processor - Scaling
+    data_processor_scaling_method: str = Field(default="standardize")
+    
+    # ARIMA Model
+    stats_model_ARIMA_enabled: bool = Field(default=False)
+    stats_model_ARIMA_fit_p: int = Field(default=1)
+    stats_model_ARIMA_fit_d: int = Field(default=1)
+    stats_model_ARIMA_fit_q: int = Field(default=1)
+    stats_model_ARIMA_predict_steps: int = Field(default=5)
+    
+    # GARCH Model
+    stats_model_GARCH_enabled: bool = Field(default=False)
+    stats_model_GARCH_fit_p: int = Field(default=1)
+    stats_model_GARCH_fit_q: int = Field(default=1)
+    stats_model_GARCH_fit_dist: str = Field(default="normal")
+    stats_model_GARCH_predict_steps: int = Field(default=5)
 
 def load_configuration(config_file: str) -> Config:
     """
@@ -127,6 +82,5 @@ def load_configuration(config_file: str) -> Config:
         Config: The validated configuration object.
     """
     l.info(f"# Loading config_file: {config_file}")
-    # config_dict: Dict[str, Any] = read_config_from_fs(config_file)
     config_dict = read_config_from_fs(config_file)
-    return Config(**config_dict)  # ** unpacks the dictionary into keyword args
+    return Config(**config_dict)

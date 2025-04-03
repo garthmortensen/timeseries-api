@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/utilities/interpretation.py
+# timeseries-pipeline/api/services/interpretations.py
 
 """
 Module for interpreting statistical results from time series analyses.
@@ -10,10 +10,6 @@ import logging
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, List, Tuple, Optional, Union
-
-# handle relative directory imports for chronicler
-import logging as l
-from utilities.chronicler import init_chronicler
 
 
 def interpret_correlation(corr_value: float) -> str:
@@ -496,6 +492,3 @@ def interpret_garch_results(
         interpretations[column] = f"{model_desc} {persistence_desc} {terms_desc} {forecast_trend}"
     
     return interpretations
-
-
-

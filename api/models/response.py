@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# # timeseries-pipeline/api/models/response.py
+"""Response Pydantic models for API response validation.
+This module contains Pydantic models for validating API response data.
+"""
+
+from pydantic import BaseModel, Field
+from typing import Dict, List, Any
+
+
+class TimeSeriesDataResponse(BaseModel):
+    """Response model for time series data endpoints."""
+    data: Dict[str, Dict[str, Any]] = Field(
+        ..., 
+        description="Time series data indexed by date"
+    )
+
+
+class StationarityTestResponse(BaseModel):
+    """Response model for stationarity test results."""
+    adf_statistic: float = Field(..., description="ADF test statistic")
+    p_value: float = Field(..., description="P-value of the test")
+    critical_values: Dict[str, float] = Field(
+        ..., 
+        description="Critical values at different significance levels"
+    )
+    is_stationary: bool = Field(
+        ..., 
+        description="Whether the time series is considered stationary"
+    )
+    interpretation: str = Field(..., description="Human-readable interpretation of results")
+
+
+class ARIMAModelResponse(BaseModel):
+    """Response model for ARIMA model results."""
+    fitted_model: str = Field(..., description="Summary of the fitted ARIMA model")
+    parameters: Dict[str, float] = Field(..., description="Model parameters")
+    p_values: Dict[str, float] = Field(..., description="P-values for model parameters")
+    forecast: List[float] = Field(..., description="Forecasted values")
+
+
+class GARCHModelResponse(BaseModel):
+    """Response model for GARCH model results."""
+    fitted_model: str = Field(..., description="Summary of the fitted GARCH model")
+    forecast: List[float] = Field(..., description="Forecasted volatility values")
+
+
+class PipelineResponse(BaseModel):
+    """Response model for the complete pipeline."""
+    stationarity_results: StationarityTestResponse = Field(
+        ..., 
+        description="Results of stationarity tests"
+    )
+    arima_summary: str = Field(..., description="ARIMA model summary")
+    arima_forecast: List[float] = Field(..., description="ARIMA model forecast")
+    garch_summary: str = Field(..., description="GARCH model summary")
+    garch_forecast: List[float] = Field(..., description="GARCH model forecast")

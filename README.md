@@ -16,11 +16,13 @@
          ▐▌  ▗▄█▄▖▐▌   ▐▙▄▄▖▐▙▄▄▖▗▄█▄▖▐▌  ▐▌▐▙▄▄▖
 ```
 
-TODO: toss vertically into air for the full up and down crash pad effect
+TODO: generate diagrams with pyreverse. this project is complex and requires info to make it more understandable
 
-TODO NOT: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens. I'm not doing this because of increased complexity and project scope.
+TODO: Add mermaid visuals
 
-Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
+REJECTED: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens. I'm not doing this because of increased complexity and project scope.
+
+WIP: Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
 
 Take pdf writings and convert entirely. Then add supplementary generalized code.
 
@@ -189,3 +191,11 @@ Hence, maintain seperation of concerns and place interpretation in API. Data lay
 ## License
 
 [MIT License](LICENSE). Have at it.
+
+## mermaid attempt
+
+```mermaid
+flowchart LR
+    Input[/"Input Data\nParameters"/]
+```
+

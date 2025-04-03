@@ -38,7 +38,7 @@ docker-rm:
 .PHONY: run-local
 run-local:
 	$(PYTHON) -m pip install -q fastapi uvicorn
-	uvicorn api.fastapi_pipeline:app --host 0.0.0.0 --port $(API_PORT) --reload
+	uvicorn api.app:app --host 0.0.0.0 --port $(API_PORT) --reload
 
 .PHONY: run-cli
 run-cli:
