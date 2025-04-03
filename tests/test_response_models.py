@@ -7,7 +7,10 @@ from fastapi.testclient import TestClient
 
 # Add the parent directory to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from api.fastapi_pipeline import app, GARCHModelResponse
+
+# Import from app.py instead of fastapi_pipeline
+from api.app import app
+from api.models.response import GARCHModelResponse
 
 client = TestClient(app)
 
@@ -30,7 +33,7 @@ def test_run_garch_response_model(sample_data):
         "data": sample_data
     }
     
-    response = client.post("/run_garch", json=input_data)
+    response = client.post("/api/run_garch", json=input_data)
     assert response.status_code == 200
     
     # Check that the response has the expected structure

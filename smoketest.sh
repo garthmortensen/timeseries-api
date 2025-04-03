@@ -61,7 +61,7 @@ test_1_payload='{
     "BP": 15.0
   }
 }'
-run_test "/generate_data" "Generate synthetic time series data" "$test_1_payload"
+run_test "/api/generate_data" "Generate synthetic time series data" "$test_1_payload"
 test_1_result=$?
 
 # Test 2: Scale Data
@@ -76,7 +76,7 @@ test_2_payload='{
     {"date": "2023-01-05", "price": 104}
   ]
 }'
-run_test "/scale_data" "Scale time series data" "$test_2_payload"
+run_test "/api/scale_data" "Scale time series data" "$test_2_payload"
 test_2_result=$?
 
 # Test 3: Test Stationarity
@@ -90,7 +90,7 @@ test_3_payload='{
     {"date": "2023-01-05", "price": 104}
   ]
 }'
-run_test "/test_stationarity" "Test for stationarity" "$test_3_payload"
+run_test "/api/test_stationarity" "Test for stationarity" "$test_3_payload"
 test_3_result=$?
 
 # Test 4: Run ARIMA
@@ -112,7 +112,7 @@ test_4_payload='{
     {"date": "2023-01-10", "price": 109}
   ]
 }'
-run_test "/run_arima" "Run ARIMA model on time series" "$test_4_payload"
+run_test "/api/run_arima" "Run ARIMA model on time series" "$test_4_payload"
 test_4_result=$?
 
 # Test 5: Run GARCH
@@ -133,7 +133,7 @@ test_5_payload='{
     {"date": "2023-01-10", "price": 109}
   ]
 }'
-run_test "/run_garch" "Run GARCH model on time series" "$test_5_payload"
+run_test "/api/run_garch" "Run GARCH model on time series" "$test_5_payload"
 test_5_result=$?
 
 # Test 6: Run Complete Pipeline
@@ -158,7 +158,7 @@ test_6_payload='{
     "dist": "t"
   }
 }'
-run_test "/run_pipeline" "Execute the entire pipeline" "$test_6_payload"
+run_test "/api/v1/run_pipeline" "Execute the entire pipeline" "$test_6_payload"
 test_6_result=$?
 
 # Summary
@@ -181,4 +181,3 @@ else
   echo -e "${RED}Some tests failed. Check the logs above for details.${NC}"
   exit 1
 fi
-

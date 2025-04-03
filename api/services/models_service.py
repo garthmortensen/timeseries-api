@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # timeseries-pipeline/api/services/models_service.py
 """Statistical model service functions.
-Thi module contains functions to run statistical models on time series data.
+This module contains functions to run statistical models on time series data.
 """
 
 import logging as l
@@ -22,16 +22,16 @@ def run_arima_step(df_stationary, config):
     Returns:
         tuple: (arima_summary, arima_forecast_values)
     """
-    if not config.stats_model.ARIMA.enabled:
+    if not config.stats_model_ARIMA_enabled:
         return "ARIMA not enabled", []
     
     try:
         arima_fits, arima_forecasts = stats_model.run_arima(
             df_stationary=df_stationary,
-            p=config.stats_model.ARIMA.parameters_fit.p,
-            d=config.stats_model.ARIMA.parameters_fit.d,
-            q=config.stats_model.ARIMA.parameters_fit.q,
-            forecast_steps=config.stats_model.ARIMA.parameters_predict_steps
+            p=config.stats_model_ARIMA_fit_p,
+            d=config.stats_model_ARIMA_fit_d,
+            q=config.stats_model_ARIMA_fit_q,
+            forecast_steps=config.stats_model_ARIMA_predict_steps
         )
         
         if not arima_fits or len(arima_fits) <= 0:
@@ -72,16 +72,16 @@ def run_garch_step(df_stationary, config):
     Returns:
         tuple: (garch_summary, garch_forecast_values)
     """
-    if not config.stats_model.GARCH.enabled:
+    if not config.stats_model_GARCH_enabled:
         return "GARCH not enabled", []
     
     try:
         garch_fits, garch_forecasts = stats_model.run_garch(
             df_stationary=df_stationary,
-            p=config.stats_model.GARCH.parameters_fit.p,
-            q=config.stats_model.GARCH.parameters_fit.q,
-            dist=config.stats_model.GARCH.parameters_fit.dist,
-            forecast_steps=config.stats_model.GARCH.parameters_predict_steps
+            p=config.stats_model_GARCH_fit_p,
+            q=config.stats_model_GARCH_fit_q,
+            dist=config.stats_model_GARCH_fit_dist,
+            forecast_steps=config.stats_model_GARCH_predict_steps
         )
         
         if not garch_fits or len(garch_fits) <= 0:

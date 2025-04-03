@@ -4,20 +4,19 @@ import pytest
 import yaml
 from utilities.configurator import (
     read_config_from_fs,
-    MissingDataHandlerConfig,
-    ScalingConfig,
+    Config
 )
 
 sample_config = {
-    "data_generator": {
-        "start_date": "2023-01-01",
-        "end_date": "2023-12-31",
-        "anchor_prices": {"GME": 150.5, "BYND": 700.0},
-    },
-    "data_processor": {
-        "handle_missing_values": {"strategy": "drop"},
-        "scaling": {"method": "standardize"},
-    },
+    "metadata_version": 1.0,
+    "metadata_environment": "dev",
+    "data_generator_enabled": True,
+    "data_generator_start_date": "2023-01-01",
+    "data_generator_end_date": "2023-12-31",
+    "data_generator_anchor_prices_GME": 150.5,
+    "data_generator_anchor_prices_BYND": 700.0,
+    "data_processor_missing_values_strategy": "drop",
+    "data_processor_scaling_method": "standardize",
 }
 
 
@@ -32,16 +31,13 @@ def config_file(tmp_path):
 
 def test_read_config_from_fs(config_file):
     config = read_config_from_fs(config_file)
-    assert config["data_generator"]["start_date"] == "2023-01-01"
-    assert config["data_generator"]["end_date"] == "2023-12-31"
-    assert config["data_generator"]["anchor_prices"]["GME"] == 150.5
+    assert config["data_generator_start_date"] == "2023-01-01"
+    assert config["data_generator_end_date"] == "2023-12-31"
+    assert config["data_generator_anchor_prices_GME"] == 150.5
 
 
-def test_missing_data_handler_config():
-    config = MissingDataHandlerConfig(strategy="forward_fill")
-    assert config.strategy == "forward_fill"
-
-
-def test_scaling_config():
-    config = ScalingConfig(method="standardize")
-    assert config.method == "standardize"
+def test_config_model():
+    config = Config(**sample_config)
+    assert config.data_generator_start_date == "2023-01-01"
+    assert config.data_processor_missing_values_strategy == "drop"
+    assert config.data_generator_anchor_prices_GME == 150.5

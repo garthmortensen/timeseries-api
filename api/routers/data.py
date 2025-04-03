@@ -6,7 +6,7 @@ This module contains the API endpoints for generating synthetic time series data
 
 import logging as l
 import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from generalized_timeseries import data_generator, data_processor
 from api.models.input import DataGenerationInput, ScalingInput, StationarityTestInput
@@ -15,9 +15,13 @@ from api.services.interpretations import interpret_stationarity_test
 
 # Get the application configuration
 from utilities.configurator import load_configuration
-config = load_configuration("config.yml")
-
+ 
+# Create router
 router = APIRouter(tags=["Data Operations"])
+
+# Dependency to get config
+def get_config():
+    return load_configuration("config.yml")
 
 
 @router.post("/generate_data", 
@@ -69,18 +73,18 @@ async def scale_data(input_data: ScalingInput):
 @router.post("/test_stationarity", 
           summary="Test for stationarity", 
           response_model=StationarityTestResponse)
-async def test_stationarity(input_data: StationarityTestInput):
+async def test_stationarity(input_data: StationarityTestInput, config=Depends(get_config)):
     """Test stationarity of time series data."""
     try:
         # Process data and run tests
         df = pd.DataFrame(input_data.data)
-        method = config.data_processor.test_stationarity.method
+        method = config.data_processor_stationarity_test_method
         results = data_processor.test_stationarity(df=df, method=method)
         
         # Add interpretation
         interpretation = interpret_stationarity_test(
             results, 
-            p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+            p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
         
         # Add interpretation to results

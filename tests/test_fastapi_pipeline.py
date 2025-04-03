@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 # Add the parent directory to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from api.fastapi_pipeline import app
+from api.app import app  # Import from app.py instead of fastapi_pipeline
 
 client = TestClient(app)
 
@@ -78,7 +78,7 @@ def test_run_pipeline_input():
 
 def test_generate_data(data_generation_input):
     """Test the /generate_data endpoint."""
-    response = client.post("/generate_data", json=data_generation_input)
+    response = client.post("/api/generate_data", json=data_generation_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert isinstance(data, dict)
@@ -86,7 +86,7 @@ def test_generate_data(data_generation_input):
 
 def test_scale_data(test_scale_data_input):
     """Test the /scale_data endpoint."""
-    response = client.post("/scale_data", json=test_scale_data_input)
+    response = client.post("/api/scale_data", json=test_scale_data_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert isinstance(data, dict)
@@ -94,7 +94,7 @@ def test_scale_data(test_scale_data_input):
 
 def test_test_stationarity(test_stationarity_input):
     """Test the /test_stationarity endpoint."""
-    response = client.post("/test_stationarity", json=test_stationarity_input)
+    response = client.post("/api/test_stationarity", json=test_stationarity_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     # Validate response structure based on your implementation
@@ -102,7 +102,7 @@ def test_test_stationarity(test_stationarity_input):
 
 def test_run_arima(test_arima_input):
     """Test the /run_arima endpoint."""
-    response = client.post("/run_arima", json=test_arima_input)
+    response = client.post("/api/run_arima", json=test_arima_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert "fitted_model" in data
@@ -110,7 +110,7 @@ def test_run_arima(test_arima_input):
 
 def test_run_garch(test_garch_input):
     """Test the /run_garch endpoint."""
-    response = client.post("/run_garch", json=test_garch_input)
+    response = client.post("/api/run_garch", json=test_garch_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert "fitted_model" in data
@@ -118,7 +118,7 @@ def test_run_garch(test_garch_input):
 
 def test_run_pipeline(test_run_pipeline_input):
     """Test the /run_pipeline endpoint."""
-    response = client.post("/run_pipeline", json=test_run_pipeline_input)
+    response = client.post("/api/v1/run_pipeline", json=test_run_pipeline_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert "stationarity_results" in data

@@ -25,17 +25,24 @@ def generate_data_step(pipeline_input, config):
     Raises:
         HTTPException: If data generation is disabled or fails
     """
-    if not config.data_generator.enabled:
+    if not config.data_generator_enabled:
         raise HTTPException(
             status_code=400,
             detail="Data generation is disabled in the configuration.",
         )
     
     try:
+        # Build anchor_prices dictionary from flat config fields
+        anchor_prices = {
+            "GME": config.data_generator_anchor_prices_GME,
+            "BYND": config.data_generator_anchor_prices_BYND,
+            "BYD": config.data_generator_anchor_prices_BYD,
+        }
+        
         _, df = data_generator.generate_price_series(
             start_date=pipeline_input.start_date,
             end_date=pipeline_input.end_date,
-            anchor_prices=pipeline_input.anchor_prices,
+            anchor_prices=pipeline_input.anchor_prices or anchor_prices,  # TODO: replace this implementation with the one in the pipeline_input
         )
         return df
     except Exception as e:
@@ -56,10 +63,10 @@ def fill_missing_data_step(df, config):
     Returns:
         pandas.DataFrame: Data frame with filled missing values
     """
-    if config.data_processor.handle_missing_values.enabled:
+    if config.data_processor_missing_values_enabled:
         return data_processor.fill_data(
             df=df, 
-            strategy=config.data_processor.handle_missing_values.strategy
+            strategy=config.data_processor_missing_values_strategy
         )
     return df
 
@@ -74,12 +81,10 @@ def scale_data_step(df, config):
     Returns:
         pandas.DataFrame: Scaled data frame
     """
-    if config.data_processor.scaling.enabled:
-        return data_processor.scale_data(
-            df=df, 
-            method=config.data_processor.scaling.method
-        )
-    return df
+    return data_processor.scale_data(
+        df=df, 
+        method=config.data_processor_scaling_method
+    )
 
 
 def stationarize_data_step(df, config):
@@ -92,10 +97,10 @@ def stationarize_data_step(df, config):
     Returns:
         pandas.DataFrame: Stationary data frame
     """
-    if config.data_processor.make_stationary.enabled:
+    if config.data_processor_stationary_enabled:
         return data_processor.stationarize_data(
             df=df, 
-            method=config.data_processor.make_stationary.method
+            method=config.data_processor_stationary_method
         )
     return df
 
@@ -113,19 +118,19 @@ def test_stationarity_step(df, config):
     try:
         stationarity_results = data_processor.test_stationarity(
             df=df, 
-            method=config.data_processor.test_stationarity.method
+            method=config.data_processor_stationarity_test_method
         )
         
         # Log stationarity results
         data_processor.log_stationarity(
             adf_results=stationarity_results,
-            p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+            p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
         
         # Add interpretation
         interpretation = interpret_stationarity_test(
             stationarity_results, 
-            p_value_threshold=config.data_processor.test_stationarity.p_value_threshold
+            p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
         
         # Add interpretation to results
