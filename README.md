@@ -5,6 +5,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/dashboard)
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-pipeline--timeseries-blue)](https://hub.docker.com/r/goattheprofessionalmeower/timeseries-pipeline)
 
+## Overview
+
 ```ascii
    ▗▄▄▄▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖ ▗▄▄▖▗▄▄▄▖▗▄▄▖ ▗▄▄▄▖▗▄▄▄▖ ▗▄▄▖
      █    █  ▐▛▚▞▜▌▐▌   ▐▌   ▐▌   ▐▌ ▐▌  █  ▐▌   ▐▌   
@@ -16,19 +18,11 @@
          ▐▌  ▗▄█▄▖▐▌   ▐▙▄▄▖▐▙▄▄▖▗▄█▄▖▐▌  ▐▌▐▙▄▄▖
 ```
 
-TODO: generate diagrams with pyreverse. this project is complex and requires info to make it more understandable
+A production-grade FastAPI pipeline for time series analysis with ARIMA and GARCH modeling.
 
-TODO: Add mermaid visuals
+This project provides both a web API and CLI interface for financial and econometric data analysis.
 
-TODO: Fix failed pytest and smoketest stemming from flattening of config
-
-REJECTED: Add async webhooks. Webhooks are HTTP callbacks that are triggered by specific events. They're a way to notify other systems when something happens. I'm not doing this because of increased complexity and project scope.
-
-WIP: Reproduce [thesis work](https://github.com/garthmortensen/finance/tree/master/15_thesis) as a production-grade api pipeline.
-
-Take pdf writings and convert entirely. Then add supplementary generalized code.
-
-## Features
+### Features
 
 - FastAPI endpoints for time series analysis
 - OpenAPI response model for illustrating API contract
@@ -38,7 +32,31 @@ Take pdf writings and convert entirely. Then add supplementary generalized code.
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
+### Architectural Overview
+
+```mermaid
+flowchart TB
+    %% Styling
+    classDef person fill:#08427B,color:#fff,stroke:#052E56,stroke-width:1px
+    classDef system fill:#1168BD,color:#fff,stroke:#0B4884,stroke-width:1px
+    classDef external fill:#999999,color:#fff,stroke:#6B6B6B,stroke-width:1px
+    
+    %% Actors and Systems
+    User((User)):::person
+    TimeSeriesPipeline[Time Series Pipeline]:::system
+    ExternalDataSource[(External Data Source)]:::external
+    ExistingAnalysisTool[Existing Analysis Tools]:::external
+    
+    %% Relationships
+    User -- "Uploads data, requests analysis" --> TimeSeriesPipeline
+    TimeSeriesPipeline -- "Returns results and forecasts" --> User
+    ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
+    TimeSeriesPipeline -- "Can export results to" --> ExistingAnalysisTool
+```
+
 ## Quick Start
+
+### Docker
 
 Pull the Docker image:
 
@@ -49,26 +67,8 @@ docker pull goattheprofessionalmeower/timeseries-pipeline
 Run the container:
 
 ```bash
-docker run -d -p 8000:8000 --name timeseries-pipeline-container goattheprofessionalmeower/timeseries-pipeline:latest
+docker run -d -p 8001:8001 --name timeseries-pipeline-container goattheprofessionalmeower/timeseries-pipeline:latest
 ```
-
-## API Endpoints
-
-| Endpoint | HTTP Verb | Description |
-|----------|-----------|-------------|
-| `/generate_data` | POST | Generate synthetic time series data |
-| `/scale_data` | POST | Scale time series data |
-| `/test_stationarity` | POST | Test for stationarity |
-| `/run_arima` | POST | Run ARIMA model on time series |
-| `/run_garch` | POST | Run GARCH model on time series |
-| `/run_pipeline` | POST | Execute the full pipeline |
-
-## Development
-
-### Prerequisites
-
-- Python 3.11+
-- Docker (optional)
 
 ### Local Setup
 
@@ -95,31 +95,78 @@ docker run -d -p 8000:8000 --name timeseries-pipeline-container goattheprofessio
 4. Run the FastAPI app:
 
    ```bash
-   python -m fastapi_pipeline.py
+   python -m fastapi_pipeline
    # or
    make run-local
    ```
 
-5. Access the API documentation:
+### API Endpoints
 
-   - Swagger: http://localhost:8001/docs
-   - ReDoc: http://localhost:8001/redoc
-   - OpenAPI spec: http://localhost:8001/api/openapi.json
+| Endpoint | HTTP Verb | Description |
+|----------|-----------|-------------|
+| `/generate_data` | POST | Generate synthetic time series data |
+| `/scale_data` | POST | Scale time series data |
+| `/test_stationarity` | POST | Test for stationarity |
+| `/run_arima` | POST | Run ARIMA model on time series |
+| `/run_garch` | POST | Run GARCH model on time series |
+| `/run_pipeline` | POST | Execute the full pipeline |
+
+API docs:
+
+- Swagger: http://localhost:8001/docs
+- ReDoc: http://localhost:8001/redoc
+- OpenAPI spec: http://localhost:8001/api/openapi.json
 
 ### Configuration
 
-The application uses a YAML configuration file at `config/config.yml`. You can customize:
+The application uses YAML configuration file `config/config.yml` to set:
 
 - Data generation parameters
 - Data processing strategies
 - Model parameters for ARIMA and GARCH
+
+## Development
+
+### Project Structure
+
+```text
+timeseries-pipeline/.........
+├── cli_pipeline.py         # for running the full pipeline from the terminal without API
+├── fastapi_pipeline.py     # for starting the API server with uvicorn
+├── Makefile                # for automating common tasks
+├── smoketest.sh            # for quickly verifying API endpoints are functional after deployment
+├── config/..................
+│ └── config.yml            # for centralizing all pipeline parameters in one YAML file
+├── api/.....................
+│ ├── models/               # Pydantic API models, for data validation and documentation
+│ │ ├── input.py            # Input validation models, for validating and documenting request data schemas
+│ │ └── response.py         # Response models, for defining and validating API response formats
+│ ├── routers/              # API endpoints by category
+│ │ ├── data.py             # Data endpoints, for data generation and transformation operations
+│ │ ├── models.py           # Stat models endpoints, for running ARIMA and GARCH modeling
+│ │ └── pipeline.py         # End-to-end pipeline endpoint, for executing the complete analysis workflow
+│ ├── services/             # Business logic implementation, for separating core logic from API handlers
+│ │ ├── data_service.py     # Data processing services, for data generation, scaling, and stationarity tests
+│ │ ├── interpretations.py  # Stat interpretations, for creating human-readable model insights
+│ │ └── models_service.py   # Model training services, for running stat models on time series data
+│ ├── utils/ # API utilities
+│ │ └── json_handling.py    # JSON serialization utilities, for handling special cases like NaN values (MacOS issues)
+│ └── app.py                # FastAPI app initialization, for configuring the API and registering routers
+├── utilities/...............
+│ ├── chronicler.py         # Logging utils, for standardized logging across the application
+│ └── configurator.py       # Configuration utils, for loading and validating the YAML config
+├── tests/...................
+└── .github/.................
+  └── workflows/
+    └── cicd.yml            # CI/CD pipeline configuration, for automated testing and Docker image deployment
+```
 
 ### Testing
 
 Run smoke tests (after launching app):
 
 ```bash
-./smoketest.sh
+bash smoketest.sh
 ```
 
 Run the test suite:
@@ -128,7 +175,7 @@ Run the test suite:
 pytest .
 ```
 
-## Docker
+### Docker
 
 Build the Docker image:
 
@@ -148,26 +195,7 @@ For interactive shell:
 make docker-run-interactive
 ```
 
-## Project Structure
-
-```
-timeseries-pipeline/
-├── api/                    # API implementation
-│   ├── cli_pipeline.py     # Command-line interface
-│   └── fastapi_pipeline.py # FastAPI implementation
-├── config/                 # Configuration files
-│   └── config.yml          # Main configuration
-├── tests/                  # Test suite
-├── utilities/              # Utility modules
-│   ├── chronicler.py       # Logging utilities
-│   └── configurator.py     # Configuration utilities
-├── .github/                # GitHub Actions workflows
-├── Dockerfile              # Docker configuration
-├── Makefile                # Development shortcuts
-└── smoketest.sh            # API smoke tests
-```
-
-## CI/CD Pipeline
+### CI/CD Pipeline
 
 The project uses GitHub Actions for:
 
@@ -175,7 +203,7 @@ The project uses GitHub Actions for:
 - Building and pushing Docker images
 - Code coverage reporting
 
-## Architecture Decisions
+### Architecture Decisions (late addition)
 
 Statistical interpretations could be added to either:
 1. Core computational python package
@@ -190,37 +218,13 @@ Statistical interpretations could be added to either:
 
 Hence, maintain seperation of concerns and place interpretation in API. Data layer -> Business layer -> Presentation layer. API is a service that provides complete, consumable info.
 
-## C4 mermaid diagrams
+### Additional (C4) Architectural Diagrams
 
 Each level of a C4 diagram provides a different level of zoom. This helps users understand a project at the most-useful granularity.
 
-### Level 1: Context Diagram
+#### level 2: Container Diagram
 
-Big picture of the pipeline. It's a map that shows who uses the system and what systems it talks to. You can use the pipeline to analyze externally sourced data.
-
-```mermaid
-flowchart TB
-    %% Styling
-    classDef person fill:#08427B,color:#fff,stroke:#052E56,stroke-width:1px
-    classDef system fill:#1168BD,color:#fff,stroke:#0B4884,stroke-width:1px
-    classDef external fill:#999999,color:#fff,stroke:#6B6B6B,stroke-width:1px
-    
-    %% Actors and Systems
-    User((User)):::person
-    TimeSeriesPipeline[Time Series Pipeline]:::system
-    ExternalDataSource[(External Data Source)]:::external
-    ExistingAnalysisTool[Existing Analysis Tools]:::external
-    
-    %% Relationships
-    User -- "Uploads data, requests analysis" --> TimeSeriesPipeline
-    TimeSeriesPipeline -- "Returns results and forecasts" --> User
-    ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
-    TimeSeriesPipeline -- "Can export results to" --> ExistingAnalysisTool
-```
-
-### level 2: Container Diagram
-
-Enhance! Zooms in one level to show the major building blocks/"containers". Containers are diff tech chunks that work together. The main engine is FastAPI, which reads from a `config.yml` file. It's all packed in a Docker container for easy deployment, and a CI/CD pipeline automates testing and building.
+Zooms in one level to show the major building blocks/"containers". Containers are diff tech chunks that work together. The main engine is FastAPI, which reads from a `config.yml` file. It's all packed in a Docker container for easy deployment, and a CI/CD pipeline automates testing and building.
 
 ```mermaid
 flowchart TB
@@ -254,9 +258,9 @@ flowchart TB
     FastAPI -- "Can export to" --> ExistingAnalysisTool
 ```
 
-### level 3: Component Diagram
+#### level 3: Component Diagram
 
-Enhance the API! Look inside the FastAPI app to see the key components. We can see various services like the Data Service for handling data, Models Service for statistical analysis, and Interpretation Service for making sense of results.
+Look inside the FastAPI app to see the key components. We can see various services like the Data Service for handling data, Models Service for statistical analysis, and Interpretation Service for making sense of results.
 
 ```mermaid
 flowchart TB
@@ -300,9 +304,9 @@ flowchart TB
     ConfigUtil -- "Reads from" --> ConfigFile
 ```
 
-### level 4: Code/Class Diagram
+#### level 4: Code/Class Diagram
 
-Enhance the code to see classes! This shows some the classes involved in handling ARIMA and GARCH statistical models, including input classes that define what data goes in and response classes that define what comes back.
+Shows the classes involved in handling ARIMA and GARCH statistical models, including input classes that define what data goes in and response classes that define what comes back.
 
 ```mermaid
 classDiagram

@@ -15,7 +15,7 @@ RUN mkdir -p /app && chown timeseriespipelineapp:timeseriespipelineapp /app
 USER timeseriespipelineapp
 
 # Copy requirements file (as the user)
-COPY --chown=timeseriespipelineapp:timeseriespipelineapp requirements-minimal.txt ./requirements.txt
+COPY --chown=timeseriespipelineapp:timeseriespipelineapp requirements-docker.txt ./requirements.txt
 
 # Install dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
@@ -29,4 +29,4 @@ COPY --chown=timeseriespipelineapp:timeseriespipelineapp ./ /app
 EXPOSE 8000
 
 # Run the FastAPI app
-CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8001"]
