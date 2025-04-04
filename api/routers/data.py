@@ -9,13 +9,14 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Depends
 
 from generalized_timeseries import data_generator, data_processor
-from api.models.input import DataGenerationInput, ScalingInput, StationarityTestInput
+from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
 from api.models.response import TimeSeriesDataResponse, StationarityTestResponse
+from api.services.market_data_service import fetch_market_data
 from api.services.interpretations import interpret_stationarity_test
 
 # Get the application configuration
 from utilities.configurator import load_configuration
- 
+
 # Create router
 router = APIRouter(tags=["Data Operations"])
 
@@ -50,6 +51,24 @@ async def generate_data(input_data: DataGenerationInput):
         l.error(f"Error generating data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/fetch_market_data", 
+          summary="Fetch real market data from external sources", 
+          response_model=TimeSeriesDataResponse)
+async def fetch_market_data(input_data: MarketDataInput):
+    """Fetch real market data from external sources like Yahoo Finance."""
+    try:
+        data = fetch_market_data(
+            symbols=input_data.symbols,
+            start_date=input_data.start_date,
+            end_date=input_data.end_date,
+            interval=input_data.interval
+        )
+        
+        # Convert to the same format as generate_data returns
+        return {"data": data}
+    except Exception as e:
+        l.error(f"Error fetching market data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/scale_data", 
           summary="Scale time series data", 

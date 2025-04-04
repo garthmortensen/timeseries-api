@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # # timeseries-pipeline/api/routers/__init__.py
-"""API routers."""
+"""API routers, grouped by functionality."""
 
 from .data import router as data_router
 from .models import router as models_router

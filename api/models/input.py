@@ -17,6 +17,12 @@ class DataGenerationInput(BaseModel):
     end_date: str
     anchor_prices: dict
 
+class MarketDataInput(BaseModel):
+    """Input model for market data fetch endpoint."""
+    symbols: List[str]
+    start_date: str
+    end_date: str
+    interval: str = "1d"  # daily data by default
 
 class ScalingInput(BaseModel):
     """Input model for data scaling endpoint."""

@@ -43,15 +43,37 @@ flowchart TB
     
     %% Actors and Systems
     User((User)):::person
-    TimeSeriesPipeline[Time Series Pipeline]:::system
+    
+    %% Main Systems
+    TimeSeriesFrontend["Timeseries Frontend
+    (Django Web App)"]:::system
+    TimeSeriesPipeline["Timeseries Pipeline
+    (FastAPI Service)"]:::system
+    GeneralizedTimeseries["Generalized Timeseries
+    (Python Package)"]:::system
+    
+    %% External Systems
     ExternalDataSource[(External Data Source)]:::external
-    ExistingAnalysisTool[Existing Analysis Tools]:::external
+    ExistingAnalysisTool["Existing Analysis Tools"]:::external
+    PyPI["PyPI Package Registry"]:::external
     
     %% Relationships
-    User -- "Uploads data, requests analysis" --> TimeSeriesPipeline
-    TimeSeriesPipeline -- "Returns results and forecasts" --> User
+    User -- "Interacts with UI,
+    configures analysis params" --> TimeSeriesFrontend
+    TimeSeriesFrontend -- "Makes API calls" --> TimeSeriesPipeline
+    TimeSeriesPipeline -- "Returns analysis results" --> TimeSeriesFrontend
+    TimeSeriesFrontend -- "Visualizes results,
+    shows charts" --> User
+    
+    TimeSeriesPipeline -- "Imports and uses" --> GeneralizedTimeseries
+    TimeSeriesPipeline -- "Exposes API for" --> ExistingAnalysisTool
+    
     ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
-    TimeSeriesPipeline -- "Can export results to" --> ExistingAnalysisTool
+    ExternalDataSource -- "Can provide data
+    for visualization" --> TimeSeriesFrontend
+    
+    GeneralizedTimeseries -- "Published to" --> PyPI
+    TimeSeriesPipeline -- "Retrieves package from" --> PyPI
 ```
 
 ## Quick Start
@@ -202,21 +224,6 @@ The project uses GitHub Actions for:
 - Running tests on multiple Python versions and platforms
 - Building and pushing Docker images
 - Code coverage reporting
-
-### Architecture Decisions (late addition)
-
-Statistical interpretations could be added to either:
-1. Core computational python package
-   pros: centralized statistical logic, interpretation close to logic making them consistent and sound
-   cons: package scope creep
-2. API layer
-   pros: seperates domain/business logic from computation and presentation logic, centralized for all downstream. 
-   cons: depedency on package, api is more than just data handoff
-3. Frontend
-   pros: -
-   cons: bigger gap between computation and interpretation -> drift. Added frontend complexity.
-
-Hence, maintain seperation of concerns and place interpretation in API. Data layer -> Business layer -> Presentation layer. API is a service that provides complete, consumable info.
 
 ### Additional (C4) Architectural Diagrams
 
