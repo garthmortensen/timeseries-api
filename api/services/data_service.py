@@ -11,48 +11,70 @@ import pandas as pd
 from generalized_timeseries import data_generator, data_processor
 from .interpretations import interpret_stationarity_test
 
+from api.services.market_data_service import fetch_market_data
+
+
 
 def generate_data_step(pipeline_input, config):
-    """Generate synthetic data step.
+    """Generate or fetch time series data step.
     
     Args:
         pipeline_input: Pydantic model containing input parameters
         config: Application configuration
         
     Returns:
-        pandas.DataFrame: Generated time series data
+        pandas.DataFrame: Generated or fetched time series data
         
     Raises:
-        HTTPException: If data generation is disabled or fails
+        HTTPException: If data generation or fetching fails
     """
-    if not config.data_generator_enabled:
-        raise HTTPException(
-            status_code=400,
-            detail="Data generation is disabled in the configuration.",
-        )
-    
-    try:
-        # Build anchor_prices dictionary from flat config fields if not provided
-        if not pipeline_input.anchor_prices:
-            anchor_prices = {
-                "GME": config.data_generator_anchor_prices_GME,
-                "BYND": config.data_generator_anchor_prices_BYND,
-                "BYD": config.data_generator_anchor_prices_BYD,
-            }
-        else:
-            anchor_prices = pipeline_input.anchor_prices
+    # Handle data source selection 
+    if config.source_actual_or_synthetic_data == "synthetic":
+        try:
+            # Use configuration parameters for synthetic data
+            anchor_prices = dict(zip(
+                config.symbols, 
+                config.synthetic_anchor_prices
+            ))
             
-        _, df = data_generator.generate_price_series(
-            start_date=pipeline_input.start_date,
-            end_date=pipeline_input.end_date,
-            anchor_prices=anchor_prices,
-        )
-        return df
-    except Exception as e:
-        l.error(f"Error generating data: {e}")
+            _, df = data_generator.generate_price_series(
+                start_date=config.data_start_date,
+                end_date=config.data_end_date,
+                anchor_prices=anchor_prices,
+                random_seed=config.synthetic_random_seed
+            )
+            return df
+        except Exception as e:
+            l.error(f"Error generating synthetic data: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error generating data: {str(e)}"
+            )
+    
+    elif config.source_actual_or_synthetic_data == "actual":
+        try:
+            # Fetch market data using configuration parameters
+            data_dict = fetch_market_data(
+                symbols=config.symbols,
+                start_date=config.data_start_date,
+                end_date=config.data_end_date,
+            )
+            
+            # Convert the market data dict to a DataFrame
+            df = pd.DataFrame.from_dict(data_dict, orient='index')
+            
+            return df
+        except Exception as e:
+            l.error(f"Error fetching market data: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error fetching market data: {str(e)}"
+            )
+    
+    else:
         raise HTTPException(
-            status_code=500, 
-            detail=f"Error generating data: {str(e)}"
+            status_code=400, 
+            detail=f"Invalid data source: {config.source_actual_or_synthetic_data}"
         )
 
 

@@ -51,13 +51,34 @@ class GARCHInput(BaseModel):
     dist: Optional[str] = "normal"
 
 
+
 class PipelineInput(BaseModel):
     """Input model for full pipeline endpoint."""
-    start_date: str = Field(
-        ..., description="Start date for data generation (YYYY-MM-DD)"
+    source_actual_or_synthetic_data: Optional[str] = Field(
+        default=config.source_actual_or_synthetic_data, 
+        description="Choose between actual market data or synthetic data",
+        pattern="^(actual|synthetic)$"
     )
-    end_date: str = Field(..., description="End date for data generation (YYYY-MM-DD)")
-    anchor_prices: Optional[dict] = Field(None, description="Symbol-prices for data generation")
+    data_start_date: str = Field(
+        default=config.data_start_date, 
+        description="Start date for data generation/fetching (YYYY-MM-DD)"
+    )
+    data_end_date: str = Field(
+        default=config.data_end_date, 
+        description="End date for data generation/fetching (YYYY-MM-DD)"
+    )
+    symbols: Optional[List[str]] = Field(
+        default=config.symbols, 
+        description="Symbols to generate or fetch data for"
+    )
+    synthetic_anchor_prices: Optional[List[float]] = Field(
+        default=config.synthetic_anchor_prices, 
+        description="Anchor prices for synthetic data generation"
+    )
+    synthetic_random_seed: Optional[int] = Field(
+        default=config.synthetic_random_seed, 
+        description="Random seed for synthetic data generation"
+    )
     scaling_method: str = Field(
         default=config.data_processor_scaling_method, 
         description="Scaling method"

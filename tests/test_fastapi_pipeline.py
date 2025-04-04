@@ -74,9 +74,12 @@ def test_garch_input(sample_data):
 def test_run_pipeline_input():
     """Fixture to provide input data for the run_pipeline endpoint."""
     return {
-        "start_date": "2023-01-01",
-        "end_date": "2023-01-10",
-        "anchor_prices": {"GME": 150.0, "BYND": 200.0},
+        "source_actual_or_synthetic_data": "synthetic",
+        "data_start_date": "2023-01-01",
+        "data_end_date": "2023-01-10",
+        "symbols": ["GME", "BYND"],
+        "synthetic_anchor_prices": [150.0, 200.0],
+        "synthetic_random_seed": 42,
         "scaling_method": "standardize",
         "arima_params": {"p": 1, "d": 1, "q": 1},
         "garch_params": {"p": 1, "q": 1}
@@ -140,4 +143,3 @@ def test_run_pipeline(test_run_pipeline_input):
     assert "arima_forecast" in data
     assert "garch_summary" in data
     assert "garch_forecast" in data
-    

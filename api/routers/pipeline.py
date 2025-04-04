@@ -25,7 +25,6 @@ config = load_configuration("config.yml")
 
 router = APIRouter(tags=["Pipeline"])
 
-
 @router.post("/run_pipeline", 
           summary="Execute the entire pipeline",
           response_model=PipelineResponse)
@@ -34,7 +33,7 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
     Execute the complete time series analysis pipeline.
     
     This endpoint:
-    1. Generates synthetic time series data
+    1. Generates synthetic or fetches actual time series data
     2. Fills any missing values
     3. Scales the data
     4. Makes the data stationary
@@ -45,6 +44,24 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
     t1 = time.perf_counter()
 
     try:
+        # Override configuration with input parameters
+        config.source_actual_or_synthetic_data = pipeline_input.source_actual_or_synthetic_data
+        config.data_start_date = pipeline_input.data_start_date
+        config.data_end_date = pipeline_input.data_end_date
+        config.symbols = pipeline_input.symbols or config.symbols
+        config.synthetic_anchor_prices = pipeline_input.synthetic_anchor_prices or config.synthetic_anchor_prices
+        config.synthetic_random_seed = pipeline_input.synthetic_random_seed or config.synthetic_random_seed
+        config.data_processor_scaling_method = pipeline_input.scaling_method
+
+        # Update ARIMA and GARCH model parameters
+        config.stats_model_ARIMA_fit_p = pipeline_input.arima_params.get('p', config.stats_model_ARIMA_fit_p)
+        config.stats_model_ARIMA_fit_d = pipeline_input.arima_params.get('d', config.stats_model_ARIMA_fit_d)
+        config.stats_model_ARIMA_fit_q = pipeline_input.arima_params.get('q', config.stats_model_ARIMA_fit_q)
+        
+        config.stats_model_GARCH_fit_p = pipeline_input.garch_params.get('p', config.stats_model_GARCH_fit_p)
+        config.stats_model_GARCH_fit_q = pipeline_input.garch_params.get('q', config.stats_model_GARCH_fit_q)
+        config.stats_model_GARCH_fit_dist = pipeline_input.garch_params.get('dist', config.stats_model_GARCH_fit_dist)
+
         # Enable models for pipeline run
         config.stats_model_ARIMA_enabled = True
         config.stats_model_GARCH_enabled = True
@@ -81,4 +98,3 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         raise HTTPException(
             status_code=500, detail=f"Pipeline failed: {str(e)}"
         )
-    

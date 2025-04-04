@@ -5,7 +5,7 @@ import os
 import yaml
 import logging as l
 from pydantic import BaseModel, Field
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 def read_config_from_fs(config_filename: str) -> Dict[str, Any]:
     """
@@ -33,14 +33,15 @@ class Config(BaseModel):
     metadata_version: float = Field(default=1.0)
     metadata_environment: str = Field(default="dev")
     
-    # Data Generator
-    data_generator_enabled: bool = Field(default=True)
-    data_generator_random_seed: int = Field(default=1)
-    data_generator_start_date: str = Field(default="2023-01-01")
-    data_generator_end_date: str = Field(default="2023-12-31")
-    data_generator_anchor_prices_GME: float = Field(default=150.0)
-    data_generator_anchor_prices_BYND: float = Field(default=200.0)
-    data_generator_anchor_prices_BYD: float = Field(default=15.0)
+    # Data Source Selection
+    source_actual_or_synthetic_data: str = Field(default="synthetic", pattern="^(actual|synthetic)$")
+    data_start_date: str = Field(default="2023-01-01")
+    data_end_date: str = Field(default="2023-02-01")
+    symbols: List[str] = Field(default=["GME", "BYND", "BYD"])
+    
+    # Synthetic Data Options
+    synthetic_anchor_prices: List[float] = Field(default=[150.0, 200.0, 15.0])
+    synthetic_random_seed: int = Field(default=1)
     
     # Data Processor - Missing Values
     data_processor_missing_values_enabled: bool = Field(default=True)

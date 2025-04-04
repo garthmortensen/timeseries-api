@@ -14,7 +14,7 @@ metadata_environment: "dev"
 # data_generator_anchor_prices_BYD: 15.0
 
 # pull internet data or generate synthetic data
-source_data_from_actual_or_synthetic: "actual"  # options: actual, synthetic
+source_actual_or_synthetic_data: "actual"  # options: actual, synthetic
 
 # universal data sourcing options
 data_start_date: "2023-01-01"

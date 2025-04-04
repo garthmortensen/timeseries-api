@@ -1,0 +1,831 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Timeseries Pipeline API",
+    "summary": "A statistical time series analysis API for financial and econometric modeling",
+    "description": "Econometric time series modeling API with ARIMA and GARCH capabilities",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/favicon.ico": {
+      "get": {
+        "summary": "Ignore Favicon",
+        "operationId": "ignore_favicon_favicon_ico_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/generate_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Generate synthetic time series data",
+        "description": "Generate synthetic time series data based on input parameters.",
+        "operationId": "generate_data_endpoint_api_generate_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataGenerationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fetch_market_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Fetch real market data from external sources",
+        "description": "Fetch real market data from external sources like Yahoo Finance.",
+        "operationId": "fetch_market_data_endpoint_api_fetch_market_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scale_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Scale time series data",
+        "description": "Scale time series data using specified method.",
+        "operationId": "scale_data_endpoint_api_scale_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScalingInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/test_stationarity": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Test for stationarity",
+        "description": "Test stationarity of time series data.",
+        "operationId": "test_stationarity_endpoint_api_test_stationarity_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StationarityTestInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StationarityTestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/run_arima": {
+      "post": {
+        "tags": [
+          "Statistical Models"
+        ],
+        "summary": "Run ARIMA model on time series",
+        "description": "Run ARIMA model on time series data.",
+        "operationId": "run_arima_endpoint_api_run_arima_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ARIMAInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ARIMAModelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/run_garch": {
+      "post": {
+        "tags": [
+          "Statistical Models"
+        ],
+        "summary": "Run GARCH model on time series",
+        "description": "Run GARCH model on time series data.",
+        "operationId": "run_garch_endpoint_api_run_garch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GARCHInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GARCHModelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/run_pipeline": {
+      "post": {
+        "tags": [
+          "Pipeline"
+        ],
+        "summary": "Execute the entire pipeline",
+        "description": "Execute the complete time series analysis pipeline.\n\nThis endpoint:\n1. Generates synthetic or fetches actual time series data\n2. Fills any missing values\n3. Scales the data\n4. Makes the data stationary\n5. Tests for stationarity\n6. Runs ARIMA and GARCH models\n7. Returns model results and forecasts",
+        "operationId": "run_pipeline_endpoint_api_v1_run_pipeline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Root",
+        "description": "Root endpoint for API health check.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ARIMAInput": {
+        "properties": {
+          "p": {
+            "type": "integer",
+            "title": "P"
+          },
+          "d": {
+            "type": "integer",
+            "title": "D"
+          },
+          "q": {
+            "type": "integer",
+            "title": "Q"
+          },
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p",
+          "d",
+          "q",
+          "data"
+        ],
+        "title": "ARIMAInput",
+        "description": "Input model for ARIMA model endpoint."
+      },
+      "ARIMAModelResponse": {
+        "properties": {
+          "fitted_model": {
+            "type": "string",
+            "title": "Fitted Model",
+            "description": "Summary of the fitted ARIMA model"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parameters",
+            "description": "Model parameters"
+          },
+          "p_values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "P Values",
+            "description": "P-values for model parameters"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast",
+            "description": "Forecasted values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fitted_model",
+          "parameters",
+          "p_values",
+          "forecast"
+        ],
+        "title": "ARIMAModelResponse",
+        "description": "Response model for ARIMA model results."
+      },
+      "DataGenerationInput": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date"
+          },
+          "anchor_prices": {
+            "type": "object",
+            "title": "Anchor Prices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "end_date",
+          "anchor_prices"
+        ],
+        "title": "DataGenerationInput",
+        "description": "Input model for data generation endpoint."
+      },
+      "GARCHInput": {
+        "properties": {
+          "p": {
+            "type": "integer",
+            "title": "P"
+          },
+          "q": {
+            "type": "integer",
+            "title": "Q"
+          },
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          },
+          "dist": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dist",
+            "default": "normal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p",
+          "q",
+          "data"
+        ],
+        "title": "GARCHInput",
+        "description": "Input model for GARCH model endpoint."
+      },
+      "GARCHModelResponse": {
+        "properties": {
+          "fitted_model": {
+            "type": "string",
+            "title": "Fitted Model",
+            "description": "Summary of the fitted GARCH model"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast",
+            "description": "Forecasted volatility values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fitted_model",
+          "forecast"
+        ],
+        "title": "GARCHModelResponse",
+        "description": "Response model for GARCH model results."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MarketDataInput": {
+        "properties": {
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Symbols"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date"
+          },
+          "interval": {
+            "type": "string",
+            "title": "Interval",
+            "default": "1d"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbols",
+          "start_date",
+          "end_date"
+        ],
+        "title": "MarketDataInput",
+        "description": "Input model for market data fetch endpoint."
+      },
+      "PipelineInput": {
+        "properties": {
+          "source_actual_or_synthetic_data": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(actual|synthetic)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Actual Or Synthetic Data",
+            "description": "Choose between actual market data or synthetic data",
+            "default": "actual"
+          },
+          "data_start_date": {
+            "type": "string",
+            "title": "Data Start Date",
+            "description": "Start date for data generation/fetching (YYYY-MM-DD)",
+            "default": "2023-01-01"
+          },
+          "data_end_date": {
+            "type": "string",
+            "title": "Data End Date",
+            "description": "End date for data generation/fetching (YYYY-MM-DD)",
+            "default": "2023-02-01"
+          },
+          "symbols": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbols",
+            "description": "Symbols to generate or fetch data for",
+            "default": [
+              "GME",
+              "BYND",
+              "BYD"
+            ]
+          },
+          "synthetic_anchor_prices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Anchor Prices",
+            "description": "Anchor prices for synthetic data generation",
+            "default": [
+              150.0,
+              200.0,
+              15.0
+            ]
+          },
+          "synthetic_random_seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Random Seed",
+            "description": "Random seed for synthetic data generation",
+            "default": 1
+          },
+          "scaling_method": {
+            "type": "string",
+            "title": "Scaling Method",
+            "description": "Scaling method",
+            "default": "standardize"
+          },
+          "arima_params": {
+            "type": "object",
+            "title": "Arima Params",
+            "description": "ARIMA parameters",
+            "default": {
+              "p": 2,
+              "d": 1,
+              "q": 4
+            }
+          },
+          "garch_params": {
+            "type": "object",
+            "title": "Garch Params",
+            "description": "GARCH parameters",
+            "default": {
+              "p": 1,
+              "q": 1,
+              "dist": "t"
+            }
+          }
+        },
+        "type": "object",
+        "title": "PipelineInput",
+        "description": "Input model for full pipeline endpoint."
+      },
+      "PipelineResponse": {
+        "properties": {
+          "stationarity_results": {
+            "$ref": "#/components/schemas/StationarityTestResponse",
+            "description": "Results of stationarity tests"
+          },
+          "arima_summary": {
+            "type": "string",
+            "title": "Arima Summary",
+            "description": "ARIMA model summary"
+          },
+          "arima_forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Arima Forecast",
+            "description": "ARIMA model forecast"
+          },
+          "garch_summary": {
+            "type": "string",
+            "title": "Garch Summary",
+            "description": "GARCH model summary"
+          },
+          "garch_forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Garch Forecast",
+            "description": "GARCH model forecast"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stationarity_results",
+          "arima_summary",
+          "arima_forecast",
+          "garch_summary",
+          "garch_forecast"
+        ],
+        "title": "PipelineResponse",
+        "description": "Response model for the complete pipeline."
+      },
+      "ScalingInput": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "data"
+        ],
+        "title": "ScalingInput",
+        "description": "Input model for data scaling endpoint."
+      },
+      "StationarityTestInput": {
+        "properties": {
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "StationarityTestInput",
+        "description": "Input model for stationarity test endpoint."
+      },
+      "StationarityTestResponse": {
+        "properties": {
+          "adf_statistic": {
+            "type": "number",
+            "title": "Adf Statistic",
+            "description": "ADF test statistic"
+          },
+          "p_value": {
+            "type": "number",
+            "title": "P Value",
+            "description": "P-value of the test"
+          },
+          "critical_values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Critical Values",
+            "description": "Critical values at different significance levels"
+          },
+          "is_stationary": {
+            "type": "boolean",
+            "title": "Is Stationary",
+            "description": "Whether the time series is considered stationary"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation",
+            "description": "Human-readable interpretation of results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "adf_statistic",
+          "p_value",
+          "critical_values",
+          "is_stationary",
+          "interpretation"
+        ],
+        "title": "StationarityTestResponse",
+        "description": "Response model for stationarity test results."
+      },
+      "TimeSeriesDataResponse": {
+        "properties": {
+          "data": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Data",
+            "description": "Time series data indexed by date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "TimeSeriesDataResponse",
+        "description": "Response model for time series data endpoints."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -48,6 +48,10 @@ run-cli:
 .PHONY: rebuild
 rebuild: docker-stop docker-rm docker-clean docker-build docker-run
 
+.PHONY: save-openapi
+save-openapi:
+	$(PYTHON) save_openapi_json.py
+
 .PHONY: help
 help:
 	@echo "Available targets:"
