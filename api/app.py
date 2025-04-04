@@ -11,6 +11,8 @@ import os
 # Add parent directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from colorama import Fore, Style
+
 # Initialize logger
 from utilities.chronicler import init_chronicler
 chronicler = init_chronicler()
@@ -31,6 +33,42 @@ import uvicorn
 from api.utils.json_handling import RoundingJSONResponse
 from api.routers import data_router, models_router, pipeline_router
 
+ascii_banner = f"""
+   ▗▄▄▄▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖ ▗▄▄▖▗▄▄▄▖▗▄▄▖ ▗▄▄▄▖▗▄▄▄▖ ▗▄▄▖
+     █    █  ▐▛▚▞▜▌▐▌   ▐▌   ▐▌   ▐▌ ▐▌  █  ▐▌   ▐▌   
+     █    █  ▐▌  ▐▌▐▛▀▀▘ ▝▀▚▖▐▛▀▀▘▐▛▀▚▖  █  ▐▛▀▀▘ ▝▀▚▖
+     █  ▗▄█▄▖▐▌  ▐▌▐▙▄▄▖▗▄▄▞▘▐▙▄▄▖▐▌ ▐▌▗▄█▄▖▐▙▄▄▖▗▄gm▘
+         ▗▄▄▖▗▄▄▄▖▗▄▄▖ ▗▄▄▄▖▗▖   ▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖
+         ▐▌ ▐▌ █  ▐▌ ▐▌▐▌   ▐▌     █  ▐▛▚▖▐▌▐▌   
+         ▐▛▀▘  █  ▐▛▀▘ ▐▛▀▀▘▐▌     █  ▐▌ ▝▜▌▐▛▀▀▘
+         ▐▌  ▗▄█▄▖▐▌   ▐▙▄▄▖▐▙▄▄▖▗▄█▄▖▐▌  ▐▌▐▙▄▄▖
+"""
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    base_url = "http://localhost:8001"
+
+    l.info(f"{Fore.GREEN}{ascii_banner}")
+
+    # Log interactive docs URLs
+    l.info(f"Swagger UI:     {Fore.YELLOW}{base_url}{app.docs_url}")
+    l.info(f"ReDoc:          {Fore.YELLOW}{base_url}{app.redoc_url}")
+    l.info(f"OpenAPI schema: {Fore.YELLOW}{base_url}{app.openapi_url}")
+
+    # log all endpoints but avoid logging the interactive docs
+    skip_paths = {app.docs_url, app.redoc_url, app.openapi_url}
+    for route in app.routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            if route.path in skip_paths:
+                continue
+            methods = ",".join(route.methods)
+            l.info(f"{methods}  {Fore.CYAN}{base_url}{route.path}")
+
+    yield
+    l.info("Timeseries Pipeline API is shutting down")
+
 # Create FastAPI app
 app = FastAPI(
     title="Timeseries Pipeline API",
@@ -41,7 +79,8 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/api/openapi.json",
     swagger_ui_parameters={"defaultModelsExpandDepth": -1},  # collapse all models by default
-    default_response_class=RoundingJSONResponse  # custom response class for rounding
+    default_response_class=RoundingJSONResponse,  # custom response class for rounding
+    lifespan=lifespan  # adds custom startup/shutdown logging
 )
 
 # Add routers
@@ -54,7 +93,6 @@ app.include_router(pipeline_router, prefix="/api/v1")
 async def run_pipeline_alias(pipeline_input):
     """Legacy endpoint that redirects to /api/v1/run_pipeline."""
     return await pipeline_router.endpoints["run_pipeline"](pipeline_input)
-
 
 # Root endpoint
 @app.get("/", tags=["Health"])

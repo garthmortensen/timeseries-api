@@ -18,26 +18,37 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
     """
     l.info(f"Fetching market data for {symbols} from {start_date} to {end_date}")
     
-    # Format to match the structure returned by generate_data
+    # Format to match the structure returned by generate_data()
     data_dict = {}
     
     try:
         # Download data for all symbols at once
         data = yf.download(symbols, start=start_date, end=end_date, interval=interval)
         
-        # If only one symbol, yfinance returns a different structure
+        # Handle different data structures based on number of symbols
         if len(symbols) == 1:
-            # Handle single symbol case
-            data.columns = pd.MultiIndex.from_product([['Adj Close'], symbols])
-        
-        # Extract adjusted close prices
-        prices = data['Adj Close']
-        
-        # Convert to the format expected by TimeSeriesDataResponse
-        for date_idx, row in prices.iterrows():
-            str_date = str(date_idx.date())
-            data_dict[str_date] = row.to_dict()
+            # For single symbol case, yfinance returns a DataFrame without MultiIndex
+            # Extract Adj Close or handle it directly
+            if 'Adj Close' in data.columns:
+                # If it's a standard DataFrame with columns including 'Adj Close'
+                single_symbol = symbols[0]
+                for date_idx, row in data.iterrows():
+                    str_date = str(date_idx.date())
+                    data_dict[str_date] = {single_symbol: row['Adj Close']}
+            else:
+                for date_idx, row in data.iterrows():
+                    str_date = str(date_idx.date())
+                    data_dict[str_date] = {symbols[0]: row.iloc[0]}  # Just take the first value
+        else:
+            # For multiple symbols, handle the MultiIndex structure
+            # Extract adjusted close prices
+            prices = data['Adj Close']
             
+            # Convert to the format expected by TimeSeriesDataResponse
+            for date_idx, row in prices.iterrows():
+                str_date = str(date_idx.date())
+                data_dict[str_date] = row.to_dict()
+                
         return data_dict
     except Exception as e:
         l.error(f"Error fetching data from Yahoo Finance: {e}")

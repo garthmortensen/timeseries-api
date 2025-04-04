@@ -28,7 +28,7 @@ def get_config():
 @router.post("/generate_data", 
           summary="Generate synthetic time series data", 
           response_model=TimeSeriesDataResponse)
-async def generate_data(input_data: DataGenerationInput):
+async def generate_data_endpoint(input_data: DataGenerationInput):
     """Generate synthetic time series data based on input parameters."""
     try:
         _, price_df = data_generator.generate_price_series(
@@ -54,7 +54,7 @@ async def generate_data(input_data: DataGenerationInput):
 @router.post("/fetch_market_data", 
           summary="Fetch real market data from external sources", 
           response_model=TimeSeriesDataResponse)
-async def fetch_market_data(input_data: MarketDataInput):
+async def fetch_market_data_endpoint(input_data: MarketDataInput):
     """Fetch real market data from external sources like Yahoo Finance."""
     try:
         data = fetch_market_data(
@@ -73,7 +73,7 @@ async def fetch_market_data(input_data: MarketDataInput):
 @router.post("/scale_data", 
           summary="Scale time series data", 
           response_model=TimeSeriesDataResponse)
-async def scale_data(input_data: ScalingInput):
+async def scale_data_endpoint(input_data: ScalingInput):
     """Scale time series data using specified method."""
     try:
         df = pd.DataFrame(input_data.data)
@@ -107,7 +107,7 @@ async def scale_data(input_data: ScalingInput):
 @router.post("/test_stationarity", 
           summary="Test for stationarity", 
           response_model=StationarityTestResponse)
-async def test_stationarity(input_data: StationarityTestInput, config=Depends(get_config)):
+async def test_stationarity_endpoint(input_data: StationarityTestInput, config=Depends(get_config)):
     """Test stationarity of time series data."""
     try:
         # Process data and run tests

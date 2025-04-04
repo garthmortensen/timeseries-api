@@ -120,6 +120,5 @@ def test_fetch_market_data_single_symbol(mock_download, client):
     market_data = data["data"]
     assert len(market_data) > 0
     
-    # Check that SPY exists in the response for a sample date
     first_date = list(market_data.keys())[0]
-    assert "^HSI" in market_data[first_date]
+    assert "^DJI" in market_data[first_date]

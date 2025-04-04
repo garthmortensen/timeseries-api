@@ -5,6 +5,7 @@ beautifulsoup4==4.13.3
 certifi==2025.1.31
 charset-normalizer==3.4.1
 click==8.1.8
+colorama==0.4.6
 coverage==7.7.1
 fastapi==0.115.11
 frozendict==2.4.6

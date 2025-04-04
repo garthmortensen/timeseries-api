@@ -8,6 +8,10 @@ import sys
 import subprocess
 from typing import List, Dict, Union
 
+# colorful logging must be imported and initialized before any other logging scripts
+from colorama import init
+init(autoreset=True)
+
 
 class GitInfo:
     """

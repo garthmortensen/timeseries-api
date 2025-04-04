@@ -29,7 +29,7 @@ router = APIRouter(tags=["Pipeline"])
 @router.post("/run_pipeline", 
           summary="Execute the entire pipeline",
           response_model=PipelineResponse)
-async def run_pipeline(pipeline_input: PipelineInput):
+async def run_pipeline_endpoint(pipeline_input: PipelineInput):
     """
     Execute the complete time series analysis pipeline.
     
