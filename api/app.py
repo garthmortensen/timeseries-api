@@ -26,7 +26,7 @@ except Exception as e:
     raise
 
 # Import FastAPI and related modules
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 import uvicorn
 
 # Import custom modules
@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
             l.info(f"{methods}  {Fore.CYAN}{base_url}{route.path}")
 
     yield
-    l.info("Timeseries Pipeline API is shutting down")
+    l.info(f"{Fore.RED}Timeseries Pipeline API is shutting down")
 
 # Create FastAPI app
 app = FastAPI(
@@ -82,6 +82,11 @@ app = FastAPI(
     default_response_class=RoundingJSONResponse,  # custom response class for rounding
     lifespan=lifespan  # adds custom startup/shutdown logging
 )
+
+# ignore favicon requests
+@app.get("/favicon.ico")
+async def ignore_favicon():
+    return Response(status_code=204)
 
 # Add routers
 app.include_router(data_router, prefix="/api")

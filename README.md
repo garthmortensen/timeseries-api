@@ -32,6 +32,8 @@ This project provides both a web API and CLI interface for financial and econome
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
+TODO: Update C4 with `fetch_market_data()`.
+
 ### Architectural Overview
 
 ```mermaid

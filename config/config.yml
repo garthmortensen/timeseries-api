@@ -4,14 +4,26 @@
 metadata_version: 1.0
 metadata_environment: "dev"
 
-# Data Generator
-data_generator_enabled: true
-data_generator_random_seed: 1
-data_generator_start_date: "2023-01-01"
-data_generator_end_date: "2023-02-01"
-data_generator_anchor_prices_GME: 150.0
-data_generator_anchor_prices_BYND: 200.0
-data_generator_anchor_prices_BYD: 15.0
+# Data Generator - depreciated
+# data_generator_enabled: false
+# data_generator_random_seed: 1
+# data_generator_start_date: "2023-01-01"
+# data_generator_end_date: "2023-02-01"
+# data_generator_anchor_prices_GME: 150.0
+# data_generator_anchor_prices_BYND: 200.0
+# data_generator_anchor_prices_BYD: 15.0
+
+# pull internet data or generate synthetic data
+source_data_from_actual_or_synthetic: "actual"  # options: actual, synthetic
+
+# universal data sourcing options
+data_start_date: "2023-01-01"
+data_end_date: "2023-02-01"
+symbols: ["GME", "BYND", "BYD"]
+
+# synthetic-specific options
+synthetic_anchor_prices: [150.0, 200.0, 15.0]
+synthetic_random_seed: 1
 
 # Data Processor - Missing Values
 data_processor_missing_values_enabled: true
