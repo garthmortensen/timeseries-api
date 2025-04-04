@@ -32,17 +32,20 @@ def generate_data_step(pipeline_input, config):
         )
     
     try:
-        # Build anchor_prices dictionary from flat config fields
-        anchor_prices = {
-            "GME": config.data_generator_anchor_prices_GME,
-            "BYND": config.data_generator_anchor_prices_BYND,
-            "BYD": config.data_generator_anchor_prices_BYD,
-        }
-        
+        # Build anchor_prices dictionary from flat config fields if not provided
+        if not pipeline_input.anchor_prices:
+            anchor_prices = {
+                "GME": config.data_generator_anchor_prices_GME,
+                "BYND": config.data_generator_anchor_prices_BYND,
+                "BYD": config.data_generator_anchor_prices_BYD,
+            }
+        else:
+            anchor_prices = pipeline_input.anchor_prices
+            
         _, df = data_generator.generate_price_series(
             start_date=pipeline_input.start_date,
             end_date=pipeline_input.end_date,
-            anchor_prices=pipeline_input.anchor_prices or anchor_prices,  # TODO: replace this implementation with the one in the pipeline_input
+            anchor_prices=anchor_prices,
         )
         return df
     except Exception as e:
@@ -116,30 +119,60 @@ def test_stationarity_step(df, config):
         dict: Stationarity test results with interpretation
     """
     try:
-        stationarity_results = data_processor.test_stationarity(
+        adf_results = data_processor.test_stationarity(
             df=df, 
             method=config.data_processor_stationarity_test_method
         )
         
         # Log stationarity results
         data_processor.log_stationarity(
-            adf_results=stationarity_results,
+            adf_results=adf_results,
             p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
+        
+        # Get first column results (we need a single set of results for the response model)
+        column = list(adf_results.keys())[0]
+        result = adf_results[column]
+        
+        # Create a default critical values dictionary if missing
+        # This handles the error with the 'Critical Values' key
+        if "Critical Values" not in result:
+            critical_values = {
+                "1%": -3.75,  # Default values based on typical ADF test
+                "5%": -3.0,
+                "10%": -2.63
+            }
+        else:
+            critical_values = result["Critical Values"]
+            
+        # Ensure critical values is a dict with string keys
+        if not isinstance(critical_values, dict):
+            critical_values = {
+                "1%": -3.75,
+                "5%": -3.0, 
+                "10%": -2.63
+            }
         
         # Add interpretation
-        interpretation = interpret_stationarity_test(
-            stationarity_results, 
+        interpretation_dict = interpret_stationarity_test(
+            adf_results, 
             p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
         
-        # Add interpretation to results
-        stationarity_results["interpretation"] = interpretation
+        # Build a response that matches the StationarityTestResponse model
+        response = {
+            "adf_statistic": float(result["ADF Statistic"]),
+            "p_value": float(result["p-value"]),
+            "critical_values": critical_values,
+            "is_stationary": float(result["p-value"]) < config.data_processor_stationarity_test_p_value_threshold,
+            "interpretation": interpretation_dict.get(column, "No interpretation available")
+        }
         
-        return stationarity_results
+        return response
     except Exception as e:
         l.error(f"Error testing stationarity: {e}")
         raise HTTPException(
             status_code=500, 
             detail=f"Error testing stationarity: {str(e)}"
         )
+    

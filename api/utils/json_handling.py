@@ -10,6 +10,7 @@ This ensures the API tests pass on all platforms.
 import json
 import math
 import numpy as np
+import pandas as pd
 from fastapi.responses import JSONResponse
 
 # Round values and handle special cases for json serialization
@@ -25,12 +26,18 @@ def round_for_json(obj, decimals=6):
     elif isinstance(obj, np.ndarray):
         # recursively round values in numpy array
         return [round_for_json(x, decimals) for x in obj]
-    elif isinstance(obj, float):
+    elif isinstance(obj, (float, np.float32, np.float64)):
         # round floats to avoid json serialization issues
         if math.isnan(obj) or math.isinf(obj):
             return None
         # round to specified decimal places
-        return round(obj, decimals)
+        return round(float(obj), decimals)
+    elif isinstance(obj, (np.int32, np.int64)):
+        # convert numpy ints to Python ints
+        return int(obj)
+    elif isinstance(obj, pd.Timestamp):
+        # convert pandas Timestamp to ISO format string
+        return obj.isoformat()
     else:
         return obj
 
@@ -42,6 +49,10 @@ class RoundingJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
             return None
+        elif isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+        elif isinstance(obj, (np.int32, np.int64, np.float32, np.float64)):
+            return float(obj)
         return super().default(obj)
 
 

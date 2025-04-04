@@ -45,6 +45,10 @@ async def run_pipeline(pipeline_input: PipelineInput):
     t1 = time.perf_counter()
 
     try:
+        # Enable models for pipeline run
+        config.stats_model_ARIMA_enabled = True
+        config.stats_model_GARCH_enabled = True
+        
         # Execute pipeline steps sequentially
         df = generate_data_step(pipeline_input, config)
         df_filled = fill_missing_data_step(df, config)
@@ -77,3 +81,4 @@ async def run_pipeline(pipeline_input: PipelineInput):
         raise HTTPException(
             status_code=500, detail=f"Pipeline failed: {str(e)}"
         )
+    

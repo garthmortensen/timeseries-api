@@ -51,22 +51,23 @@ class PipelineInput(BaseModel):
         ..., description="Start date for data generation (YYYY-MM-DD)"
     )
     end_date: str = Field(..., description="End date for data generation (YYYY-MM-DD)")
-    anchor_prices: dict = Field(..., description="Symbol-prices for data generation")
+    anchor_prices: Optional[dict] = Field(None, description="Symbol-prices for data generation")
     scaling_method: str = Field(
-        default=config.data_processor_scaling_method, description="Scaling method"
+        default=config.data_processor_scaling_method, 
+        description="Scaling method"
     )
     arima_params: dict = Field(
         default={
-            "p": config.stats_model_ARIMA_fit_p, 
-            "d": config.stats_model_ARIMA_fit_d, 
+            "p": config.stats_model_ARIMA_fit_p,
+            "d": config.stats_model_ARIMA_fit_d,
             "q": config.stats_model_ARIMA_fit_q
         }, 
         description="ARIMA parameters"
     )
     garch_params: dict = Field(
         default={
-            "p": config.stats_model_GARCH_fit_p, 
-            "q": config.stats_model_GARCH_fit_q, 
+            "p": config.stats_model_GARCH_fit_p,
+            "q": config.stats_model_GARCH_fit_q,
             "dist": config.stats_model_GARCH_fit_dist
         }, 
         description="GARCH parameters"

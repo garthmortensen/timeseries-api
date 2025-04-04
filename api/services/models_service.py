@@ -8,6 +8,7 @@ import logging as l
 from fastapi import HTTPException
 import pandas as pd
 import numpy as np
+from statsmodels.tsa.arima.model import ARIMA
 
 from generalized_timeseries import stats_model
 
@@ -26,13 +27,58 @@ def run_arima_step(df_stationary, config):
         return "ARIMA not enabled", []
     
     try:
-        arima_fits, arima_forecasts = stats_model.run_arima(
-            df_stationary=df_stationary,
-            p=config.stats_model_ARIMA_fit_p,
-            d=config.stats_model_ARIMA_fit_d,
-            q=config.stats_model_ARIMA_fit_q,
-            forecast_steps=config.stats_model_ARIMA_predict_steps
-        )
+        # Initialize dictionaries to store models and forecasts
+        arima_fits = {}
+        arima_forecasts = {}
+        
+        # Process the first column only - for simplicity in API responses
+        if len(df_stationary.columns) > 0:
+            column_name = df_stationary.columns[0]
+            
+            # Create DataFrame with datetime index if not already
+            if not isinstance(df_stationary.index, pd.DatetimeIndex):
+                if 'date' in df_stationary.columns:
+                    df_temp = df_stationary.copy()
+                    df_temp['date'] = pd.to_datetime(df_temp['date'])
+                    df_temp.set_index('date', inplace=True)
+                    series = df_temp[column_name]
+                else:
+                    # If no date column, create a date range
+                    series = pd.Series(
+                        df_stationary[column_name].values,
+                        index=pd.date_range(start='2000-01-01', periods=len(df_stationary), freq='D')
+                    )
+            else:
+                series = df_stationary[column_name]
+            
+            # Set frequency if not already set
+            if series.index.freq is None:
+                series = series.asfreq('D')
+                
+            # Use more robust model initialization and fitting
+            model = ARIMA(
+                series, 
+                order=(config.stats_model_ARIMA_fit_p, config.stats_model_ARIMA_fit_d, config.stats_model_ARIMA_fit_q),
+                enforce_stationarity=False,  # Don't enforce stationarity
+                enforce_invertibility=False  # Don't enforce invertibility
+            )
+            
+            # Fit the model with more robust approach - remove maxiter parameter
+            try:
+                arima_fit = model.fit(method='css')  # Use CSS method
+            except:
+                # Fallback to default method
+                arima_fit = model.fit()
+                
+            # Store the model
+            arima_fits[column_name] = arima_fit
+            
+            # Generate forecasts
+            forecast_steps = config.stats_model_ARIMA_predict_steps
+            forecast = arima_fit.forecast(steps=forecast_steps)
+            arima_forecasts[column_name] = forecast
+        else:
+            return "No columns found in data", []
         
         if not arima_fits or len(arima_fits) <= 0:
             return "No ARIMA models fitted", []
@@ -44,13 +90,30 @@ def run_arima_step(df_stationary, config):
         # Get forecast for the first column
         forecast_values = arima_forecasts[column_name]
         
-        # Convert forecast values to a list
-        if hasattr(forecast_values, 'tolist'):
-            arima_forecast_values = forecast_values.tolist()
+        # Handle different types of forecast return values
+        arima_forecast_values = []
+        
+        # Check if forecast_values is a scalar (single value)
+        if np.isscalar(forecast_values):
+            arima_forecast_values = [float(forecast_values)]
+        # Check if it's a pandas Series
+        elif isinstance(forecast_values, pd.Series):
+            arima_forecast_values = [float(x) for x in forecast_values.values]
+        # Check if it's a numpy array
+        elif isinstance(forecast_values, np.ndarray):
+            arima_forecast_values = [float(x) for x in forecast_values]
+        # Check if it's already a list
+        elif isinstance(forecast_values, list):
+            arima_forecast_values = [float(x) for x in forecast_values]
+        # Fallback for any other type
         else:
-            arima_forecast_values = []
-            for x in forecast_values:
-                arima_forecast_values.append(float(x))
+            try:
+                # Try to convert to a list if it's some other iterable
+                arima_forecast_values = [float(x) for x in forecast_values]
+            except:
+                # If all else fails, use a single empty list
+                arima_forecast_values = []
+                l.warning(f"Couldn't convert forecast values of type {type(forecast_values)}")
         
         return arima_summary, arima_forecast_values
     
@@ -94,13 +157,30 @@ def run_garch_step(df_stationary, config):
         # Get forecast for the first column
         forecast_values = garch_forecasts[column_name]
         
-        # Convert forecast values to a list
-        if hasattr(forecast_values, 'tolist'):
-            garch_forecast_values = forecast_values.tolist()
+        # Handle different types of forecast return values
+        garch_forecast_values = []
+        
+        # Check if forecast_values is a scalar (single value)
+        if np.isscalar(forecast_values):
+            garch_forecast_values = [float(forecast_values)]
+        # Check if it's a pandas Series
+        elif isinstance(forecast_values, pd.Series):
+            garch_forecast_values = [float(x) for x in forecast_values.values]
+        # Check if it's a numpy array
+        elif isinstance(forecast_values, np.ndarray):
+            garch_forecast_values = [float(x) for x in forecast_values]
+        # Check if it's already a list
+        elif isinstance(forecast_values, list):
+            garch_forecast_values = [float(x) for x in forecast_values]
+        # Fallback for any other type
         else:
-            garch_forecast_values = []
-            for x in forecast_values:
-                garch_forecast_values.append(float(x))
+            try:
+                # Try to convert to a list if it's some other iterable
+                garch_forecast_values = [float(x) for x in forecast_values]
+            except:
+                # If all else fails, use a single empty list
+                garch_forecast_values = []
+                l.warning(f"Couldn't convert forecast values of type {type(forecast_values)}")
         
         return garch_summary, garch_forecast_values
     
