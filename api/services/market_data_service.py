@@ -1,9 +1,9 @@
 import yfinance as yf
 import pandas as pd
 import logging as l
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
-def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interval: str = "1d") -> Dict[str, Dict[str, Any]]:
+def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interval: str = "1d") -> Tuple[Dict[str, Dict[str, Any]], pd.DataFrame]:
     """
     Fetch market data from Yahoo Finance.
     
@@ -14,7 +14,9 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
         interval: Data frequency (1d, 1wk, 1mo, etc.)
         
     Returns:
-        Dict with dates as keys and nested dicts of symbol data as values
+        Tuple of:
+        - Dict with dates as keys and nested dicts of symbol data as values
+        - DataFrame with datetime index and columns for each symbol
     """
     l.info(f"Fetching market data for {symbols} from {start_date} to {end_date}")
     
@@ -25,31 +27,30 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
         # Download data for all symbols at once
         data = yf.download(symbols, start=start_date, end=end_date, interval=interval)
         
-        # Handle different data structures based on number of symbols
+        # Ensure we have a MultiIndex or regular DataFrame with Adj Close
         if len(symbols) == 1:
-            # For single symbol case, yfinance returns a DataFrame without MultiIndex
-            # Extract Adj Close or handle it directly
-            if 'Adj Close' in data.columns:
-                # If it's a standard DataFrame with columns including 'Adj Close'
-                single_symbol = symbols[0]
-                for date_idx, row in data.iterrows():
-                    str_date = str(date_idx.date())
-                    data_dict[str_date] = {single_symbol: row['Adj Close']}
+            # For single symbol, ensure we have a DataFrame with Adj Close
+            if isinstance(data.columns, pd.MultiIndex):
+                prices = data['Adj Close']
             else:
-                for date_idx, row in data.iterrows():
-                    str_date = str(date_idx.date())
-                    data_dict[str_date] = {symbols[0]: row.iloc[0]}  # Just take the first value
-        else:
-            # For multiple symbols, handle the MultiIndex structure
-            # Extract adjusted close prices
-            prices = data['Adj Close']
+                prices = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
             
-            # Convert to the format expected by TimeSeriesDataResponse
-            for date_idx, row in prices.iterrows():
-                str_date = str(date_idx.date())
-                data_dict[str_date] = row.to_dict()
-                
-        return data_dict
+            # Rename column to the symbol
+            prices = prices.to_frame(name=symbols[0])
+        else:
+            # For multiple symbols, extract Adj Close
+            prices = data['Adj Close']
+        
+        # Ensure the index is datetime 
+        prices.index = pd.to_datetime(prices.index)
+        
+        # Populate data_dict in the same structure as generate_price_series() found in py package
+        for date_idx, row in prices.iterrows():
+            str_date = str(date_idx)
+            data_dict[str_date] = row.to_dict()
+        
+        return data_dict, prices
+    
     except Exception as e:
         l.error(f"Error fetching data from Yahoo Finance: {e}")
         raise

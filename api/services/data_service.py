@@ -60,10 +60,19 @@ def generate_data_step(pipeline_input, config):
                 end_date=config.data_end_date,
             )
             
-            # Convert the market data dict to a DataFrame
-            df = pd.DataFrame.from_dict(data_dict, orient='index')
+            # Convert market data dict to DataFrame with proper index
+            df_data = []
+            for date_str, symbol_prices in data_dict.items():
+                row_data = {'date': date_str}
+                row_data.update(symbol_prices)
+                df_data.append(row_data)
+            
+            df = pd.DataFrame(df_data)
+            df['date'] = pd.to_datetime(df['date'])
+            df.set_index('date', inplace=True)
             
             return df
+
         except Exception as e:
             l.error(f"Error fetching market data: {e}")
             raise HTTPException(
@@ -76,7 +85,6 @@ def generate_data_step(pipeline_input, config):
             status_code=400, 
             detail=f"Invalid data source: {config.source_actual_or_synthetic_data}"
         )
-
 
 def fill_missing_data_step(df, config):
     """Fill missing data in time series.

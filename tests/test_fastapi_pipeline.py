@@ -88,6 +88,7 @@ def test_run_pipeline_input():
 def test_generate_data(data_generation_input):
     """Test the /generate_data endpoint."""
     response = client.post("/api/generate_data", json=data_generation_input)
+    print("Response content:", response.content)  # Add this line
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert isinstance(data, dict)

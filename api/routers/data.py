@@ -26,27 +26,21 @@ def get_config():
 
 
 @router.post("/generate_data", 
-          summary="Generate synthetic time series data", 
-          response_model=TimeSeriesDataResponse)
+             summary="Generate synthetic time series data", 
+             response_model=TimeSeriesDataResponse)
 async def generate_data_endpoint(input_data: DataGenerationInput):
     """Generate synthetic time series data based on input parameters."""
     try:
-        _, price_df = data_generator.generate_price_series(
+        price_dict, _ = data_generator.generate_price_series(
             start_date=input_data.start_date,
             end_date=input_data.end_date,
             anchor_prices=input_data.anchor_prices,
-        )  # _ is shorthand for throwaway variable
-
-        # Convert DataFrame to dictionary with string keys
-        data_dict = {}
-        for idx, row in price_df.iterrows():
-            str_date = str(idx)
-            data_dict[str_date] = row.to_dict()
-
-        return_data = {"data": data_dict}
+        )
+        
+        return_data = {"data": price_dict}
         l.info(f"generate_data() returning {len(return_data['data'])} data points")
         return return_data
-
+    
     except Exception as e:
         l.error(f"Error generating data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -57,15 +51,14 @@ async def generate_data_endpoint(input_data: DataGenerationInput):
 async def fetch_market_data_endpoint(input_data: MarketDataInput):
     """Fetch real market data from external sources like Yahoo Finance."""
     try:
-        data = fetch_market_data(
+        data_dict = fetch_market_data(
             symbols=input_data.symbols,
             start_date=input_data.start_date,
             end_date=input_data.end_date,
             interval=input_data.interval
         )
         
-        # Convert to the same format as generate_data returns
-        return {"data": data}
+        return {"data": data_dict}
     except Exception as e:
         l.error(f"Error fetching market data: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -34,6 +34,16 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: Update C4 with `fetch_market_data()`.
 
+TODO: This is the data structure [`list` of `dictionaries`] I want to achieve because it's easy to load into a df, sortable, groupable, serializable:
+```json
+    [
+    {"date": "2023-01-01", "symbol": "GME", "price": 150.0},
+    {"date": "2023-01-01", "symbol": "BYND", "price": 200.0},
+    {"date": "2023-01-02", "symbol": "GME", "price": 149.3}
+    ]
+```
+**This Impacts the py package, api and frontend.**
+
 ### Architectural Overview
 
 ```mermaid
