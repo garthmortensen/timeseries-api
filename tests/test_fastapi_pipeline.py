@@ -12,14 +12,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def sample_data():
-    """Fixture to provide sample data for testing."""
-    return [
+    """Fixture with more data points."""
+    data = [
         {"date": "2023-01-01", "price": 100},
         {"date": "2023-01-02", "price": 101},
         {"date": "2023-01-03", "price": 102},
         {"date": "2023-01-04", "price": 103},
         {"date": "2023-01-05", "price": 104},
+        {"date": "2023-01-06", "price": 105},
+        {"date": "2023-01-07", "price": 106},
+        {"date": "2023-01-08", "price": 107},
+        {"date": "2023-01-09", "price": 108},
+        {"date": "2023-01-10", "price": 109},
     ]
+    return data
 
 @pytest.fixture
 def data_generation_input():
@@ -82,7 +88,8 @@ def test_generate_data(data_generation_input):
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert isinstance(data, dict)
-    assert len(data) > 0
+    assert "data" in data
+    assert len(data["data"]) > 0
 
 def test_scale_data(test_scale_data_input):
     """Test the /scale_data endpoint."""
@@ -90,15 +97,22 @@ def test_scale_data(test_scale_data_input):
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert isinstance(data, dict)
-    assert len(data) == len(test_scale_data_input["data"])
+    assert "data" in data
+    # The response data is a dict with the data at the 'data' key
+    assert len(data["data"]) == len(test_scale_data_input["data"])
 
 def test_test_stationarity(test_stationarity_input):
     """Test the /test_stationarity endpoint."""
     response = client.post("/api/test_stationarity", json=test_stationarity_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
-    # Validate response structure based on your implementation
+    # Validate response structure
     assert isinstance(data, dict)
+    assert "adf_statistic" in data
+    assert "p_value" in data
+    assert "critical_values" in data
+    assert "is_stationary" in data
+    assert "interpretation" in data
 
 def test_run_arima(test_arima_input):
     """Test the /run_arima endpoint."""
@@ -126,3 +140,4 @@ def test_run_pipeline(test_run_pipeline_input):
     assert "arima_forecast" in data
     assert "garch_summary" in data
     assert "garch_forecast" in data
+    

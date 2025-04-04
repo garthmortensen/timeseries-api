@@ -43,4 +43,11 @@ def test_run_garch_response_model(sample_data):
     
     # Validate against the Pydantic model
     validated_data = GARCHModelResponse(**data)
-    assert validated_data.dict() == data
+    
+    # Use model_dump() instead of dict() which is deprecated in Pydantic v2
+    if hasattr(validated_data, "model_dump"):
+        # Pydantic v2
+        assert validated_data.model_dump() == data
+    else:
+        # Fallback for Pydantic v1
+        assert validated_data.dict() == data
