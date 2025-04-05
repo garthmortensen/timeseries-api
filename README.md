@@ -166,35 +166,46 @@ The application uses YAML configuration file `config/config.yml` to set:
 ### Project Structure
 
 ```text
-timeseries-pipeline/.........
-├── cli_pipeline.py         # for running the full pipeline from the terminal without API
-├── fastapi_pipeline.py     # for starting the API server with uvicorn
-├── Makefile                # for automating common tasks
-├── smoketest.sh            # for quickly verifying API endpoints are functional after deployment
-├── config/..................
-│ └── config.yml            # for centralizing all pipeline parameters in one YAML file
-├── api/.....................
-│ ├── models/               # Pydantic API models, for data validation and documentation
-│ │ ├── input.py            # Input validation models, for validating and documenting request data schemas
-│ │ └── response.py         # Response models, for defining and validating API response formats
-│ ├── routers/              # API endpoints by category
-│ │ ├── data.py             # Data endpoints, for data generation and transformation operations
-│ │ ├── models.py           # Stat models endpoints, for running ARIMA and GARCH modeling
-│ │ └── pipeline.py         # End-to-end pipeline endpoint, for executing the complete analysis workflow
-│ ├── services/             # Business logic implementation, for separating core logic from API handlers
-│ │ ├── data_service.py     # Data processing services, for data generation, scaling, and stationarity tests
-│ │ ├── interpretations.py  # Stat interpretations, for creating human-readable model insights
-│ │ └── models_service.py   # Model training services, for running stat models on time series data
-│ ├── utils/ # API utilities
-│ │ └── json_handling.py    # JSON serialization utilities, for handling special cases like NaN values (MacOS issues)
-│ └── app.py                # FastAPI app initialization, for configuring the API and registering routers
-├── utilities/...............
-│ ├── chronicler.py         # Logging utils, for standardized logging across the application
-│ └── configurator.py       # Configuration utils, for loading and validating the YAML config
-├── tests/...................
-└── .github/.................
-  └── workflows/
-    └── cicd.yml            # CI/CD pipeline configuration, for automated testing and Docker image deployment
+timeseries-pipeline/..................
+├── cli_pipeline.py                  # For running the full pipeline from the terminal sans API
+├── fastapi_pipeline.py              # For starting the API server with uvicorn
+├── Makefile                         # For automating dev tasks
+├── smoketest.sh                     # For quickly verifying endpoints are functional
+├── config/........................... 
+│   └── config.yml                   # For centralizing all pipeline params
+├── api/..............................
+│   ├── __init__.py                  # For making the API module importable and adding parent dir to path
+│   ├── app.py                       # For FastAPI init() and registering routes
+│   ├── models/.......................
+│   │   ├── __init__.py              # For exporting all models and making the module importable
+│   │   ├── input.py                 # For defining and validating request payload schemas
+│   │   └── response.py              # For defining and validating response formats
+│   ├── routers/......................
+│   │   ├── __init__.py              # For exporting router instances and making the module importable
+│   │   ├── data.py                  # For handling data generation and transformation endpoints
+│   │   ├── models.py                # For implementing statistical modeling endpoints
+│   │   └── pipeline.py              # For providing the end-to-end analysis pipeline endpoint
+│   ├── services/.....................
+│   │   ├── __init__.py              # For exporting service functions and making the module importable
+│   │   ├── data_service.py          # For implementing data processing business logic
+│   │   ├── models_service.py        # For implementing statistical modeling business logic
+│   │   └── interpretations.py       # For generating human-readable explanations of statistical results
+│   ├── utils/........................
+│   │   ├── __init__.py              # For exporting utility functions and making the module importable
+│   │   └── json_handling.py         # For handling JSON serialization NaN values (MacOS compatibility issue)
+├── utilities/.......................
+│   ├── chronicler.py               # For configuring standardized logging across the application
+│   └── configurator.py             # For loading and validating YAML configuration
+├── tests/...........................
+│   ├── __init__.py                 # Makes tests discoverable
+│   ├── test_chronicler.py          # test logging functionality
+│   ├── test_configurator.py        # test configuration loading and validation
+│   ├── test_fastapi_pipeline.py    # test API endpoints and response formats
+│   ├── test_response_models.py     # validate response model schemas
+│   └── test_yfinance_fetch.py      # test external market data fetching
+└── .github/.........................
+    └── workflows/
+        └── cicd.yml                # For automating testing and Docker image deployment
 ```
 
 ### Testing
