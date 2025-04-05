@@ -36,6 +36,8 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
+FIXME: Architectural overview C4 is bad. Frontend interfaces with the API, not the py package!
+
 ### Architectural Overview
 
 ```mermaid
