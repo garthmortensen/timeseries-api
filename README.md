@@ -34,6 +34,8 @@ This project provides both a web API and CLI interface for financial and econome
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
+TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
+
 ### Architectural Overview
 
 ```mermaid
@@ -259,7 +261,7 @@ flowchart TB
     end
     
     %% External Systems
-    ExternalDataSource[(External Data Source)]:::external
+    ExternalDataSource[(External Data Source<br>Yahoo Finance API)]:::external
     ExistingAnalysisTool[Existing Analysis Tools]:::external
     
     %% Relationships
@@ -267,7 +269,7 @@ flowchart TB
     FastAPI -- "Reads" --> Config
     FastAPI -- "Packaged into" --> Dockerized
     CIpipeline -- "Builds and tests" --> Dockerized
-    ExternalDataSource -- "Provides data to" --> FastAPI
+    ExternalDataSource -- "Provides market data [yfinance]" --> FastAPI
     FastAPI -- "Can export to" --> ExistingAnalysisTool
 ```
 
@@ -291,6 +293,7 @@ flowchart TB
         APIRouters["API Routers<br>[Python]<br>Manages endpoints"]:::component
         DataService["Data Service<br>[Python]<br>Data transformations"]:::component
         ModelsService["Models Service<br>[Python]<br>Statistical models"]:::component
+        MarketDataService["Market Data Service<br>[Python]<br>Fetches external data"]:::component
         ChroniclerUtil["Chronicler<br>[Python]<br>Handles logging"]:::component
         ConfigUtil["Configurator<br>[Python]<br>Manages config"]:::component
         InterpretationService["Interpretation Service<br>[Python]<br>Interprets results"]:::component
@@ -299,7 +302,9 @@ flowchart TB
         %% Component relationships
         APIRouters --> DataService
         APIRouters --> ModelsService
+        APIRouters --> MarketDataService
         APIRouters --> InterpretationService
+        DataService --> MarketDataService
         DataService --> ChroniclerUtil
         ModelsService --> ChroniclerUtil
         DataService --> ConfigUtil
@@ -311,10 +316,12 @@ flowchart TB
     
     %% External
     ConfigFile[(Config YAML)]:::external
+    ExternalMarketSource[(Yahoo Finance API)]:::external
     
     %% Relationships
     User -- "Makes API requests to" --> APIRouters
     ConfigUtil -- "Reads from" --> ConfigFile
+    MarketDataService -- "Fetches data from" --> ExternalMarketSource
 ```
 
 #### level 4: Code/Class Diagram
@@ -332,9 +339,10 @@ classDiagram
     %% Router Classes
     class DataRouter {
         +router: APIRouter
-        +generate_data(input_data)
-        +scale_data(input_data)
-        +test_stationarity(input_data)
+        +generate_data_endpoint(input_data)
+        +fetch_market_data_endpoint(input_data)
+        +scale_data_endpoint(input_data)
+        +test_stationarity_endpoint(input_data)
     }
 
     class ModelsRouter {
@@ -345,7 +353,7 @@ classDiagram
     
     class PipelineRouter {
         +router: APIRouter
-        +run_pipeline(pipeline_input)
+        +run_pipeline_endpoint(pipeline_input)
     }
     
     %% Service Classes
@@ -355,6 +363,10 @@ classDiagram
         +scale_data_step(df, config)
         +stationarize_data_step(df, config)
         +test_stationarity_step(df, config)
+    }
+    
+    class MarketDataService {
+        +fetch_market_data(symbols, start_date, end_date, interval)
     }
     
     class ModelsService {
@@ -402,6 +414,13 @@ classDiagram
         +anchor_prices: dict
     }
     
+    class MarketDataInput {
+        +symbols: List[str]
+        +start_date: str
+        +end_date: str
+        +interval: str
+    }
+    
     class ScalingInput {
         +method: str
         +data: list
@@ -426,9 +445,12 @@ classDiagram
     }
     
     class PipelineInput {
-        +start_date: str
-        +end_date: str
-        +anchor_prices: dict
+        +source_actual_or_synthetic_data: str
+        +data_start_date: str
+        +data_end_date: str
+        +symbols: List[str]
+        +synthetic_anchor_prices: List[float]
+        +synthetic_random_seed: int
         +scaling_method: str
         +arima_params: dict
         +garch_params: dict
@@ -485,11 +507,15 @@ classDiagram
     App --> Chronicler: uses
     
     DataRouter --> DataService: uses
+    DataRouter --> MarketDataService: uses
     DataRouter --> DataGenerationInput: accepts
+    DataRouter --> MarketDataInput: accepts
     DataRouter --> ScalingInput: accepts
     DataRouter --> StationarityTestInput: accepts
     DataRouter --> TimeSeriesDataResponse: returns
     DataRouter --> StationarityTestResponse: returns
+    
+    DataService --> MarketDataService: uses
     
     ModelsRouter --> ModelsService: uses
     ModelsRouter --> ARIMAInput: accepts
@@ -514,6 +540,7 @@ classDiagram
     Chronicler --> GitInfo: uses
     
     BaseInputModel <|-- DataGenerationInput: extends
+    BaseInputModel <|-- MarketDataInput: extends
     BaseInputModel <|-- ScalingInput: extends
     BaseInputModel <|-- StationarityTestInput: extends
     BaseInputModel <|-- ARIMAInput: extends
@@ -525,6 +552,73 @@ classDiagram
     BaseResponseModel <|-- ARIMAModelResponse: extends
     BaseResponseModel <|-- GARCHModelResponse: extends
     BaseResponseModel <|-- PipelineResponse: extends
+```
+
+## CI/CD Process
+
+Triggers: Runs when code is pushed to branches main or dev, or when pull requests target main
+Testing: Validates code across multiple Python versions (3.11, 3.13) and operating systems (Ubuntu, macOS)
+Docker: Builds and publishes container images to Docker Hub
+Quality: Uploads test results and coverage metrics to Codecov
+
+```mermaid
+flowchart TB
+    %% Styling
+    classDef person fill:#08427B,color:#fff,stroke:#052E56,stroke-width:1px
+    classDef system fill:#1168BD,color:#fff,stroke:#0B4884,stroke-width:1px
+    classDef external fill:#999999,color:#fff,stroke:#6B6B6B,stroke-width:1px
+    classDef pipeline fill:#ff9900,color:#fff,stroke:#cc7700,stroke-width:1px
+    
+    %% Actors
+    Developer((Developer)):::person
+    
+    %% Main Systems
+    TimeseriesPipeline["Timeseries Pipeline\nAPI Service"]:::system
+    
+    %% Source Control
+    GitHub["GitHub\nSource Repository"]:::external
+    
+    %% CI/CD Pipeline and Tools
+    GitHubActions["GitHub Actions\nCI/CD Pipeline"]:::pipeline
+    
+    %% Distribution Platforms
+    DockerHub["Docker Hub"]:::external
+    
+    %% Code Quality Services
+    Codecov["Codecov\nCode Coverage"]:::external
+    
+    %% Flow
+    Developer -- "Commits code to" --> GitHub
+    GitHub -- "Triggers on push to main/dev\nor PR to main" --> GitHubActions
+    
+    %% Primary Jobs
+    subgraph TestJob["Test Job"]
+        Deps["Install Dependencies"]:::pipeline
+        Lint["Lint with Flake8"]:::pipeline
+        Test["Run Tests with Pytest"]:::pipeline
+        Coverage["Collect Code Coverage"]:::pipeline
+        
+        Deps --> Lint --> Test --> Coverage
+    end
+    
+    subgraph DockerJob["Docker Job"]
+        BuildDocker["Build Docker Image"]:::pipeline
+        TagDocker["Tag Docker Image\nmain/dev/hash/version"]:::pipeline
+        PushDocker["Push to DockerHub"]:::pipeline
+        
+        BuildDocker --> TagDocker --> PushDocker
+    end
+    
+    %% Job Dependencies
+    GitHubActions --> TestJob
+    TestJob --> DockerJob
+    
+    %% External Services Connections
+    Coverage -- "Upload Results" --> Codecov
+    PushDocker -- "Push Image" --> DockerHub
+    
+    %% Final Products
+    DockerHub -- "Container Image" --> TimeseriesPipeline
 ```
 
 ## License
