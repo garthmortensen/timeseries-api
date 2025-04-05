@@ -34,18 +34,6 @@ This project provides both a web API and CLI interface for financial and econome
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
-TODO: Update C4 with `fetch_market_data()`.
-
-TODO: This is the data structure [`list` of `dictionaries`] I want to achieve because it's easy to load into a df, sortable, groupable, serializable:
-```json
-    [
-    {"date": "2023-01-01", "symbol": "GME", "price": 150.0},
-    {"date": "2023-01-01", "symbol": "BYND", "price": 200.0},
-    {"date": "2023-01-02", "symbol": "GME", "price": 149.3}
-    ]
-```
-**This Impacts the py package, api and frontend.**
-
 ### Architectural Overview
 
 ```mermaid
@@ -60,34 +48,27 @@ flowchart TB
     
     %% Main Systems
     TimeSeriesFrontend["Timeseries Frontend
-    (Django Web App)"]:::system
+    (Visualization Apps)"]:::system
     TimeSeriesPipeline["Timeseries Pipeline
-    (FastAPI Service)"]:::system
+    (API Service)"]:::system
     GeneralizedTimeseries["Generalized Timeseries
     (Python Package)"]:::system
     
     %% External Systems
     ExternalDataSource[(External Data Source)]:::external
-    ExistingAnalysisTool["Existing Analysis Tools"]:::external
+    AnalysisTool["Data Analysis Tools"]:::external
     PyPI["PyPI Package Registry"]:::external
     
     %% Relationships
-    User -- "Interacts with UI,
-    configures analysis params" --> TimeSeriesFrontend
-    TimeSeriesFrontend -- "Makes API calls" --> TimeSeriesPipeline
-    TimeSeriesPipeline -- "Returns analysis results" --> TimeSeriesFrontend
-    TimeSeriesFrontend -- "Visualizes results,
-    shows charts" --> User
-    
+    User -- "Uses package directly" --> GeneralizedTimeseries
     TimeSeriesPipeline -- "Imports and uses" --> GeneralizedTimeseries
-    TimeSeriesPipeline -- "Exposes API for" --> ExistingAnalysisTool
+    TimeSeriesFrontend -- "Imports and uses" --> GeneralizedTimeseries
     
-    ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
-    ExternalDataSource -- "Can provide data
-    for visualization" --> TimeSeriesFrontend
+    ExternalDataSource -- "Provides time series data" --> GeneralizedTimeseries
+    GeneralizedTimeseries -- "Exports analysis to" --> AnalysisTool
     
     GeneralizedTimeseries -- "Published to" --> PyPI
-    TimeSeriesPipeline -- "Retrieves package from" --> PyPI
+    User -- "Installs from" --> PyPI
 ```
 
 ## Quick Start

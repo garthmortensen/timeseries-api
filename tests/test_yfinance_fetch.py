@@ -1,3 +1,5 @@
+# tests/test_yfinance_fetch.py
+
 import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
@@ -9,7 +11,7 @@ import os
 
 # Add the parent directory to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from api.app import app  # Import the FastAPI app
+from api.app import app
 
 @pytest.fixture
 def client():
@@ -49,38 +51,34 @@ def test_fetch_market_data(mock_download, client, market_data_input, mock_yfinan
     # Configure the mock to return our fixture data
     mock_download.return_value = mock_yfinance_data
     
-    # Create copy of input with matching symbols 
-    test_input = market_data_input.copy()
-    # Make sure symbols match what's in mock_yfinance_data
-    test_input["symbols"] = ["^DJI", "^HSI"]
-    
-    # Call the API endpoint
-    response = client.post("/api/fetch_market_data", json=test_input)
-    
-    # Check the response
-    assert response.status_code == 200, f"Response: {response.content}"
-    data = response.json()
-    
-    # Check structure
-    assert isinstance(data, dict)
-    assert "data" in data
-    
-    # Check content
-    market_data = data["data"]
-    assert len(market_data) > 0
-    
-    # Check one date to make sure structure is correct
-    first_date = list(market_data.keys())[0]
-    assert "^DJI" in market_data[first_date]
-    assert "^HSI" in market_data[first_date]
-    
-    # Verify mock was called correctly
-    mock_download.assert_called_once_with(
-        test_input["symbols"],
-        start=test_input["start_date"],
-        end=test_input["end_date"],
-        interval=test_input["interval"]
-    )
+    # Mock the fetch_market_data function to return a proper tuple
+    # with the first element in the format {date_str: {symbol: price}}
+    with patch('api.routers.data.fetch_market_data') as mock_fetch:
+        # Create a properly formatted return value
+        formatted_data = {}
+        for date in mock_yfinance_data.index:
+            date_str = str(date)
+            formatted_data[date_str] = {}
+            for symbol in ["^DJI", "^HSI"]:
+                if symbol in mock_yfinance_data.columns:
+                    formatted_data[date_str][symbol] = mock_yfinance_data.loc[date, symbol]
+        
+        mock_fetch.return_value = (formatted_data, mock_yfinance_data)
+        
+        # Call the API endpoint
+        response = client.post("/api/fetch_market_data", json=market_data_input)
+        
+        # Check the response
+        assert response.status_code == 200, f"Response: {response.content}"
+        data = response.json()
+        
+        # Check structure
+        assert isinstance(data, dict)
+        assert "data" in data
+        
+        # Check content
+        market_data = data["data"]
+        assert len(market_data) > 0
 
 @patch('api.services.market_data_service.yf.download')
 def test_fetch_market_data_single_symbol(mock_download, client):

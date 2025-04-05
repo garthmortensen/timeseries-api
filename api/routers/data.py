@@ -31,13 +31,19 @@ def get_config():
 async def generate_data_endpoint(input_data: DataGenerationInput):
     """Generate synthetic time series data based on input parameters."""
     try:
-        price_dict, _ = data_generator.generate_price_series(
+        price_dict, price_df = data_generator.generate_price_series(
             start_date=input_data.start_date,
             end_date=input_data.end_date,
             anchor_prices=input_data.anchor_prices,
         )
         
-        return_data = {"data": price_dict}
+        # Convert from ticker-based to date-based structure required by the API
+        date_based_dict = {}
+        for date, row in price_df.iterrows():
+            date_str = date.strftime('%Y-%m-%d')
+            date_based_dict[date_str] = row.to_dict()
+        
+        return_data = {"data": date_based_dict}
         l.info(f"generate_data() returning {len(return_data['data'])} data points")
         return return_data
     
@@ -51,7 +57,7 @@ async def generate_data_endpoint(input_data: DataGenerationInput):
 async def fetch_market_data_endpoint(input_data: MarketDataInput):
     """Fetch real market data from external sources like Yahoo Finance."""
     try:
-        data_dict = fetch_market_data(
+        data_dict, _ = fetch_market_data(
             symbols=input_data.symbols,
             start_date=input_data.start_date,
             end_date=input_data.end_date,
