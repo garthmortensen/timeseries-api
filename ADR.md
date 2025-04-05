@@ -67,7 +67,7 @@ Consequences: Maintains architectural consistency with ADR-001 (API is interface
             {"date": "2023-01-02", "symbol": "GME", "price": 149.3}
             ]
         ```
-    - pros: easily loaded into Pandas, sortable, groupable, filterable, JSON serializable, API and frontend friendly
+    - pros: easily loaded into Pandas, sortable, groupable, filterable, JSON serializable, API and frontend friendly. List of records - straight out of a database. This seems like a pretty neat datastructure. Nothing interesting about lists, but the universality is neat.
     - cons: more verbose and repetitive
 
 ### Decision and consequences
