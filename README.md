@@ -1,9 +1,11 @@
 # Timeseries Pipeline
 
-![CI/CD](https://github.com/garthmortensen/timeseries-pipeline/actions/workflows/cicd.yml/badge.svg)
-[![codecov](https://codecov.io/gh/garthmortensen/timeseries-pipeline/graph/badge.svg?token=L1L5OBSF3Z)](https://codecov.io/gh/garthmortensen/timeseries-pipeline)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/dashboard)
+[![GitHub](https://img.shields.io/badge/GitHub-timeseries--pipeline-blue?logo=github)](https://github.com/garthmortensen/timeseries-pipeline)
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-pipeline--timeseries-blue)](https://hub.docker.com/r/goattheprofessionalmeower/timeseries-pipeline)
+
+![CI/CD](https://github.com/garthmortensen/timeseries-pipeline/actions/workflows/cicd.yml/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/dashboard)
+[![Coverage](https://codecov.io/gh/garthmortensen/timeseries-pipeline/graph/badge.svg&label=Coverage)](https://codecov.io/gh/garthmortensen/timeseries-pipeline)
 
 ## Overview
 
@@ -535,5 +537,4 @@ classDiagram
 
 ## License
 
-[MIT License](LICENSE). Have at it.
-
+[MIT License](LICENSE).
