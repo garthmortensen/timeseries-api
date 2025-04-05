@@ -1,4 +1,4 @@
-name: timeseries-pipeline CI/CD
+name: CI/CD
 
 # Run workflow on push
 on: 
