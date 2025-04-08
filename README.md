@@ -34,9 +34,9 @@ This project provides both a web API and CLI interface for financial and econome
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
+TODO: CICD - add to makefile process to download latest libraries and test/throw depreciation warnings with pylance(?)
+TODO: auto `pip install --update generalized-timeseries`
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
-
-FIXME: Architectural overview C4 is bad. Frontend interfaces with the API, not the py package!
 
 ### Architectural Overview
 
@@ -46,10 +46,8 @@ flowchart TB
     classDef person fill:#08427B,color:#fff,stroke:#052E56,stroke-width:1px
     classDef system fill:#1168BD,color:#fff,stroke:#0B4884,stroke-width:1px
     classDef external fill:#999999,color:#fff,stroke:#6B6B6B,stroke-width:1px
-    
     %% Actors and Systems
     User((User)):::person
-    
     %% Main Systems
     TimeSeriesFrontend["Timeseries Frontend
     (Visualization Apps)"]:::system
@@ -57,20 +55,17 @@ flowchart TB
     (API Service)"]:::system
     GeneralizedTimeseries["Generalized Timeseries
     (Python Package)"]:::system
-    
     %% External Systems
     ExternalDataSource[(External Data Source)]:::external
     AnalysisTool["Data Analysis Tools"]:::external
     PyPI["PyPI Package Registry"]:::external
-    
     %% Relationships
-    User -- "Uses package directly" --> GeneralizedTimeseries
+    User -- "Uses" --> TimeSeriesFrontend
+    TimeSeriesFrontend -- "Makes API calls to" --> TimeSeriesPipeline
     TimeSeriesPipeline -- "Imports and uses" --> GeneralizedTimeseries
-    TimeSeriesFrontend -- "Imports and uses" --> GeneralizedTimeseries
-    
-    ExternalDataSource -- "Provides time series data" --> GeneralizedTimeseries
+    User -- "Can use package directly" --> GeneralizedTimeseries  
+    ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
     GeneralizedTimeseries -- "Exports analysis to" --> AnalysisTool
-    
     GeneralizedTimeseries -- "Published to" --> PyPI
     User -- "Installs from" --> PyPI
 ```
@@ -188,9 +183,8 @@ timeseries-pipeline/..................
 │   ├── test_fastapi_pipeline.py    # test API endpoints and response formats
 │   ├── test_response_models.py     # validate response model schemas
 │   └── test_yfinance_fetch.py      # test external market data fetching
-└── .github/.........................
-    └── workflows/
-        └── cicd.yml                # For automating testing and Docker image deployment
+└── .github/workflows/
+            └── cicd.yml            # For automating testing and Docker image deployment
 ```
 
 ### Testing
@@ -556,7 +550,7 @@ classDiagram
     BaseResponseModel <|-- PipelineResponse: extends
 ```
 
-## CI/CD Process
+#### CI/CD Process
 
 Triggers: Runs when code is pushed to branches main or dev, or when pull requests target main
 Testing: Validates code across multiple Python versions (3.11, 3.13) and operating systems (Ubuntu, macOS)
@@ -622,7 +616,3 @@ flowchart TB
     %% Final Products
     DockerHub -- "Container Image" --> TimeseriesPipeline
 ```
-
-## License
-
-[MIT License](LICENSE).
