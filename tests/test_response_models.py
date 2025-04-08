@@ -33,7 +33,7 @@ def test_run_garch_response_model(sample_data):
         "data": sample_data
     }
     
-    response = client.post("/api/run_garch", json=input_data)
+    response = client.post("/api/v1/run_garch", json=input_data)
     assert response.status_code == 200
     
     # Check that the response has the expected structure

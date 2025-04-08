@@ -86,8 +86,8 @@ def test_run_pipeline_input():
     }
 
 def test_generate_data(data_generation_input):
-    """Test the /generate_data endpoint."""
-    response = client.post("/api/generate_data", json=data_generation_input)
+    """Test the /api/v1/generate_data endpoint."""
+    response = client.post("/api/v1/generate_data", json=data_generation_input)
     print("Response content:", response.content)  # Add this line
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
@@ -96,8 +96,8 @@ def test_generate_data(data_generation_input):
     assert len(data["data"]) > 0
 
 def test_scale_data(test_scale_data_input):
-    """Test the /scale_data endpoint."""
-    response = client.post("/api/scale_data", json=test_scale_data_input)
+    """Test the /api/v1/scale_data endpoint."""
+    response = client.post("/api/v1/scale_data", json=test_scale_data_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert isinstance(data, dict)
@@ -106,8 +106,8 @@ def test_scale_data(test_scale_data_input):
     assert len(data["data"]) == len(test_scale_data_input["data"])
 
 def test_test_stationarity(test_stationarity_input):
-    """Test the /test_stationarity endpoint."""
-    response = client.post("/api/test_stationarity", json=test_stationarity_input)
+    """Test the /api/v1/test_stationarity endpoint."""
+    response = client.post("/api/v1/test_stationarity", json=test_stationarity_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     # Validate response structure
@@ -119,23 +119,23 @@ def test_test_stationarity(test_stationarity_input):
     assert "interpretation" in data
 
 def test_run_arima(test_arima_input):
-    """Test the /run_arima endpoint."""
-    response = client.post("/api/run_arima", json=test_arima_input)
+    """Test the /api/v1/run_arima endpoint."""
+    response = client.post("/api/v1/run_arima", json=test_arima_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert "fitted_model" in data
     assert "forecast" in data
 
 def test_run_garch(test_garch_input):
-    """Test the /run_garch endpoint."""
-    response = client.post("/api/run_garch", json=test_garch_input)
+    """Test the /api/v1/run_garch endpoint."""
+    response = client.post("/api/v1/run_garch", json=test_garch_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()
     assert "fitted_model" in data
     assert "forecast" in data
 
 def test_run_pipeline(test_run_pipeline_input):
-    """Test the /run_pipeline endpoint."""
+    """Test the /api/v1/run_pipeline endpoint."""
     response = client.post("/api/v1/run_pipeline", json=test_run_pipeline_input)
     assert response.status_code == 200, f"Response: {response.content}"
     data = response.json()

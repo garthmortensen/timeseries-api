@@ -23,14 +23,14 @@
         }
       }
     },
-    "/api/generate_data": {
+    "/api/v1/generate_data": {
       "post": {
         "tags": [
           "Data Operations"
         ],
         "summary": "Generate synthetic time series data",
         "description": "Generate synthetic time series data based on input parameters.",
-        "operationId": "generate_data_endpoint_api_generate_data_post",
+        "operationId": "generate_data_endpoint_api_v1_generate_data_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -65,14 +65,14 @@
         }
       }
     },
-    "/api/fetch_market_data": {
+    "/api/v1/fetch_market_data": {
       "post": {
         "tags": [
           "Data Operations"
         ],
         "summary": "Fetch real market data from external sources",
         "description": "Fetch real market data from external sources like Yahoo Finance.",
-        "operationId": "fetch_market_data_endpoint_api_fetch_market_data_post",
+        "operationId": "fetch_market_data_endpoint_api_v1_fetch_market_data_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -107,14 +107,14 @@
         }
       }
     },
-    "/api/scale_data": {
+    "/api/v1/scale_data": {
       "post": {
         "tags": [
           "Data Operations"
         ],
         "summary": "Scale time series data",
         "description": "Scale time series data using specified method.",
-        "operationId": "scale_data_endpoint_api_scale_data_post",
+        "operationId": "scale_data_endpoint_api_v1_scale_data_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -149,14 +149,14 @@
         }
       }
     },
-    "/api/test_stationarity": {
+    "/api/v1/test_stationarity": {
       "post": {
         "tags": [
           "Data Operations"
         ],
         "summary": "Test for stationarity",
         "description": "Test stationarity of time series data.",
-        "operationId": "test_stationarity_endpoint_api_test_stationarity_post",
+        "operationId": "test_stationarity_endpoint_api_v1_test_stationarity_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -191,14 +191,14 @@
         }
       }
     },
-    "/api/run_arima": {
+    "/api/v1/run_arima": {
       "post": {
         "tags": [
           "Statistical Models"
         ],
         "summary": "Run ARIMA model on time series",
         "description": "Run ARIMA model on time series data.",
-        "operationId": "run_arima_endpoint_api_run_arima_post",
+        "operationId": "run_arima_endpoint_api_v1_run_arima_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -233,14 +233,14 @@
         }
       }
     },
-    "/api/run_garch": {
+    "/api/v1/run_garch": {
       "post": {
         "tags": [
           "Statistical Models"
         ],
         "summary": "Run GARCH model on time series",
         "description": "Run GARCH model on time series data.",
-        "operationId": "run_garch_endpoint_api_run_garch_post",
+        "operationId": "run_garch_endpoint_api_v1_run_garch_post",
         "requestBody": {
           "content": {
             "application/json": {

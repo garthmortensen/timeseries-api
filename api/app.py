@@ -89,15 +89,9 @@ async def ignore_favicon():
     return Response(status_code=204)
 
 # Add routers
-app.include_router(data_router, prefix="/api")
-app.include_router(models_router, prefix="/api")
+app.include_router(data_router, prefix="/api/v1")
+app.include_router(models_router, prefix="/api/v1")
 app.include_router(pipeline_router, prefix="/api/v1")
-
-# Add v1 endpoint alias for backward compatibility
-@app.post("/run_pipeline", include_in_schema=False)
-async def run_pipeline_alias(pipeline_input):
-    """Legacy endpoint that redirects to /api/v1/run_pipeline."""
-    return await pipeline_router.endpoints["run_pipeline"](pipeline_input)
 
 # Root endpoint
 @app.get("/", tags=["Health"])

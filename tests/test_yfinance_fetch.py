@@ -47,7 +47,7 @@ def mock_yfinance_data():
 
 @patch('api.services.market_data_service.yf.download')
 def test_fetch_market_data(mock_download, client, market_data_input, mock_yfinance_data):
-    """Test the /fetch_market_data endpoint."""
+    """Test the /api/v1/fetch_market_data endpoint."""
     # Configure the mock to return our fixture data
     mock_download.return_value = mock_yfinance_data
     
@@ -66,7 +66,7 @@ def test_fetch_market_data(mock_download, client, market_data_input, mock_yfinan
         mock_fetch.return_value = (formatted_data, mock_yfinance_data)
         
         # Call the API endpoint
-        response = client.post("/api/fetch_market_data", json=market_data_input)
+        response = client.post("/api/v1/fetch_market_data", json=market_data_input)
         
         # Check the response
         assert response.status_code == 200, f"Response: {response.content}"
@@ -82,7 +82,7 @@ def test_fetch_market_data(mock_download, client, market_data_input, mock_yfinan
 
 @patch('api.services.market_data_service.yf.download')
 def test_fetch_market_data_single_symbol(mock_download, client):
-    """Test the /fetch_market_data endpoint with a single symbol."""
+    """Test the /api/v1/fetch_market_data endpoint with a single symbol."""
     # For single symbols, yfinance returns a different structure
     # Create test data for one symbol
     dates = pd.date_range(start="2023-01-01", end="2023-01-10", freq="D")
@@ -107,7 +107,7 @@ def test_fetch_market_data_single_symbol(mock_download, client):
     }
     
     # Call the API endpoint
-    response = client.post("/api/fetch_market_data", json=input_data)
+    response = client.post("/api/v1/fetch_market_data", json=input_data)
     
     # Check the response
     assert response.status_code == 200, f"Response: {response.content}"
@@ -120,3 +120,4 @@ def test_fetch_market_data_single_symbol(mock_download, client):
     
     first_date = list(market_data.keys())[0]
     assert "^DJI" in market_data[first_date]
+    

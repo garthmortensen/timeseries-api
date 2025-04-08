@@ -54,22 +54,26 @@ def generate_data_step(pipeline_input, config):
     elif config.source_actual_or_synthetic_data == "actual":
         try:
             # Fetch market data using configuration parameters
-            data_dict = fetch_market_data(
+            data_dict, df = fetch_market_data(
                 symbols=config.symbols,
                 start_date=config.data_start_date,
                 end_date=config.data_end_date,
             )
             
-            # Convert market data dict to DataFrame with proper index
-            df_data = []
-            for date_str, symbol_prices in data_dict.items():
-                row_data = {'date': date_str}
-                row_data.update(symbol_prices)
-                df_data.append(row_data)
-            
-            df = pd.DataFrame(df_data)
-            df['date'] = pd.to_datetime(df['date'])
-            df.set_index('date', inplace=True)
+            # The second return value (df) already should be a DataFrame with proper index
+            # Just check to make sure it has what we need
+            if not isinstance(df, pd.DataFrame):
+                # If df is not a DataFrame for some reason, convert data_dict to DataFrame
+                l.warning("fetch_market_data did not return a DataFrame as expected, converting from dict")
+                df_data = []
+                for date_str, symbol_prices in data_dict.items():
+                    row_data = {'date': date_str}
+                    row_data.update(symbol_prices)
+                    df_data.append(row_data)
+                
+                df = pd.DataFrame(df_data)
+                df['date'] = pd.to_datetime(df['date'])
+                df.set_index('date', inplace=True)
             
             return df
 
@@ -205,4 +209,3 @@ def test_stationarity_step(df, config):
             status_code=500, 
             detail=f"Error testing stationarity: {str(e)}"
         )
-    
