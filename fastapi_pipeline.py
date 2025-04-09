@@ -8,6 +8,8 @@ import logging as l
 from api.app import app
 import uvicorn
 
+port = int(os.getenv("PORT", 8001))
+
 if __name__ == "__main__":
     l.info("Starting timeseries-pipeline FastAPI application")
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=port)

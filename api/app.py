@@ -15,7 +15,7 @@ from colorama import Fore, Style
 
 # Initialize logger
 from utilities.chronicler import init_chronicler
-chronicler = init_chronicler()
+chronicler = init_chronicler(use_json=os.getenv("ENVIRONMENT", "").lower() in ["prod", "production", "cloud"])
 
 # Load configuration
 from utilities.configurator import load_configuration

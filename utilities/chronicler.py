@@ -2,6 +2,7 @@
 # timeseries-pipeline/utilities/chronicler.py
 
 import logging
+import json
 import time
 import os
 import sys
@@ -12,6 +13,29 @@ from typing import List, Dict, Union
 from colorama import init
 init(autoreset=True)
 
+
+class JsonFormatter(logging.Formatter):
+    """Format logs as JSON objects for better cloud integration."""
+    
+    def format(self, record):
+        log_record = {
+            "timestamp": self.formatTime(record, "%Y%m%d_%H%M%S"),
+            "level": record.levelname,
+            "filename": record.filename,
+            "line": record.lineno,
+            "function": record.funcName,
+            "message": record.getMessage(),
+        }
+        
+        # Add exception info if present
+        if record.exc_info:
+            log_record["exception"] = self.formatException(record.exc_info)
+            
+        # Add extra fields if present
+        if hasattr(record, "extra_fields"):
+            log_record.update(record.extra_fields)
+            
+        return json.dumps(log_record)
 
 class GitInfo:
     """
@@ -84,32 +108,41 @@ class Chronicler:
     Writes logs to both `stdout` (for AWS CloudWatch) and a timestamped log file in `./logs`.
     """
 
-    def __init__(self, script_path: str) -> None:
+    def __init__(self, script_path: str, use_json: bool = False) -> None:
         """
         Initializes the Chronicler class and sets up logging for the script.
 
         Args:
             script_path (str): Path of the script for which logging is being initialized.
+            use_json (bool): Whether to use JSON formatting for logs (useful for cloud environments).
         """
         script_name = os.path.splitext(os.path.basename(script_path))[0]
         timestamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
         self.log_file = f"./logs/{timestamp}_{script_name}.log"
         os.makedirs("./logs", exist_ok=True)
 
-        handlers = [
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler(filename=self.log_file, mode="w"),  # write to file
-        ]
-
-        # 20240202_154449 INFO practice.py:56 log_meta| pid:    10629
-        log_format = "%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(funcName)s| %(message)s"
-        logging.basicConfig(
-            level=logging.INFO,
-            format=log_format,
-            datefmt="%Y%m%d_%H%M%S",
-            handlers=handlers,
-        )
-
+        # Create handlers
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        file_handler = logging.FileHandler(filename=self.log_file, mode="w")
+        
+        # Apply formatting based on configuration
+        if use_json:
+            json_formatter = JsonFormatter()
+            stdout_handler.setFormatter(json_formatter)
+            file_handler.setFormatter(json_formatter)
+        else:
+            # Traditional format
+            log_format = "%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(funcName)s| %(message)s"
+            formatter = logging.Formatter(log_format, datefmt="%Y%m%d_%H%M%S")
+            stdout_handler.setFormatter(formatter)
+            file_handler.setFormatter(formatter)
+        
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.INFO)
+        root_logger.addHandler(stdout_handler)
+        root_logger.addHandler(file_handler)
+        
         ascii_banner = """\n
         >  ┓       • ┓     <
         > ┏┣┓┏┓┏┓┏┓┓┏┃┏┓┏┓ <
@@ -127,13 +160,15 @@ class Chronicler:
         )
 
 
-def init_chronicler() -> Chronicler:
+def init_chronicler(use_json: bool = False) -> Chronicler:
     """
     Initializes and returns an instance of the Chronicler class.
+    
+    Args:
+        use_json (bool): Whether to use JSON formatted logs (recommended for cloud environments).
 
     Returns:
         Chronicler: An instance of the Chronicler class.
     """
-    current_script_path = os.path.abspath(__file__)  # "/myproject/run.py"
-    return Chronicler(current_script_path)  # Chronicler("/myproject/run.py")
-
+    current_script_path = os.path.abspath(__file__)
+    return Chronicler(current_script_path, use_json=use_json)
