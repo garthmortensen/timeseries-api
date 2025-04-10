@@ -29,4 +29,5 @@ COPY --chown=timeseriespipelineapp:timeseriespipelineapp ./ /app
 EXPOSE 8000
 
 # Run the FastAPI app
-CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8001"]
+# CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["python", "fastapi_pipeline.py"]
