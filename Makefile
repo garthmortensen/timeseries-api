@@ -52,6 +52,22 @@ rebuild: docker-stop docker-rm docker-clean docker-build docker-run
 save-openapi:
 	$(PYTHON) save_openapi_json.py
 
+# update python dependencies
+.PHONY: update-deps
+update-deps:
+	@echo "Updating dependencies to latest versions..."
+	@if [ -d "venv" ]; then \
+		echo "Activating virtual environment..."; \
+		. venv/bin/activate && \
+		$(PYTHON) -m pip install --upgrade pip && \
+		$(PYTHON) -m pip install --upgrade -r requirements.txt && \
+		echo "Generating new requirements.txt with updated dependencies..." && \
+		$(PYTHON) -m pip freeze > requirements.txt && \
+		echo "Dependencies updated."; \
+	else \
+		echo "Virtual environment 'venv' not found." ; \
+	fi
+
 .PHONY: help
 help:
 	@echo "Available targets:"

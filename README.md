@@ -34,8 +34,6 @@ This project provides both a web API and CLI interface for financial and econome
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
-TODO: CICD - add to makefile process to download latest libraries and test/throw depreciation warnings with pylance(?)
-TODO: auto `pip install --update generalized-timeseries`
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
 ### Architectural Overview
