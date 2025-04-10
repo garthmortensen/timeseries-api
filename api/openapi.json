@@ -29,7 +29,7 @@
           "Data Operations"
         ],
         "summary": "Generate synthetic time series data",
-        "description": "Generate synthetic time series data based on input parameters.",
+        "description": "Generate synthetic time series data based on input parameters.\n\nThis endpoint creates synthetic price series for multiple symbols over a specified date range.\nEach symbol starts from its anchor price and follows a random walk with drift.\n\nThe response provides a dictionary of dates, with each date containing prices for all symbols.",
         "operationId": "generate_data_endpoint_api_v1_generate_data_post",
         "requestBody": {
           "content": {
@@ -43,14 +43,32 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully generated time series data",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                },
+                "example": {
+                  "data": {
+                    "2023-01-01": {
+                      "GME": 150.0,
+                      "BYND": 200.0
+                    },
+                    "2023-01-02": {
+                      "GME": 152.3,
+                      "BYND": 198.7
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid date format or other input parameters"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to generate time series data"
           },
           "422": {
             "description": "Validation Error",
@@ -71,7 +89,7 @@
           "Data Operations"
         ],
         "summary": "Fetch real market data from external sources",
-        "description": "Fetch real market data from external sources like Yahoo Finance.",
+        "description": "Fetch real market data from external sources like Yahoo Finance.\n\nThis endpoint retrieves historical price data for specified symbols over a date range.\nData is obtained from Yahoo Finance via the yfinance library.\n\nThe interval parameter controls the frequency of the data (daily, weekly, monthly).",
         "operationId": "fetch_market_data_endpoint_api_v1_fetch_market_data_post",
         "requestBody": {
           "content": {
@@ -85,14 +103,32 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully fetched market data",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                },
+                "example": {
+                  "data": {
+                    "2023-01-01": {
+                      "BYND": 150.0,
+                      "GME": 200.0
+                    },
+                    "2023-01-02": {
+                      "BYND": 152.3,
+                      "GME": 198.7
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid symbols or date range"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to fetch data from external source"
           },
           "422": {
             "description": "Validation Error",
@@ -113,7 +149,7 @@
           "Data Operations"
         ],
         "summary": "Scale time series data",
-        "description": "Scale time series data using specified method.",
+        "description": "Scale time series data using the specified method.\n\nThis endpoint takes raw price data and applies a scaling transformation.\nSupported methods include:\n- standardize: Transforms data to have mean=0 and standard deviation=1\n- minmax: Scales data to a range between 0 and 1\n\nThe input data must contain 'date' and 'price' columns.",
         "operationId": "scale_data_endpoint_api_v1_scale_data_post",
         "requestBody": {
           "content": {
@@ -127,14 +163,36 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully scaled time series data",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                },
+                "example": {
+                  "data": {
+                    "0": {
+                      "date": "2023-01-01",
+                      "price": 0.0
+                    },
+                    "1": {
+                      "date": "2023-01-02",
+                      "price": 0.5
+                    },
+                    "2": {
+                      "date": "2023-01-03",
+                      "price": -0.3
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid data format or missing required columns"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to scale data"
           },
           "422": {
             "description": "Validation Error",
@@ -155,7 +213,7 @@
           "Data Operations"
         ],
         "summary": "Test for stationarity",
-        "description": "Test stationarity of time series data.",
+        "description": "Test time series data for stationarity using the Augmented Dickey-Fuller test.\n\nStationarity is a key property for time series analysis, indicating that statistical\nproperties like mean, variance, and autocorrelation are constant over time.\n\nThe test returns:\n- ADF statistic: More negative values suggest stationarity\n- p-value: Smaller values suggest stationarity\n- Critical values: Threshold values at different significance levels\n- is_stationary: Boolean indication based on p-value threshold\n- interpretation: Human-readable explanation of the results\n\nA p-value less than the threshold (default 0.05) indicates stationarity.",
         "operationId": "test_stationarity_endpoint_api_v1_test_stationarity_post",
         "requestBody": {
           "content": {
@@ -169,14 +227,31 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully tested time series for stationarity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StationarityTestResponse"
+                },
+                "example": {
+                  "adf_statistic": -3.45,
+                  "p_value": 0.032,
+                  "critical_values": {
+                    "1%": -3.75,
+                    "5%": -3.0,
+                    "10%": -2.63
+                  },
+                  "is_stationary": true,
+                  "interpretation": "The series is stationary (p-value: 0.0320). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling."
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid data format or insufficient data points"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to run stationarity test"
           },
           "422": {
             "description": "Validation Error",
@@ -197,7 +272,7 @@
           "Statistical Models"
         ],
         "summary": "Run ARIMA model on time series",
-        "description": "Run ARIMA model on time series data.",
+        "description": "Run an ARIMA (AutoRegressive Integrated Moving Average) model on time series data.\n\nARIMA is a statistical model for analyzing and forecasting time series data.\nIt combines three components:\n- AR(p): AutoRegressive - uses the relationship between an observation and p lagged observations\n- I(d): Integrated - differencing to make the time series stationary\n- MA(q): Moving Average - uses the dependency between an observation and q lagged residuals\n\nParameters:\n- p: Order of the AutoRegressive component (number of lag observations)\n- d: Order of differencing required to make the series stationary\n- q: Order of the Moving Average component (size of the moving average window)\n\nReturns:\n- fitted_model: Summary of the fitted model with diagnostics\n- parameters: Estimated coefficients for the model\n- p_values: Statistical significance of each parameter\n- forecast: Future predictions from the model",
         "operationId": "run_arima_endpoint_api_v1_run_arima_post",
         "requestBody": {
           "content": {
@@ -211,14 +286,44 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully fitted ARIMA model",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ARIMAModelResponse"
+                },
+                "example": {
+                  "fitted_model": "ARIMA(2,1,2) Results\nAIC: 123.45\nBIC: 134.56\n...",
+                  "parameters": {
+                    "ar.L1": 0.5,
+                    "ar.L2": 0.3,
+                    "ma.L1": 0.2,
+                    "ma.L2": 0.1,
+                    "const": 0.02
+                  },
+                  "p_values": {
+                    "ar.L1": 0.001,
+                    "ar.L2": 0.01,
+                    "ma.L1": 0.005,
+                    "ma.L2": 0.05,
+                    "const": 0.22
+                  },
+                  "forecast": [
+                    101.2,
+                    102.3,
+                    103.5,
+                    104.1,
+                    105.2
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid model parameters or insufficient data"
+          },
+          "500": {
+            "description": "Internal Server Error - Model fitting failed"
           },
           "422": {
             "description": "Validation Error",
@@ -239,7 +344,7 @@
           "Statistical Models"
         ],
         "summary": "Run GARCH model on time series",
-        "description": "Run GARCH model on time series data.",
+        "description": "Run a GARCH (Generalized AutoRegressive Conditional Heteroskedasticity) model on time series data.\n\nGARCH models are used to estimate and forecast volatility in financial time series.\nThey are particularly useful for asset returns that exhibit volatility clustering.\n\nParameters:\n- p: ARCH order (lag volatility terms)\n- q: GARCH order (lag residual terms)\n- dist: Error distribution assumption (normal, t, skewed-t)\n\nThe model captures how volatility evolves over time, accounting for:\n- Persistence of volatility (p)\n- Impact of past shocks on current volatility (q)\n\nReturns:\n- fitted_model: Summary of the fitted model with diagnostics\n- forecast: Predicted future volatility values",
         "operationId": "run_garch_endpoint_api_v1_run_garch_post",
         "requestBody": {
           "content": {
@@ -253,14 +358,30 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully fitted GARCH model",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GARCHModelResponse"
+                },
+                "example": {
+                  "fitted_model": "GARCH(1,1) Results\nAIC: 235.67\nBIC: 245.89\n...",
+                  "forecast": [
+                    0.0025,
+                    0.0028,
+                    0.003,
+                    0.0027,
+                    0.0026
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid model parameters or insufficient data"
+          },
+          "500": {
+            "description": "Internal Server Error - Model fitting failed"
           },
           "422": {
             "description": "Validation Error",
@@ -280,8 +401,8 @@
         "tags": [
           "Pipeline"
         ],
-        "summary": "Execute the entire pipeline",
-        "description": "Execute the complete time series analysis pipeline.\n\nThis endpoint:\n1. Generates synthetic or fetches actual time series data\n2. Fills any missing values\n3. Scales the data\n4. Makes the data stationary\n5. Tests for stationarity\n6. Runs ARIMA and GARCH models\n7. Returns model results and forecasts",
+        "summary": "Execute the complete time series analysis pipeline",
+        "description": "Run the end-to-end time series analysis pipeline with a single API call.\n          \n          This endpoint performs a complete workflow:\n          1. Generate synthetic data or fetch real market data\n          2. Fill any missing values in the data\n          3. Scale the data for better modeling\n          4. Transform data to achieve stationarity\n          5. Test for stationarity using the Augmented Dickey-Fuller test\n          6. Fit ARIMA model for forecasting trends\n          7. Fit GARCH model for forecasting volatility\n          8. Return all results including forecasts\n          \n          All parameters have sensible defaults defined in the configuration.",
         "operationId": "run_pipeline_endpoint_api_v1_run_pipeline_post",
         "requestBody": {
           "content": {
@@ -295,14 +416,49 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Successfully executed the entire pipeline",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PipelineResponse"
+                },
+                "example": {
+                  "stationarity_results": {
+                    "adf_statistic": -3.45,
+                    "p_value": 0.032,
+                    "critical_values": {
+                      "1%": -3.75,
+                      "5%": -3.0,
+                      "10%": -2.63
+                    },
+                    "is_stationary": true,
+                    "interpretation": "The series is stationary (p-value: 0.0320)."
+                  },
+                  "arima_summary": "ARIMA(2,1,2) model fitted successfully with AIC: 123.45",
+                  "arima_forecast": [
+                    101.2,
+                    102.3,
+                    103.5,
+                    104.1,
+                    105.2
+                  ],
+                  "garch_summary": "GARCH(1,1) model fitted successfully with AIC: 235.67",
+                  "garch_forecast": [
+                    0.0025,
+                    0.0028,
+                    0.003,
+                    0.0027,
+                    0.0026
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request - Invalid pipeline parameters"
+          },
+          "500": {
+            "description": "Internal Server Error - Pipeline execution failed"
           },
           "422": {
             "description": "Validation Error",

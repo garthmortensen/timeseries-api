@@ -29,5 +29,5 @@ COPY --chown=timeseriespipelineapp:timeseriespipelineapp ./ /app
 EXPOSE 8000
 
 # Run the FastAPI app
-# CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8001"]
+# Docker recommended: this json format avoids shell string parsing issues
 CMD ["python", "fastapi_pipeline.py"]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/routers/models.py
+# timeseries-pipeline/api/routers/models.py
 """Statistical models API endpoints.
 This module contains the API endpoints for running statistical models on time series data.
 """
@@ -7,7 +7,7 @@ This module contains the API endpoints for running statistical models on time se
 import logging as l
 import pandas as pd
 import numpy as np
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from statsmodels.tsa.arima.model import ARIMA
 
 from generalized_timeseries import stats_model
@@ -19,9 +19,49 @@ router = APIRouter(tags=["Statistical Models"])
 
 @router.post("/run_arima", 
           summary="Run ARIMA model on time series", 
-          response_model=ARIMAModelResponse)
+          response_model=ARIMAModelResponse,
+          responses={
+              200: {
+                  "description": "Successfully fitted ARIMA model",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "fitted_model": "ARIMA(2,1,2) Results\nAIC: 123.45\nBIC: 134.56\n...",
+                              "parameters": {"ar.L1": 0.5, "ar.L2": 0.3, "ma.L1": 0.2, "ma.L2": 0.1, "const": 0.02},
+                              "p_values": {"ar.L1": 0.001, "ar.L2": 0.01, "ma.L1": 0.005, "ma.L2": 0.05, "const": 0.22},
+                              "forecast": [101.2, 102.3, 103.5, 104.1, 105.2]
+                          }
+                      }
+                  }
+              },
+              400: {
+                  "description": "Bad Request - Invalid model parameters or insufficient data"
+              },
+              500: {
+                  "description": "Internal Server Error - Model fitting failed"
+              }
+          })
 async def run_arima_endpoint(input_data: ARIMAInput):
-    """Run ARIMA model on time series data."""
+    """
+    Run an ARIMA (AutoRegressive Integrated Moving Average) model on time series data.
+    
+    ARIMA is a statistical model for analyzing and forecasting time series data.
+    It combines three components:
+    - AR(p): AutoRegressive - uses the relationship between an observation and p lagged observations
+    - I(d): Integrated - differencing to make the time series stationary
+    - MA(q): Moving Average - uses the dependency between an observation and q lagged residuals
+    
+    Parameters:
+    - p: Order of the AutoRegressive component (number of lag observations)
+    - d: Order of differencing required to make the series stationary
+    - q: Order of the Moving Average component (size of the moving average window)
+    
+    Returns:
+    - fitted_model: Summary of the fitted model with diagnostics
+    - parameters: Estimated coefficients for the model
+    - p_values: Statistical significance of each parameter
+    - forecast: Future predictions from the model
+    """
     try:
         df = pd.DataFrame(input_data.data)
         
@@ -143,9 +183,46 @@ async def run_arima_endpoint(input_data: ARIMAInput):
 
 @router.post("/run_garch", 
           summary="Run GARCH model on time series", 
-          response_model=GARCHModelResponse)
+          response_model=GARCHModelResponse,
+          responses={
+              200: {
+                  "description": "Successfully fitted GARCH model",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "fitted_model": "GARCH(1,1) Results\nAIC: 235.67\nBIC: 245.89\n...",
+                              "forecast": [0.0025, 0.0028, 0.0030, 0.0027, 0.0026]
+                          }
+                      }
+                  }
+              },
+              400: {
+                  "description": "Bad Request - Invalid model parameters or insufficient data"
+              },
+              500: {
+                  "description": "Internal Server Error - Model fitting failed"
+              }
+          })
 async def run_garch_endpoint(input_data: GARCHInput):
-    """Run GARCH model on time series data."""
+    """
+    Run a GARCH (Generalized AutoRegressive Conditional Heteroskedasticity) model on time series data.
+    
+    GARCH models are used to estimate and forecast volatility in financial time series.
+    They are particularly useful for asset returns that exhibit volatility clustering.
+    
+    Parameters:
+    - p: ARCH order (lag volatility terms)
+    - q: GARCH order (lag residual terms)
+    - dist: Error distribution assumption (normal, t, skewed-t)
+    
+    The model captures how volatility evolves over time, accounting for:
+    - Persistence of volatility (p)
+    - Impact of past shocks on current volatility (q)
+    
+    Returns:
+    - fitted_model: Summary of the fitted model with diagnostics
+    - forecast: Predicted future volatility values
+    """
     try:
         # Create DataFrame from input data
         df = pd.DataFrame(input_data.data)

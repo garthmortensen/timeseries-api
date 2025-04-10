@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/routers/data.py
+# timeseries-pipeline/api/routers/data.py
 """Data generation and transformation API endpoints.
 This module contains the API endpoints for generating synthetic time series data, scaling time series data, and testing for stationarity.
 """
 
 import logging as l
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 
 from generalized_timeseries import data_generator, data_processor
 from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
@@ -27,9 +27,37 @@ def get_config():
 
 @router.post("/generate_data", 
              summary="Generate synthetic time series data", 
-             response_model=TimeSeriesDataResponse)
+             response_model=TimeSeriesDataResponse,
+             responses={
+                 200: {
+                     "description": "Successfully generated time series data",
+                     "content": {
+                         "application/json": {
+                             "example": {
+                                 "data": {
+                                     "2023-01-01": {"GME": 150.0, "BYND": 200.0},
+                                     "2023-01-02": {"GME": 152.3, "BYND": 198.7}
+                                 }
+                             }
+                         }
+                     }
+                 },
+                 400: {
+                     "description": "Bad Request - Invalid date format or other input parameters"
+                 },
+                 500: {
+                     "description": "Internal Server Error - Failed to generate time series data"
+                 }
+             })
 async def generate_data_endpoint(input_data: DataGenerationInput):
-    """Generate synthetic time series data based on input parameters."""
+    """
+    Generate synthetic time series data based on input parameters.
+    
+    This endpoint creates synthetic price series for multiple symbols over a specified date range.
+    Each symbol starts from its anchor price and follows a random walk with drift.
+    
+    The response provides a dictionary of dates, with each date containing prices for all symbols.
+    """
     try:
         price_dict, price_df = data_generator.generate_price_series(
             start_date=input_data.start_date,
@@ -53,9 +81,37 @@ async def generate_data_endpoint(input_data: DataGenerationInput):
 
 @router.post("/fetch_market_data", 
           summary="Fetch real market data from external sources", 
-          response_model=TimeSeriesDataResponse)
+          response_model=TimeSeriesDataResponse,
+          responses={
+              200: {
+                  "description": "Successfully fetched market data",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "data": {
+                                  "2023-01-01": {"BYND": 150.0, "GME": 200.0},
+                                  "2023-01-02": {"BYND": 152.3, "GME": 198.7}
+                              }
+                          }
+                      }
+                  }
+              },
+              400: {
+                  "description": "Bad Request - Invalid symbols or date range"
+              },
+              500: {
+                  "description": "Internal Server Error - Failed to fetch data from external source"
+              }
+          })
 async def fetch_market_data_endpoint(input_data: MarketDataInput):
-    """Fetch real market data from external sources like Yahoo Finance."""
+    """
+    Fetch real market data from external sources like Yahoo Finance.
+    
+    This endpoint retrieves historical price data for specified symbols over a date range.
+    Data is obtained from Yahoo Finance via the yfinance library.
+    
+    The interval parameter controls the frequency of the data (daily, weekly, monthly).
+    """
     try:
         data_dict, _ = fetch_market_data(
             symbols=input_data.symbols,
@@ -71,9 +127,40 @@ async def fetch_market_data_endpoint(input_data: MarketDataInput):
 
 @router.post("/scale_data", 
           summary="Scale time series data", 
-          response_model=TimeSeriesDataResponse)
+          response_model=TimeSeriesDataResponse,
+          responses={
+              200: {
+                  "description": "Successfully scaled time series data",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "data": {
+                                  "0": {"date": "2023-01-01", "price": 0.0},
+                                  "1": {"date": "2023-01-02", "price": 0.5},
+                                  "2": {"date": "2023-01-03", "price": -0.3}
+                              }
+                          }
+                      }
+                  }
+              },
+              400: {
+                  "description": "Bad Request - Invalid data format or missing required columns"
+              },
+              500: {
+                  "description": "Internal Server Error - Failed to scale data"
+              }
+          })
 async def scale_data_endpoint(input_data: ScalingInput):
-    """Scale time series data using specified method."""
+    """
+    Scale time series data using the specified method.
+    
+    This endpoint takes raw price data and applies a scaling transformation.
+    Supported methods include:
+    - standardize: Transforms data to have mean=0 and standard deviation=1
+    - minmax: Scales data to a range between 0 and 1
+    
+    The input data must contain 'date' and 'price' columns.
+    """
     try:
         df = pd.DataFrame(input_data.data)
         if 'date' not in df.columns:
@@ -105,9 +192,45 @@ async def scale_data_endpoint(input_data: ScalingInput):
 
 @router.post("/test_stationarity", 
           summary="Test for stationarity", 
-          response_model=StationarityTestResponse)
+          response_model=StationarityTestResponse,
+          responses={
+              200: {
+                  "description": "Successfully tested time series for stationarity",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "adf_statistic": -3.45,
+                              "p_value": 0.032,
+                              "critical_values": {"1%": -3.75, "5%": -3.0, "10%": -2.63},
+                              "is_stationary": True,
+                              "interpretation": "The series is stationary (p-value: 0.0320). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling."
+                          }
+                      }
+                  }
+              },
+              400: {
+                  "description": "Bad Request - Invalid data format or insufficient data points"
+              },
+              500: {
+                  "description": "Internal Server Error - Failed to run stationarity test"
+              }
+          })
 async def test_stationarity_endpoint(input_data: StationarityTestInput, config=Depends(get_config)):
-    """Test stationarity of time series data."""
+    """
+    Test time series data for stationarity using the Augmented Dickey-Fuller test.
+    
+    Stationarity is a key property for time series analysis, indicating that statistical
+    properties like mean, variance, and autocorrelation are constant over time.
+    
+    The test returns:
+    - ADF statistic: More negative values suggest stationarity
+    - p-value: Smaller values suggest stationarity
+    - Critical values: Threshold values at different significance levels
+    - is_stationary: Boolean indication based on p-value threshold
+    - interpretation: Human-readable explanation of the results
+    
+    A p-value less than the threshold (default 0.05) indicates stationarity.
+    """
     try:
         # Process data and run tests
         df = pd.DataFrame(input_data.data)
