@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/utilities/chronicler.py
+# timeseries-api/utilities/chronicler.py
 
 import logging
 import json

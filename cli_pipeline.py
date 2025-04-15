@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/cli_pipeline.py
+# timeseries-api/api/cli_pipeline.py
 
 # import parent directory modules
 import sys

@@ -1,11 +1,11 @@
-# Timeseries Pipeline
+# Timeseries API
 
-[![GitHub](https://img.shields.io/badge/GitHub-timeseries--pipeline-blue?logo=github)](https://github.com/garthmortensen/timeseries-pipeline)
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-pipeline--timeseries-blue)](https://hub.docker.com/r/goattheprofessionalmeower/timeseries-pipeline)
+[![GitHub](https://img.shields.io/badge/GitHub-timeseries--pipeline-blue?logo=github)](https://github.com/garthmortensen/timeseries-api)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-pipeline--timeseries-blue)](https://hub.docker.com/r/goattheprofessionalmeower/timeseries-api)
 
-![CI/CD](https://github.com/garthmortensen/timeseries-pipeline/actions/workflows/cicd.yml/badge.svg)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/timeseries-pipeline/dashboard)
-[![Coverage](https://codecov.io/gh/garthmortensen/timeseries-pipeline/graph/badge.svg)](https://codecov.io/gh/garthmortensen/timeseries-pipeline)
+![CI/CD](https://github.com/garthmortensen/timeseries-api/actions/workflows/cicd.yml/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a55633cfb8324f379b0b5ec16f03c268)](https://app.codacy.com/gh/garthmortensen/timeseries-api/dashboard)
+[![Coverage](https://codecov.io/gh/garthmortensen/timeseries-api/graph/badge.svg)](https://codecov.io/gh/garthmortensen/timeseries-api)
 
 ## Overview
 
@@ -34,6 +34,8 @@ This project provides both a web API and CLI interface for financial and econome
 - GitHub Actions CI/CD pipeline
 - Comprehensive test suite
 
+TODO: loathsome, but rename this from timeseries-pipline to timeseries-api or timeseries-api-rest or timeseries-interface
+
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
 ### Architectural Overview
@@ -49,7 +51,7 @@ flowchart TB
     %% Main Systems
     TimeSeriesFrontend["Timeseries Frontend
     (Visualization Apps)"]:::system
-    TimeSeriesPipeline["Timeseries Pipeline
+    TimeSeriesPipeline["Timeseries API
     (API Service)"]:::system
     GeneralizedTimeseries["Generalized Timeseries
     (Python Package)"]:::system
@@ -75,13 +77,13 @@ flowchart TB
 Pull the Docker image:
 
 ```bash
-docker pull goattheprofessionalmeower/timeseries-pipeline
+docker pull goattheprofessionalmeower/timeseries-api
 ```
 
 Run the container:
 
 ```bash
-docker run -d -p 8001:8001 --name timeseries-pipeline-container goattheprofessionalmeower/timeseries-pipeline:latest
+docker run -d -p 8001:8001 --name timeseries-api-container goattheprofessionalmeower/timeseries-api:latest
 ```
 
 ### Local Setup
@@ -89,8 +91,8 @@ docker run -d -p 8001:8001 --name timeseries-pipeline-container goattheprofessio
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/garthmortensen/timeseries-pipeline.git
-   cd timeseries-pipeline
+   git clone https://github.com/garthmortensen/timeseries-api.git
+   cd timeseries-api
    ```
 
 2. Create a virtual environment:
@@ -144,7 +146,7 @@ The application uses YAML configuration file `config/config.yml` to set:
 ### Project Structure
 
 ```text
-timeseries-pipeline/..................
+timeseries-api/..................
 ├── cli_pipeline.py                  # For running the full pipeline from the terminal sans API
 ├── fastapi_pipeline.py              # For starting the API server with uvicorn
 ├── Makefile                         # For automating dev tasks
@@ -567,7 +569,7 @@ flowchart TB
     Developer((Developer)):::person
     
     %% Main Systems
-    TimeseriesPipeline["Timeseries Pipeline\nAPI Service"]:::system
+    TimeseriesAPI["Timeseries API\nAPI Service"]:::system
     
     %% Source Control
     GitHub["GitHub\nSource Repository"]:::external
@@ -612,5 +614,5 @@ flowchart TB
     PushDocker -- "Push Image" --> DockerHub
     
     %% Final Products
-    DockerHub -- "Container Image" --> TimeseriesPipeline
+    DockerHub -- "Container Image" --> TimeseriesAPI
 ```

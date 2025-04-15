@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/__init__.py
+# # timeseries-api/api/__init__.py
 """API package for the timeseries pipeline.
 Thi package contains the API for the timeseries pipeline.
 """

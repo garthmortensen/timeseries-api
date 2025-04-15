@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/routers/models.py
+# timeseries-api/api/routers/models.py
 """Statistical models API endpoints.
 This module contains the API endpoints for running statistical models on time series data.
 """

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/app.py
+# timeseries-api/api/app.py
 """FastAPI application initialization and configuration.
 This module initializes the FastAPI application and sets up the API routers.
 """
@@ -67,14 +67,14 @@ async def lifespan(app: FastAPI):
             l.info(f"{methods}  {Fore.CYAN}{base_url}{route.path}")
 
     yield
-    l.info(f"{Fore.RED}Timeseries Pipeline API is shutting down")
+    l.info(f"{Fore.RED}Timeseries API API is shutting down")
 
 # Create FastAPI app
 app = FastAPI(
-    title="Timeseries Pipeline API",
+    title="Timeseries API API",
     version="0.0.1",
     description="Econometric time series modeling API with ARIMA and GARCH capabilities",
-    summary="A statistical time series analysis API for financial and econometric modeling",
+    summary="A statistical time series analysis for financial and econometric modeling",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/api/openapi.json",
@@ -97,12 +97,12 @@ app.include_router(pipeline_router, prefix="/api/v1")
 @app.get("/", tags=["Health"])
 async def root():
     """Root endpoint for API health check."""
-    return {"status": "healthy", "message": "Timeseries Pipeline API is running"}
+    return {"status": "healthy", "message": "Timeseries API API is running"}
 
 
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8001"))
-    l.info(f"Starting timeseries-pipeline FastAPI application on port {port}")
+    l.info(f"Starting timeseries-api FastAPI application on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
     # uvicorn.run("api.app:app", host="0.0.0.0", port=8000, reload=True)

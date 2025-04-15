@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/models/__init__.py
+# # timeseries-api/api/models/__init__.py
 """API data models.
 This module contains the data models used for the API.
 __init__ is the entry point of the package, and it imports all the data models

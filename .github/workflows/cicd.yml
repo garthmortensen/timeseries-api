@@ -65,7 +65,7 @@ jobs:
         uses: codecov/codecov-action@3440e5ef70c638a9f44602a80ab017feee1309fe
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: garthmortensen/timeseries-pipeline
+          slug: garthmortensen/timeseries-api
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
@@ -95,7 +95,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
         with:
-          images: goattheprofessionalmeower/timeseries-pipeline
+          images: goattheprofessionalmeower/timeseries-api
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

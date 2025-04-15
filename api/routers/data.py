@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/routers/data.py
+# timeseries-api/api/routers/data.py
 """Data generation and transformation API endpoints.
 This module contains the API endpoints for generating synthetic time series data, scaling time series data, and testing for stationarity.
 """

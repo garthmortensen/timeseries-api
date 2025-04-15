@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/services/data_service.py
+# # timeseries-api/api/services/data_service.py
 """Data generation and transformation service functions.
 This module contains functions for generating synthetic time series data and
 """

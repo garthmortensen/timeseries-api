@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/routers/pipeline.py
+# timeseries-api/api/routers/pipeline.py
 """End-to-end pipeline API endpoint.
 """
 

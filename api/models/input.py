@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/models/input.py
+# # timeseries-api/api/models/input.py
 """Input Pydantic models for API request validation.
 These models are used to validate the input data for the API endpoints.
 """

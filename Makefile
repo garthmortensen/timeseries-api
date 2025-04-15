@@ -1,6 +1,6 @@
 print-% : ; @echo $* = $($*)
 
-PROJECT_NAME = timeseries-pipeline
+PROJECT_NAME = timeseries-api
 SHELL = /bin/bash
 PYTHON ?= $(shell command -v python3 || command -v python)
 COMMIT_HASH = $(shell git log -1 --format=%h || echo "dev")

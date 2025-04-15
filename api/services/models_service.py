@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/services/models_service.py
+# timeseries-api/api/services/models_service.py
 """Statistical model service functions.
 This module contains functions to run statistical models on time series data.
 """

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# # timeseries-pipeline/api/models/response.py
+# # timeseries-api/api/models/response.py
 """Response Pydantic models for API response validation.
 This module contains Pydantic models for validating API response data.
 """

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/services/interpretations.py
+# timeseries-api/api/services/interpretations.py
 """
 Interpretation module for statistical test results.
 Contains functions to create human-readable interpretations of statistical test results.

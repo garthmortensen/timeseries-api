@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/services/__init__.py
+# timeseries-api/api/services/__init__.py
 """Service functions for the API.
 This module contains the service functions for the API. These service functions are used to perform the data processing and model training steps.
 They're called services because they provide a service to the API, which is to process the data and train the models.

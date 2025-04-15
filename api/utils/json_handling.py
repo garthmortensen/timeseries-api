@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# timeseries-pipeline/api/utils/json_handling.py
+# timeseries-api/api/utils/json_handling.py
 """JSON handling utilities for the API.
 Thi module provides utilities for handling JSON responses in the API. 
 MacOS has issues with serializing NaN and Inf values to JSON. 
