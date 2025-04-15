@@ -227,68 +227,42 @@ async def run_garch_endpoint(input_data: GARCHInput):
         # Create DataFrame from input data
         df = pd.DataFrame(input_data.data)
         
-        # Convert date column to datetime and set as index
+        # Set up index and prepare data
         df['date'] = pd.to_datetime(df['date'])
         df.set_index('date', inplace=True)
-        
-        # Ensure price column is numeric
         df['price'] = pd.to_numeric(df['price'], errors='coerce')
         
-        # Check for any NaN values after conversion
         if df['price'].isnull().any():
             raise HTTPException(status_code=400, detail="Invalid data: 'price' column contains non-numeric values.")
         
         # Keep only numeric columns
         numeric_df = df.select_dtypes(include=['number'])
         
-        forecast_steps = 5
-        model_fits, forecasts = stats_model.run_garch(
-            df_stationary=numeric_df,
-            p=input_data.p,
-            q=input_data.q,
-            dist=input_data.dist,
-            forecast_steps=forecast_steps
-        )
+        # Configure for service layer
+        class SimpleConfig:
+            def __init__(self, p, q, dist):
+                self.stats_model_GARCH_enabled = True
+                self.stats_model_GARCH_fit_p = p
+                self.stats_model_GARCH_fit_q = q
+                self.stats_model_GARCH_fit_dist = dist
+                self.stats_model_GARCH_predict_steps = 5
         
-        # Extract the summary from the first column's model
-        column_name = list(model_fits.keys())[0]
-        model_summary = str(model_fits[column_name].summary())
+        config = SimpleConfig(input_data.p, input_data.q, input_data.dist)
         
-        # Get forecast for the first column
-        forecast_values = forecasts[column_name]
-        
-        # Handle different types of forecast return values
-        forecast_list = []
-        
-        # Check if forecast_values is a scalar (single value)
-        if np.isscalar(forecast_values):
-            forecast_list = [float(forecast_values)]
-        # Check if it's a pandas Series
-        elif isinstance(forecast_values, pd.Series):
-            forecast_list = [float(x) for x in forecast_values.values]
-        # Check if it's a numpy array
-        elif isinstance(forecast_values, np.ndarray):
-            forecast_list = [float(x) for x in forecast_values]
-        # Check if it's already a list
-        elif isinstance(forecast_values, list):
-            forecast_list = [float(x) for x in forecast_values]
-        # Fallback for any other type
-        else:
-            try:
-                # Try to convert to a list if it's some other iterable
-                forecast_list = [float(x) for x in forecast_values]
-            except:
-                # If all else fails, use a single value
-                forecast_list = [0.0]  # Use a default value
-                l.warning(f"Couldn't convert forecast values of type {type(forecast_values)}")
+        # Delegate to service layer
+        garch_summary, garch_forecast, _ = run_garch_step(numeric_df, config)
         
         results = {
-            "fitted_model": model_summary,
-            "forecast": forecast_list
+            "fitted_model": garch_summary,
+            "forecast": garch_forecast
         }
+        
         l.info(f"run_garch_endpoint() returning model and forecast")
         return results
 
+    except HTTPException as he:
+        # Pass through HTTP exceptions
+        raise he
     except Exception as e:
         l.error(f"Error running GARCH model: {e}")
         raise HTTPException(status_code=500, detail=str(e))

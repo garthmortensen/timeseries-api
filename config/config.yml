@@ -58,3 +58,8 @@ stats_model_GARCH_predict_steps: 3
 
 stats_model_ARIMA_residuals_as_garch_input: true
 stats_model_GARCH_volatility_format: "standard_deviation"  # options: standard_deviation, variance
+
+spillover_analysis_enabled: false
+spillover_analysis_method: "diebold_yilmaz"
+spillover_analysis_forecast_horizon: 10
+spillover_analysis_window_size: null

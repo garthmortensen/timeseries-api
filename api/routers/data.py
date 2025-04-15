@@ -9,10 +9,20 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Depends, status
 
 from timeseries_compute import data_generator, data_processor
+from timeseries_compute import data_generator, data_processor
 from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
 from api.models.response import TimeSeriesDataResponse, StationarityTestResponse
 from api.services.market_data_service import fetch_market_data
 from api.services.interpretations import interpret_stationarity_test
+from api.services.data_service import (
+    generate_data_step,
+    fill_missing_data_step,
+    scale_data_step,
+    stationarize_data_step,
+    test_stationarity_step,
+    convert_to_returns_step,
+    scale_for_garch_step
+)
 
 # Get the application configuration
 from utilities.configurator import load_configuration
@@ -232,47 +242,11 @@ async def test_stationarity_endpoint(input_data: StationarityTestInput, config=D
     A p-value less than the threshold (default 0.05) indicates stationarity.
     """
     try:
-        # Process data and run tests
+        # Process data as a DataFrame
         df = pd.DataFrame(input_data.data)
-        method = config.data_processor_stationarity_test_method
-        adf_results = data_processor.test_stationarity(df=df, method=method)
         
-        # Get first column results (we need a single set of results for the response model)
-        column = list(adf_results.keys())[0]
-        result = adf_results[column]
-        
-        # Create a default critical values dictionary if missing
-        if "Critical Values" not in result:
-            critical_values = {
-                "1%": -3.75,  # Default values based on typical ADF test
-                "5%": -3.0,
-                "10%": -2.63
-            }
-        else:
-            critical_values = result["Critical Values"]
-            
-        # Ensure critical values is a dict with string keys
-        if not isinstance(critical_values, dict):
-            critical_values = {
-                "1%": -3.75,
-                "5%": -3.0, 
-                "10%": -2.63
-            }
-        
-        # Add interpretation
-        interpretation_dict = interpret_stationarity_test(
-            adf_results, 
-            p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
-        )
-        
-        # Build a response that matches the StationarityTestResponse model
-        response = {
-            "adf_statistic": float(result["ADF Statistic"]),
-            "p_value": float(result["p-value"]),
-            "critical_values": critical_values,
-            "is_stationary": float(result["p-value"]) < config.data_processor_stationarity_test_p_value_threshold,
-            "interpretation": interpretation_dict.get(column, "No interpretation available")
-        }
+        # Delegate to the service function
+        response = test_stationarity_step(df, config)
         
         l.info(f"test_stationarity() returning results with interpretation")
         return response
@@ -280,6 +254,7 @@ async def test_stationarity_endpoint(input_data: StationarityTestInput, config=D
     except Exception as e:
         l.error(f"Error testing stationarity: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/price_to_returns", 
           summary="Convert price data to log returns", 

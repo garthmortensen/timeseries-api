@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# # timeseries-api/api/models/input.py
+# timeseries-api/api/models/input.py
 """Input Pydantic models for API request validation.
 These models are used to validate the input data for the API endpoints.
 """
 
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 # Get the application configuration for default values
 from utilities.configurator import load_configuration
@@ -98,4 +98,32 @@ class PipelineInput(BaseModel):
             "dist": config.stats_model_GARCH_fit_dist
         }, 
         description="GARCH parameters"
+    )
+    spillover_enabled: bool = Field(
+        default=False,
+        description="Enable spillover analysis"
+    )
+    spillover_params: dict = Field(
+        default={
+            "method": "diebold_yilmaz",
+            "forecast_horizon": 10,
+            "window_size": None
+        },
+        description="Spillover analysis parameters"
+    )
+
+class SpilloverInput(BaseModel):
+    """Input model for spillover analysis endpoint."""
+    data: List[Dict[str, Any]]
+    method: str = Field(
+        default="diebold_yilmaz", 
+        description="Method for spillover calculation"
+    )
+    forecast_horizon: int = Field(
+        default=10, 
+        description="Forecast horizon for variance decomposition"
+    )
+    window_size: Optional[int] = Field(
+        default=None,
+        description="Window size for rolling analysis (None for full sample)"
     )
