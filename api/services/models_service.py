@@ -12,6 +12,8 @@ from statsmodels.tsa.arima.model import ARIMA
 
 from timeseries_compute import stats_model
 
+from typing import List, Tuple, Optional, Union
+
 def run_arima_step(df_stationary: pd.DataFrame, config) -> Tuple[str, List[float], pd.DataFrame]:
     """Run ARIMA model on stationary time series data."""
     try:

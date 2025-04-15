@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Timeseries Pipeline API",
-    "summary": "A statistical time series analysis API for financial and econometric modeling",
+    "title": "Timeseries API API",
+    "summary": "A statistical time series analysis for financial and econometric modeling",
     "description": "Econometric time series modeling API with ARIMA and GARCH capabilities",
     "version": "0.0.1"
   },
@@ -266,6 +266,92 @@
         }
       }
     },
+    "/api/v1/price_to_returns": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Convert price data to log returns",
+        "description": "Convert price time series data to log returns.\n\nThis endpoint takes price data and calculates the log returns,\nwhich are typically more suitable for statistical modeling.\n\nReturns data represents the percentage change between consecutive price observations.",
+        "operationId": "price_to_returns_endpoint_api_v1_price_to_returns_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Input Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scale_for_garch": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Scale data for GARCH modeling",
+        "description": "Scale time series data specifically for GARCH modeling.\n\nThis endpoint takes return data and applies the appropriate scaling\nfor GARCH volatility modeling.",
+        "operationId": "scale_for_garch_endpoint_api_v1_scale_for_garch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Input Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/run_arima": {
       "post": {
         "tags": [
@@ -402,7 +488,7 @@
           "Pipeline"
         ],
         "summary": "Execute the complete time series analysis pipeline",
-        "description": "Run the end-to-end time series analysis pipeline with a single API call.\n          \n          This endpoint performs a complete workflow:\n          1. Generate synthetic data or fetch real market data\n          2. Fill any missing values in the data\n          3. Scale the data for better modeling\n          4. Transform data to achieve stationarity\n          5. Test for stationarity using the Augmented Dickey-Fuller test\n          6. Fit ARIMA model for forecasting trends\n          7. Fit GARCH model for forecasting volatility\n          8. Return all results including forecasts\n          \n          All parameters have sensible defaults defined in the configuration.",
+        "description": "Run the end-to-end time series analysis pipeline with a single API call.\n          \n          This endpoint performs a complete workflow:\n          1. Generate synthetic data or fetch real market data\n          2. Convert prices to returns\n          3. Test for stationarity\n          4. Scale data for GARCH modeling\n          5. Fit ARIMA models for conditional mean\n          6. Extract ARIMA residuals\n          7. Fit GARCH models for volatility forecasting\n          8. Return all results including forecasts\n          \n          All parameters have sensible defaults defined in the configuration.",
         "operationId": "run_pipeline_endpoint_api_v1_run_pipeline_post",
         "requestBody": {
           "content": {
@@ -416,49 +502,14 @@
         },
         "responses": {
           "200": {
-            "description": "Successfully executed the entire pipeline",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PipelineResponse"
-                },
-                "example": {
-                  "stationarity_results": {
-                    "adf_statistic": -3.45,
-                    "p_value": 0.032,
-                    "critical_values": {
-                      "1%": -3.75,
-                      "5%": -3.0,
-                      "10%": -2.63
-                    },
-                    "is_stationary": true,
-                    "interpretation": "The series is stationary (p-value: 0.0320)."
-                  },
-                  "arima_summary": "ARIMA(2,1,2) model fitted successfully with AIC: 123.45",
-                  "arima_forecast": [
-                    101.2,
-                    102.3,
-                    103.5,
-                    104.1,
-                    105.2
-                  ],
-                  "garch_summary": "GARCH(1,1) model fitted successfully with AIC: 235.67",
-                  "garch_forecast": [
-                    0.0025,
-                    0.0028,
-                    0.003,
-                    0.0027,
-                    0.0026
-                  ]
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request - Invalid pipeline parameters"
-          },
-          "500": {
-            "description": "Internal Server Error - Pipeline execution failed"
           },
           "422": {
             "description": "Validation Error",
@@ -804,6 +855,21 @@
               "q": 1,
               "dist": "t"
             }
+          },
+          "spillover_enabled": {
+            "type": "boolean",
+            "title": "Spillover Enabled",
+            "description": "Enable spillover analysis",
+            "default": false
+          },
+          "spillover_params": {
+            "type": "object",
+            "title": "Spillover Params",
+            "description": "Spillover analysis parameters",
+            "default": {
+              "method": "diebold_yilmaz",
+              "forecast_horizon": 10
+            }
           }
         },
         "type": "object",
@@ -841,6 +907,17 @@
             "type": "array",
             "title": "Garch Forecast",
             "description": "GARCH model forecast"
+          },
+          "spillover_results": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpilloverResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Results of spillover analysis (if enabled)"
           }
         },
         "type": "object",
@@ -873,6 +950,60 @@
         ],
         "title": "ScalingInput",
         "description": "Input model for data scaling endpoint."
+      },
+      "SpilloverResponse": {
+        "properties": {
+          "total_spillover_index": {
+            "type": "number",
+            "title": "Total Spillover Index",
+            "description": "Overall system-wide spillover"
+          },
+          "directional_spillover": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Directional Spillover",
+            "description": "Spillover from each variable to others and from others to each variable"
+          },
+          "net_spillover": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Net Spillover",
+            "description": "Net spillover (directional to others minus directional from others)"
+          },
+          "pairwise_spillover": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Pairwise Spillover",
+            "description": "Pairwise spillover between each pair of variables"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation",
+            "description": "Human-readable interpretation of spillover results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_spillover_index",
+          "directional_spillover",
+          "net_spillover",
+          "pairwise_spillover",
+          "interpretation"
+        ],
+        "title": "SpilloverResponse",
+        "description": "Response model for spillover analysis."
       },
       "StationarityTestInput": {
         "properties": {

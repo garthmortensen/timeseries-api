@@ -56,6 +56,59 @@ def scale_for_garch_step(df: pd.DataFrame, config) -> pd.DataFrame:
     """Scale time series data for GARCH modeling."""
     return data_processor.scale_for_garch(df)
 
+def scale_data_step(df, config):
+    """Scale time series data using the specified method.
+    
+    Args:
+        df (pandas.DataFrame): Input data frame
+        config: Application configuration
+        
+    Returns:
+        pandas.DataFrame: Scaled data frame
+    """
+    try:
+        # First convert prices to returns if needed
+        if config.data_processor_returns_conversion_enabled:
+            df_returns = data_processor.price_to_returns(df)
+        else:
+            df_returns = df
+        
+        # Then scale using the method specified in config
+        return data_processor.scale_data(
+            df=df_returns, 
+            method=config.data_processor_scaling_method
+        )
+    except Exception as e:
+        l.error(f"Error scaling data: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error scaling data: {str(e)}"
+        )
+
+
+def stationarize_data_step(df, config):
+    """Make time series data stationary.
+    
+    Args:
+        df (pandas.DataFrame): Input data frame
+        config: Application configuration
+        
+    Returns:
+        pandas.DataFrame: Stationary data frame
+    """
+    if config.data_processor_stationary_enabled:
+        try:
+            return data_processor.stationarize_data(
+                df=df, 
+                method=config.data_processor_stationary_method
+            )
+        except Exception as e:
+            l.error(f"Error making data stationary: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error making data stationary: {str(e)}"
+            )
+    return df
 
 def fill_missing_data_step(df: pd.DataFrame, config) -> pd.DataFrame:
     """Fill missing data in time series."""
