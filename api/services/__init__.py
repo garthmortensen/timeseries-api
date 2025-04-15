@@ -10,7 +10,9 @@ from .data_service import (
     fill_missing_data_step,
     scale_data_step,
     stationarize_data_step,
-    test_stationarity_step
+    test_stationarity_step,
+    convert_to_returns_step,
+    scale_for_garch_step
 )
 
 from .models_service import (
@@ -24,6 +26,8 @@ __all__ = [
     "scale_data_step",
     "stationarize_data_step",
     "test_stationarity_step",
+    "convert_to_returns_step",
+    "scale_for_garch_step",
     "run_arima_step",
     "run_garch_step"
 ]

@@ -12,8 +12,8 @@ from api.models.response import PipelineResponse
 from api.services.data_service import (
     generate_data_step,
     fill_missing_data_step,
-    scale_data_step,
-    stationarize_data_step,
+    convert_to_returns_step,
+    scale_for_garch_step,
     test_stationarity_step
 )
 from api.services.models_service import run_arima_step, run_garch_step
@@ -36,52 +36,12 @@ router = APIRouter(tags=["Pipeline"])
           4. Scale data for GARCH modeling
           5. Fit ARIMA models for conditional mean
           6. Extract ARIMA residuals
-          7. Fit GARCH models for volatility
+          7. Fit GARCH models for volatility forecasting
           8. Return all results including forecasts
           
           All parameters have sensible defaults defined in the configuration.
           """,
           response_model=PipelineResponse)
-async def run_pipeline_endpoint(pipeline_input: PipelineInput):
-    """Execute the complete time series analysis pipeline."""
-    t1 = time.perf_counter()
-
-    try:
-        # Update configuration with input parameters
-        # [Same code as before for config update]
-        
-        # Execute updated pipeline steps sequentially
-        df_prices = generate_data_step(pipeline_input, config)
-        df_returns = convert_to_returns_step(df_prices, config)
-        
-        # Test stationarity on returns
-        stationarity_results = test_stationarity_step(df_returns, config)
-        
-        # Scale returns specifically for GARCH modeling
-        df_scaled = scale_for_garch_step(df_returns, config)
-        
-        # Run ARIMA models and get residuals
-        arima_summary, arima_forecast, arima_residuals = run_arima_step(df_scaled, config)
-        
-        # Run GARCH models on ARIMA residuals
-        garch_summary, garch_forecast, cond_vol = run_garch_step(arima_residuals, config)
-
-        # [Same code as before for execution time logging]
-
-        # Return results
-        return {
-            "stationarity_results": stationarity_results,
-            "arima_summary": arima_summary,
-            "arima_forecast": arima_forecast,
-            "garch_summary": garch_summary,
-            "garch_forecast": garch_forecast,
-        }
-    except Exception as e:
-        l.error(f"Pipeline error: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Pipeline failed: {str(e)}"
-        )
-
 async def run_pipeline_endpoint(pipeline_input: PipelineInput):
     """
     Execute the complete time series analysis pipeline.
@@ -89,10 +49,12 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
     This endpoint runs a full econometric modeling workflow that:
     
     1. Sources data (either synthetically generated or from external market sources)
-    2. Preprocesses the data (filling missing values, scaling, differencing)
-    3. Tests for stationarity (a requirement for reliable time series models)
-    4. Fits an ARIMA model for price/return forecasting
-    5. Fits a GARCH model for volatility forecasting
+    2. Converts price data to log returns
+    3. Tests for stationarity in the returns
+    4. Scales the returns for GARCH modeling
+    5. Fits an ARIMA model for return forecasting
+    6. Extracts ARIMA residuals as input for GARCH
+    7. Fits a GARCH model for volatility forecasting
     
     The pipeline offers significant customization through its parameters:
     - Data source selection (synthetic vs. real market data)
@@ -129,16 +91,18 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         config.stats_model_ARIMA_enabled = True
         config.stats_model_GARCH_enabled = True
         
-        # Execute pipeline steps sequentially
-        df = generate_data_step(pipeline_input, config)
-        df_filled = fill_missing_data_step(df, config)
-        df_scaled = scale_data_step(df_filled, config)
-        df_stationary = stationarize_data_step(df_scaled, config)
-        stationarity_results = test_stationarity_step(df_stationary, config)
+        # Execute pipeline steps with updated workflow
+        df_prices = generate_data_step(pipeline_input, config)
+        # New workflow: convert prices to returns before further processing
+        df_returns = convert_to_returns_step(df_prices, config)
+        stationarity_results = test_stationarity_step(df_returns, config)
+        df_scaled = scale_for_garch_step(df_returns, config)
         
-        # Run models
-        arima_summary, arima_forecast = run_arima_step(df_stationary, config)
-        garch_summary, garch_forecast = run_garch_step(df_stationary, config)
+        # Run ARIMA models and get residuals for GARCH input
+        arima_summary, arima_forecast, arima_residuals = run_arima_step(df_scaled, config)
+        
+        # Run GARCH models on ARIMA residuals
+        garch_summary, garch_forecast, cond_vol = run_garch_step(arima_residuals, config)
 
         # Record execution time
         execution_time = time.perf_counter() - t1

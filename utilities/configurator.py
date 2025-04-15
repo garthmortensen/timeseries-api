@@ -47,6 +47,9 @@ class Config(BaseModel):
     data_processor_missing_values_enabled: bool = Field(default=True)
     data_processor_missing_values_strategy: str = Field(default="forward_fill")
     
+    # Data Processor - Returns Conversion
+    data_processor_returns_conversion_enabled: bool = Field(default=True)
+    
     # Data Processor - Stationary
     data_processor_stationary_enabled: bool = Field(default=True)
     data_processor_stationary_method: str = Field(default="difference")
@@ -64,6 +67,7 @@ class Config(BaseModel):
     stats_model_ARIMA_fit_d: int = Field(default=1)
     stats_model_ARIMA_fit_q: int = Field(default=1)
     stats_model_ARIMA_predict_steps: int = Field(default=5)
+    stats_model_ARIMA_residuals_as_garch_input: bool = Field(default=True)
     
     # GARCH Model
     stats_model_GARCH_enabled: bool = Field(default=False)
@@ -71,6 +75,7 @@ class Config(BaseModel):
     stats_model_GARCH_fit_q: int = Field(default=1)
     stats_model_GARCH_fit_dist: str = Field(default="normal")
     stats_model_GARCH_predict_steps: int = Field(default=5)
+    stats_model_GARCH_volatility_format: str = Field(default="standard_deviation")
 
 def load_configuration(config_file: str) -> Config:
     """

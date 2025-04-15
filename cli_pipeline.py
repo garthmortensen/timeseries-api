@@ -6,6 +6,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import pandas as pd
 import numpy as np
 
 import time  # stopwatch
@@ -28,18 +29,15 @@ def main():
         config_file = "config.yml"
         config = load_configuration(config_file=config_file)
 
-        # Build anchor_prices dictionary
-        anchor_prices = {
-            "GME": config.data_generator_anchor_prices_GME,
-            "BYND": config.data_generator_anchor_prices_BYND,
-            "BYD": config.data_generator_anchor_prices_BYD,
-        }
+        # Create a dictionary mapping symbols to their anchor prices
+        anchor_prices = dict(zip(config.symbols, config.synthetic_anchor_prices))
+        l.info(f"Using anchor prices: {anchor_prices}")
 
         # Generate price data
         l.info("\n\n+++++pipeline: generate_price_series()+++++")
         _, price_df = data_generator.generate_price_series(
-            start_date=config.data_generator_start_date,
-            end_date=config.data_generator_end_date,
+            start_date=config.data_start_date,
+            end_date=config.data_end_date,
             anchor_prices=anchor_prices,
         )
 
