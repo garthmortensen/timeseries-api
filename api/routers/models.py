@@ -10,7 +10,7 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, status
 from statsmodels.tsa.arima.model import ARIMA
 
-from generalized_timeseries import stats_model
+from timeseries_compute import stats_model
 from api.models.input import ARIMAInput, GARCHInput
 from api.models.response import ARIMAModelResponse, GARCHModelResponse
 

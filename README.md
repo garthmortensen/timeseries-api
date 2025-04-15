@@ -44,24 +44,20 @@ flowchart TB
     User((User)):::person
     %% Main Systems
     TimeSeriesFrontend["Timeseries Frontend
-    (Visualization Apps)"]:::system
-    TimeSeriesPipeline["Timeseries API
-    (API Service)"]:::system
-    GeneralizedTimeseries["Generalized Timeseries
+    (Django App)"]:::system
+    TimeSeriesPipeline["Timeseries Pipeline
+    (API App)"]:::system
+    TimeseriesCompute["Timeseries Compute
     (Python Package)"]:::system
     %% External Systems
-    ExternalDataSource[(External Data Source)]:::external
-    AnalysisTool["Data Analysis Tools"]:::external
-    PyPI["PyPI Package Registry"]:::external
+    ExternalDataSource[(Yahoo Finance)]:::external
     %% Relationships
     User -- "Uses" --> TimeSeriesFrontend
     TimeSeriesFrontend -- "Makes API calls to" --> TimeSeriesPipeline
-    TimeSeriesPipeline -- "Imports and uses" --> GeneralizedTimeseries
-    User -- "Can use package directly" --> GeneralizedTimeseries  
+    TimeSeriesPipeline -- "Pip installs from" --> TimeseriesCompute
+    User -- "Can use package directly" --> TimeseriesCompute  
     ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
-    GeneralizedTimeseries -- "Exports analysis to" --> AnalysisTool
-    GeneralizedTimeseries -- "Published to" --> PyPI
-    User -- "Installs from" --> PyPI
+    TimeseriesCompute -- "Publishes to" --> PyPI/DockerHub
 ```
 
 ## Quick Start

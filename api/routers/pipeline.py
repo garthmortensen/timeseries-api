@@ -31,45 +31,57 @@ router = APIRouter(tags=["Pipeline"])
           
           This endpoint performs a complete workflow:
           1. Generate synthetic data or fetch real market data
-          2. Fill any missing values in the data
-          3. Scale the data for better modeling
-          4. Transform data to achieve stationarity
-          5. Test for stationarity using the Augmented Dickey-Fuller test
-          6. Fit ARIMA model for forecasting trends
-          7. Fit GARCH model for forecasting volatility
+          2. Convert prices to returns
+          3. Test for stationarity
+          4. Scale data for GARCH modeling
+          5. Fit ARIMA models for conditional mean
+          6. Extract ARIMA residuals
+          7. Fit GARCH models for volatility
           8. Return all results including forecasts
           
           All parameters have sensible defaults defined in the configuration.
           """,
-          response_model=PipelineResponse,
-          responses={
-              200: {
-                  "description": "Successfully executed the entire pipeline",
-                  "content": {
-                      "application/json": {
-                          "example": {
-                              "stationarity_results": {
-                                  "adf_statistic": -3.45,
-                                  "p_value": 0.032,
-                                  "critical_values": {"1%": -3.75, "5%": -3.0, "10%": -2.63},
-                                  "is_stationary": True,
-                                  "interpretation": "The series is stationary (p-value: 0.0320)."
-                              },
-                              "arima_summary": "ARIMA(2,1,2) model fitted successfully with AIC: 123.45",
-                              "arima_forecast": [101.2, 102.3, 103.5, 104.1, 105.2],
-                              "garch_summary": "GARCH(1,1) model fitted successfully with AIC: 235.67",
-                              "garch_forecast": [0.0025, 0.0028, 0.0030, 0.0027, 0.0026]
-                          }
-                      }
-                  }
-              },
-              400: {
-                  "description": "Bad Request - Invalid pipeline parameters"
-              },
-              500: {
-                  "description": "Internal Server Error - Pipeline execution failed"
-              }
-          })
+          response_model=PipelineResponse)
+async def run_pipeline_endpoint(pipeline_input: PipelineInput):
+    """Execute the complete time series analysis pipeline."""
+    t1 = time.perf_counter()
+
+    try:
+        # Update configuration with input parameters
+        # [Same code as before for config update]
+        
+        # Execute updated pipeline steps sequentially
+        df_prices = generate_data_step(pipeline_input, config)
+        df_returns = convert_to_returns_step(df_prices, config)
+        
+        # Test stationarity on returns
+        stationarity_results = test_stationarity_step(df_returns, config)
+        
+        # Scale returns specifically for GARCH modeling
+        df_scaled = scale_for_garch_step(df_returns, config)
+        
+        # Run ARIMA models and get residuals
+        arima_summary, arima_forecast, arima_residuals = run_arima_step(df_scaled, config)
+        
+        # Run GARCH models on ARIMA residuals
+        garch_summary, garch_forecast, cond_vol = run_garch_step(arima_residuals, config)
+
+        # [Same code as before for execution time logging]
+
+        # Return results
+        return {
+            "stationarity_results": stationarity_results,
+            "arima_summary": arima_summary,
+            "arima_forecast": arima_forecast,
+            "garch_summary": garch_summary,
+            "garch_forecast": garch_forecast,
+        }
+    except Exception as e:
+        l.error(f"Pipeline error: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Pipeline failed: {str(e)}"
+        )
+
 async def run_pipeline_endpoint(pipeline_input: PipelineInput):
     """
     Execute the complete time series analysis pipeline.

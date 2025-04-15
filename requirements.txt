@@ -9,7 +9,6 @@ colorama==0.4.6
 coverage==7.7.1
 fastapi==0.115.11
 frozendict==2.4.6
-generalized_timeseries==0.1.17
 h11==0.14.0
 httpcore==1.0.7
 httpx==0.28.1

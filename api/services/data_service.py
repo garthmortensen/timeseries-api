@@ -8,7 +8,7 @@ import logging as l
 from fastapi import HTTPException
 import pandas as pd
 
-from generalized_timeseries import data_generator, data_processor
+from timeseries_compute import data_generator, data_processor
 from .interpretations import interpret_stationarity_test
 
 from api.services.market_data_service import fetch_market_data
@@ -31,13 +31,12 @@ def generate_data_step(pipeline_input, config):
     # Handle data source selection 
     if config.source_actual_or_synthetic_data == "synthetic":
         try:
-            # Use configuration parameters for synthetic data
             anchor_prices = dict(zip(
                 config.symbols, 
                 config.synthetic_anchor_prices
             ))
             
-            _, df = data_generator.generate_price_series(
+            price_dict, df = data_generator.generate_price_series(
                 start_date=config.data_start_date,
                 end_date=config.data_end_date,
                 anchor_prices=anchor_prices,
@@ -89,6 +88,45 @@ def generate_data_step(pipeline_input, config):
             status_code=400, 
             detail=f"Invalid data source: {config.source_actual_or_synthetic_data}"
         )
+    
+def convert_to_returns_step(df, config):
+    """Convert price data to log returns.
+    
+    Args:
+        df (pandas.DataFrame): Price data frame
+        config: Application configuration
+        
+    Returns:
+        pandas.DataFrame: Returns data frame
+    """
+    try:
+        returns_df = data_processor.price_to_returns(df)
+        return returns_df
+    except Exception as e:
+        l.error(f"Error converting prices to returns: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error calculating returns: {str(e)}"
+        )
+
+def scale_for_garch_step(df, config):
+    """Scale time series data for GARCH modeling.
+    
+    Args:
+        df (pandas.DataFrame): Returns data frame
+        config: Application configuration
+        
+    Returns:
+        pandas.DataFrame: Scaled data frame for GARCH modeling
+    """
+    try:
+        return data_processor.scale_for_garch(df)
+    except Exception as e:
+        l.error(f"Error scaling data for GARCH: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error scaling data: {str(e)}"
+        )
 
 def fill_missing_data_step(df, config):
     """Fill missing data in time series.
@@ -109,7 +147,7 @@ def fill_missing_data_step(df, config):
 
 
 def scale_data_step(df, config):
-    """Scale time series data.
+    """Scale time series data for GARCH modeling.
     
     Args:
         df (pandas.DataFrame): Input data frame
@@ -118,10 +156,14 @@ def scale_data_step(df, config):
     Returns:
         pandas.DataFrame: Scaled data frame
     """
-    return data_processor.scale_data(
-        df=df, 
-        method=config.data_processor_scaling_method
-    )
+    # First convert prices to returns if needed
+    if config.data_processor_returns_conversion_enabled:
+        df_returns = data_processor.price_to_returns(df)
+    else:
+        df_returns = df
+    
+    # Then scale specifically for GARCH modeling
+    return data_processor.scale_for_garch(df=df_returns)
 
 
 def stationarize_data_step(df, config):

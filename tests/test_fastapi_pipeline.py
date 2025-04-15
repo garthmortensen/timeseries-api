@@ -144,3 +144,36 @@ def test_run_pipeline(test_run_pipeline_input):
     assert "arima_forecast" in data
     assert "garch_summary" in data
     assert "garch_forecast" in data
+
+def test_price_to_returns():
+    """Test the /api/v1/price_to_returns endpoint."""
+    price_data = [
+        {"date": "2023-01-01", "price": 100},
+        {"date": "2023-01-02", "price": 101},
+        {"date": "2023-01-03", "price": 102},
+        {"date": "2023-01-04", "price": 103},
+        {"date": "2023-01-05", "price": 104},
+    ]
+    
+    response = client.post("/api/v1/price_to_returns", json={"data": price_data})
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    
+    # Returns should have one less entry than prices
+    assert len(data["data"]) == len(price_data) - 1
+
+def test_scale_for_garch():
+    """Test the /api/v1/scale_for_garch endpoint."""
+    returns_data = [
+        {"date": "2023-01-02", "returns": 0.01},
+        {"date": "2023-01-03", "returns": 0.009},
+        {"date": "2023-01-04", "returns": 0.011},
+        {"date": "2023-01-05", "returns": 0.008},
+    ]
+    
+    response = client.post("/api/v1/scale_for_garch", json={"data": returns_data})
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert len(data["data"]) == len(returns_data)

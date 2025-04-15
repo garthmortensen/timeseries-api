@@ -29,6 +29,8 @@ synthetic_random_seed: 1
 data_processor_missing_values_enabled: true
 data_processor_missing_values_strategy: "drop"  # options: drop, forward_fill
 
+data_processor_returns_conversion_enabled: true
+
 # Data Processor - Stationary
 data_processor_stationary_enabled: true
 data_processor_stationary_method: "difference"  # options: difference, log
@@ -53,3 +55,6 @@ stats_model_GARCH_fit_p: 1
 stats_model_GARCH_fit_q: 1
 stats_model_GARCH_fit_dist: "t"  # options: normal, t
 stats_model_GARCH_predict_steps: 3
+
+stats_model_ARIMA_residuals_as_garch_input: true
+stats_model_GARCH_volatility_format: "standard_deviation"  # options: standard_deviation, variance

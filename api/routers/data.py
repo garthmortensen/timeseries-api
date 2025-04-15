@@ -8,7 +8,7 @@ import logging as l
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Depends, status
 
-from generalized_timeseries import data_generator, data_processor
+from timeseries_compute import data_generator, data_processor
 from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
 from api.models.response import TimeSeriesDataResponse, StationarityTestResponse
 from api.services.market_data_service import fetch_market_data
@@ -279,4 +279,72 @@ async def test_stationarity_endpoint(input_data: StationarityTestInput, config=D
 
     except Exception as e:
         l.error(f"Error testing stationarity: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/price_to_returns", 
+          summary="Convert price data to log returns", 
+          response_model=TimeSeriesDataResponse)
+async def price_to_returns_endpoint(input_data: dict):
+    """
+    Convert price time series data to log returns.
+    
+    This endpoint takes price data and calculates the log returns,
+    which are typically more suitable for statistical modeling.
+    
+    Returns data represents the percentage change between consecutive price observations.
+    """
+    try:
+        df = pd.DataFrame(input_data["data"])
+        
+        # Ensure proper date format and set as index
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'])
+            df.set_index('date', inplace=True)
+        
+        # Convert to returns
+        returns_df = data_processor.price_to_returns(df)
+        
+        # Convert DataFrame to dictionary for API response
+        data_dict = {}
+        for i, (idx, row) in enumerate(returns_df.iterrows()):
+            data_dict[str(i)] = row.to_dict()
+            
+        return_data = {"data": data_dict}
+        return return_data
+    
+    except Exception as e:
+        l.error(f"Error converting prices to returns: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/scale_for_garch", 
+          summary="Scale data for GARCH modeling", 
+          response_model=TimeSeriesDataResponse)
+async def scale_for_garch_endpoint(input_data: dict):
+    """
+    Scale time series data specifically for GARCH modeling.
+    
+    This endpoint takes return data and applies the appropriate scaling
+    for GARCH volatility modeling.
+    """
+    try:
+        df = pd.DataFrame(input_data["data"])
+        
+        # Ensure proper date format and set as index
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'])
+            df.set_index('date', inplace=True)
+        
+        # Scale for GARCH
+        scaled_df = data_processor.scale_for_garch(df)
+        
+        # Convert DataFrame to dictionary for API response
+        data_dict = {}
+        for i, (idx, row) in enumerate(scaled_df.iterrows()):
+            data_dict[str(i)] = row.to_dict()
+            
+        return_data = {"data": data_dict}
+        return return_data
+    
+    except Exception as e:
+        l.error(f"Error scaling data for GARCH: {e}")
         raise HTTPException(status_code=500, detail=str(e))
