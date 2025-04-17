@@ -8,8 +8,7 @@ import logging as l
 import pandas as pd
 from fastapi import HTTPException
 
-from timeseries_compute import spillover_analyzer
-
+from timeseries_compute import spillover_processor
 
 def analyze_spillover_step(input_data):
     """Analyze spillover effects between time series.
@@ -37,7 +36,7 @@ def analyze_spillover_step(input_data):
             df = input_data.data
         
         # Perform spillover analysis
-        result = spillover_analyzer.compute_spillover_index(
+        result = spillover_processor.compute_spillover_index(
             returns_data=df,
             method=input_data.method,
             forecast_horizon=input_data.forecast_horizon,
