@@ -17,6 +17,7 @@ from api.services.data_service import (
     test_stationarity_step
 )
 from api.services.models_service import run_arima_step, run_garch_step
+from api.services.spillover_service import analyze_spillover_step
 
 # Get the application configuration
 from utilities.configurator import load_configuration
@@ -37,7 +38,8 @@ router = APIRouter(tags=["Pipeline"])
           5. Fit ARIMA models for conditional mean
           6. Extract ARIMA residuals
           7. Fit GARCH models for volatility forecasting
-          8. Return all results including forecasts
+          8. Run spillover analysis if enabled
+          9. Return all results including forecasts
           
           All parameters have sensible defaults defined in the configuration.
           """,
@@ -66,6 +68,20 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         # Run GARCH models on ARIMA residuals
         garch_summary, garch_forecast, _ = run_garch_step(arima_residuals, config)
 
+        # Run spillover analysis if enabled
+        spillover_results = None
+        if config.spillover_analysis_enabled:
+            # Create input data for analyze_spillover_step
+            from api.models.input import SpilloverInput
+            spillover_input = SpilloverInput(
+                data=df_returns.reset_index().to_dict('records'),
+                method=config.spillover_analysis_method,
+                forecast_horizon=config.spillover_analysis_forecast_horizon,
+                window_size=config.spillover_analysis_window_size
+            )
+            # Run spillover analysis
+            spillover_results = analyze_spillover_step(spillover_input)
+
         # Record execution time
         log_execution_time(t1)
 
@@ -76,6 +92,7 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
             "arima_forecast": arima_forecast,
             "garch_summary": garch_summary,
             "garch_forecast": garch_forecast,
+            "spillover_results": spillover_results
         }
     except Exception as e:
         l.error(f"Pipeline error: {e}")
@@ -101,6 +118,13 @@ def update_config_from_input(config, pipeline_input: PipelineInput) -> None:
     config.stats_model_GARCH_fit_p = pipeline_input.garch_params.get('p', config.stats_model_GARCH_fit_p)
     config.stats_model_GARCH_fit_q = pipeline_input.garch_params.get('q', config.stats_model_GARCH_fit_q)
     config.stats_model_GARCH_fit_dist = pipeline_input.garch_params.get('dist', config.stats_model_GARCH_fit_dist)
+
+    config.spillover_analysis_enabled = pipeline_input.spillover_enabled
+    if pipeline_input.spillover_enabled:
+        spillover_params = pipeline_input.spillover_params
+        config.spillover_analysis_method = spillover_params.get('method', 'diebold_yilmaz')
+        config.spillover_analysis_forecast_horizon = spillover_params.get('forecast_horizon', 10)
+        config.spillover_analysis_window_size = spillover_params.get('window_size', None)
 
 def log_execution_time(start_time: float) -> None:
     """Log pipeline execution time in a readable format."""

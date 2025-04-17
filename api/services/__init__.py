@@ -20,6 +20,8 @@ from .models_service import (
     run_garch_step
 )
 
+from .spillover_service import analyze_spillover_step
+
 __all__ = [
     "generate_data_step",
     "fill_missing_data_step",

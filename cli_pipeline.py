@@ -100,6 +100,23 @@ def main():
                 else:
                     l.info(f"  {col}: {np.sqrt(forecast):.6f}")
 
+        if config.spillover_analysis_enabled:
+            l.info("\n\n+++++pipeline: analyze_spillover()+++++")
+            from api.models.input import SpilloverInput
+            from api.services.spillover_service import analyze_spillover_step
+            
+            spillover_input = SpilloverInput(
+                data=returns_df.reset_index().to_dict('records'),
+                method=config.spillover_analysis_method,
+                forecast_horizon=config.spillover_analysis_forecast_horizon,
+                window_size=config.spillover_analysis_window_size
+            )
+            
+            spillover_results = analyze_spillover_step(spillover_input)
+            
+            l.info(f"Total spillover index: {spillover_results['total_spillover_index']:.2f}%")
+            l.info(f"Net spillover: {spillover_results['net_spillover']}")
+
     except Exception as e:
         l.exception(f"\nError in pipeline:\n{e}")
         raise

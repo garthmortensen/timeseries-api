@@ -5,7 +5,7 @@ import os
 import yaml
 import logging as l
 from pydantic import BaseModel, Field
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 def read_config_from_fs(config_filename: str) -> Dict[str, Any]:
     """
@@ -76,6 +76,12 @@ class Config(BaseModel):
     stats_model_GARCH_fit_dist: str = Field(default="normal")
     stats_model_GARCH_predict_steps: int = Field(default=5)
     stats_model_GARCH_volatility_format: str = Field(default="standard_deviation")
+
+    # Spillover Analysis
+    spillover_analysis_enabled: bool = Field(default=False)
+    spillover_analysis_method: str = Field(default="diebold_yilmaz")
+    spillover_analysis_forecast_horizon: int = Field(default=10)
+    spillover_analysis_window_size: Optional[int] = Field(default=None)
 
 def load_configuration(config_file: str) -> Config:
     """
