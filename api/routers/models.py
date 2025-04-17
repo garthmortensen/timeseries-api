@@ -13,6 +13,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from timeseries_compute import stats_model
 from api.models.input import ARIMAInput, GARCHInput
 from api.models.response import ARIMAModelResponse, GARCHModelResponse
+from api.services.models_service import run_garch_step
 
 router = APIRouter(tags=["Statistical Models"])
 

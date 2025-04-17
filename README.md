@@ -144,7 +144,7 @@ The application uses YAML configuration file `config/config.yml` to set:
 ### Project Structure
 
 ```text
-timeseries-api/..................
+timeseries-api/.......................
 ├── cli_pipeline.py                  # For running the full pipeline from the terminal sans API
 ├── fastapi_pipeline.py              # For starting the API server with uvicorn
 ├── Makefile                         # For automating dev tasks
