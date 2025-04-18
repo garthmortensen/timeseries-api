@@ -100,6 +100,10 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         # more stationary behavior than raw price series
         df_returns = convert_to_returns_step(df=df_prices)
         
+        if df_returns.isnull().any().any():
+            l.warning("Missing values detected in returns data - applying appropriate filling strategy")
+            df_returns = fill_missing_data_step(df_returns, config.data_processor_missing_values_strategy)
+
         # 3. Test for stationarity using ADF test
         # Research shows that stationarity testing is a critical preliminary step
         # before applying time series models. Non-stationary data can lead to spurious regression
@@ -109,6 +113,9 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
             test_method="ADF", 
             p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
+
+        if not stationarity_results["is_stationary"]:
+            l.warning("Data is not stationary after transformation - results may be unreliable")
         
         # 4. Scale data for GARCH modeling
         # This preprocessing ensures numerical stability and comparable magnitude across series
@@ -118,6 +125,12 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         # The standard approach in financial econometrics is to first model the
         # conditional mean with ARIMA to remove autocorrelation in returns, then model the
         # volatility of residuals. This two-stage approach is well-established in academic literature
+
+        if df_returns.shape[0] < 30:  # Check for sufficient data points
+            arima_p = min(arima_p, 1)  # Reduce model complexity for small samples
+            arima_q = min(arima_q, 1)
+            l.info("Reduced ARIMA order due to limited sample size")
+            
         arima_summary, arima_forecast, arima_residuals = run_arima_step(
             df_stationary=df_scaled,
             p=arima_p,

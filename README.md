@@ -38,8 +38,6 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
-TODO: Compare timeseries-compute and timeseries-api pipelines.
-
 ### Integration Overview
 
 ```mermaid
@@ -52,9 +50,9 @@ flowchart TB
     User((User)):::person
     %% Main Systems
     TimeSeriesFrontend["Timeseries Frontend
-    (Django App)"]:::system
+    (Django)"]:::system
     TimeSeriesPipeline["Timeseries Pipeline
-    (API App)"]:::system
+    (FastAPI)"]:::system
     TimeseriesCompute["Timeseries Compute
     (Python Package)"]:::system
     %% External Systems
@@ -65,7 +63,7 @@ flowchart TB
     TimeSeriesPipeline -- "Pip installs from" --> TimeseriesCompute
     User -- "Can use package directly" --> TimeseriesCompute  
     ExternalDataSource -- "Provides time series data" --> TimeSeriesPipeline
-    TimeseriesCompute -- "Publishes to" --> PyPI/DockerHub
+    TimeseriesCompute -- "Publishes to" --> PyPI/DockerHub/ReadTheDocs
 ```
 
 ## Quick Start
@@ -145,44 +143,47 @@ The application uses YAML configuration file `config/config.yml` to set:
 
 ```text
 timeseries-api/.......................
-├── cli_pipeline.py                  # For running the full pipeline from the terminal sans API
-├── fastapi_pipeline.py              # For starting the API server with uvicorn
-├── Makefile                         # For automating dev tasks
-├── smoketest.sh                     # For quickly verifying endpoints are functional
+├── cli_pipeline.py                  # Runs the full pipeline from the terminal sans API
+├── fastapi_pipeline.py              # Starts the API server with uvicorn
+├── Makefile                         # Automates dev tasks
+├── smoketest.sh                     # Quickly verifies endpoints are functional
+├── pipeline.md                      # Documents pipeline architecture and steps
 ├── config/........................... 
-│   └── config.yml                   # For centralizing all pipeline params
+│   └── config.yml                   # Centralizes all pipeline params
 ├── api/..............................
-│   ├── __init__.py                  # For making the API module importable and adding parent dir to path
-│   ├── app.py                       # For FastAPI init() and registering routes
+│   ├── __init__.py                  # Makes API module importable and adds parent dir to path
+│   ├── app.py                       # Initializes FastAPI and registers routes
 │   ├── models/.......................
-│   │   ├── __init__.py              # For exporting all models and making the module importable
-│   │   ├── input.py                 # For defining and validating request payload schemas
-│   │   └── response.py              # For defining and validating response formats
+│   │   ├── __init__.py              # Exports all models and makes module importable
+│   │   ├── input.py                 # Defines and validates request payload schemas (including spillover)
+│   │   └── response.py              # Defines and validates response formats (including spillover)
 │   ├── routers/......................
-│   │   ├── __init__.py              # For exporting router instances and making the module importable
-│   │   ├── data.py                  # For handling data generation and transformation endpoints
-│   │   ├── models.py                # For implementing statistical modeling endpoints
-│   │   └── pipeline.py              # For providing the end-to-end analysis pipeline endpoint
+│   │   ├── __init__.py              # Exports router instances and makes module importable
+│   │   ├── data.py                  # Handles data generation and transformation endpoints
+│   │   ├── models.py                # Implements statistical modeling endpoints
+│   │   ├── pipeline.py              # Provides end-to-end analysis pipeline endpoint
+│   │   └── spillover.py             # Handles spillover analysis endpoints
 │   ├── services/.....................
-│   │   ├── __init__.py              # For exporting service functions and making the module importable
-│   │   ├── data_service.py          # For implementing data processing business logic
-│   │   ├── models_service.py        # For implementing statistical modeling business logic
-│   │   └── interpretations.py       # For generating human-readable explanations of statistical results
+│   │   ├── __init__.py              # Exports service functions and makes module importable
+│   │   ├── data_service.py          # Implements data processing business logic
+│   │   ├── models_service.py        # Implements statistical modeling business logic
+│   │   ├── interpretations.py       # Generates human-readable explanations of statistical results
+│   │   └── spillover_service.py     # Implements spillover analysis business logic
 │   ├── utils/........................
-│   │   ├── __init__.py              # For exporting utility functions and making the module importable
-│   │   └── json_handling.py         # For handling JSON serialization NaN values (MacOS compatibility issue)
+│   │   ├── __init__.py              # Exports utility functions and makes module importable
+│   │   └── json_handling.py         # Handles JSON serialization NaN values (MacOS compatibility issue)
 ├── utilities/.......................
-│   ├── chronicler.py               # For configuring standardized logging across the application
-│   └── configurator.py             # For loading and validating YAML configuration
+│   ├── chronicler.py               # Configures standardized logging across the application
+│   └── configurator.py             # Loads and validates YAML configuration
 ├── tests/...........................
 │   ├── __init__.py                 # Makes tests discoverable
-│   ├── test_chronicler.py          # test logging functionality
-│   ├── test_configurator.py        # test configuration loading and validation
-│   ├── test_fastapi_pipeline.py    # test API endpoints and response formats
-│   ├── test_response_models.py     # validate response model schemas
-│   └── test_yfinance_fetch.py      # test external market data fetching
-└── .github/workflows/
-            └── cicd.yml            # For automating testing and Docker image deployment
+│   ├── test_chronicler.py          # Tests logging functionality
+│   ├── test_configurator.py        # Tests configuration loading and validation
+│   ├── test_fastapi_pipeline.py    # Tests API endpoints and response formats
+│   ├── test_response_models.py     # Validates response model schemas
+│   └── test_yfinance_fetch.py      # Tests external market data fetching
+└── .github/workflows/...............
+            └── cicd.yml            # Automates testing, Docker image deployment, etc
 ```
 
 ### Testing
