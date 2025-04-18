@@ -7,7 +7,7 @@ import logging as l
 import time
 from fastapi import APIRouter, HTTPException, status
 
-from api.models.input import PipelineInput
+from api.models.input import PipelineInput, SpilloverInput
 from api.models.response import PipelineResponse
 from api.services.data_service import (
     generate_data_step,
