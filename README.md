@@ -38,7 +38,7 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
-TODO: Add spillover pipeline
+TODO: Compare timeseries-compute and timeseries-api pipelines.
 
 ### Integration Overview
 

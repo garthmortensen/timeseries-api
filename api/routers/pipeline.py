@@ -25,6 +25,11 @@ config = load_configuration("config.yml")
 
 router = APIRouter(tags=["Pipeline"])
 
+# In api/routers/pipeline.py
+# Add this import at the top
+from api.services.interpretations import interpret_arima_results, interpret_garch_results
+
+
 @router.post("/run_pipeline", 
           summary="Execute the complete time series analysis pipeline",
           description="""
@@ -39,45 +44,118 @@ router = APIRouter(tags=["Pipeline"])
           6. Extract ARIMA residuals
           7. Fit GARCH models for volatility forecasting
           8. Run spillover analysis if enabled
-          9. Return all results including forecasts
+          9. Return all results including forecasts and human-readable interpretations
           
           All parameters have sensible defaults defined in the configuration.
           """,
           response_model=PipelineResponse)
 async def run_pipeline_endpoint(pipeline_input: PipelineInput):
-    """Execute the complete time series analysis pipeline."""
+    """Execute the complete time series analysis pipeline with explicit parameters."""
     t1 = time.perf_counter()
 
     try:
-        # Override configuration with input parameters
-        update_config_from_input(config, pipeline_input)
+        # Extract data source parameters
+        source_type = pipeline_input.source_actual_or_synthetic_data
+        start_date = pipeline_input.data_start_date
+        end_date = pipeline_input.data_end_date
+        symbols = pipeline_input.symbols or config.symbols
         
-        # Enable models for pipeline run
-        config.stats_model_ARIMA_enabled = True
-        config.stats_model_GARCH_enabled = True
+        # Extract ARIMA parameters
+        arima_p = pipeline_input.arima_params.get('p', config.stats_model_ARIMA_fit_p)
+        arima_d = pipeline_input.arima_params.get('d', config.stats_model_ARIMA_fit_d)
+        arima_q = pipeline_input.arima_params.get('q', config.stats_model_ARIMA_fit_q)
+        arima_forecast_steps = config.stats_model_ARIMA_predict_steps
         
-        # Execute pipeline steps with clear linear flow
-        df_prices = generate_data_step(pipeline_input, config)
-        df_returns = convert_to_returns_step(df_prices, config)
-        stationarity_results = test_stationarity_step(df_returns, config)
-        df_scaled = scale_for_garch_step(df_returns, config)
+        # Extract GARCH parameters
+        garch_p = pipeline_input.garch_params.get('p', config.stats_model_GARCH_fit_p)
+        garch_q = pipeline_input.garch_params.get('q', config.stats_model_GARCH_fit_q)
+        garch_dist = pipeline_input.garch_params.get('dist', config.stats_model_GARCH_fit_dist)
+        garch_forecast_steps = config.stats_model_GARCH_predict_steps
         
-        # Run ARIMA models and get residuals for GARCH input
-        arima_summary, arima_forecast, arima_residuals = run_arima_step(df_scaled, config)
+        # Extract scaling parameters
+        scaling_method = pipeline_input.scaling_method
         
-        # Run GARCH models on ARIMA residuals
-        garch_summary, garch_forecast, _ = run_garch_step(arima_residuals, config)
+        # Extract synthetic data parameters (if applicable)
+        anchor_prices = None
+        if source_type == "synthetic":
+            synthetic_prices = pipeline_input.synthetic_anchor_prices or config.synthetic_anchor_prices
+            anchor_prices = dict(zip(symbols, synthetic_prices))
+            random_seed = pipeline_input.synthetic_random_seed or config.synthetic_random_seed
+        
+        # 1. Data acquisition: Either generate synthetic data or fetch actual market data
+        # Research emphasizes using reliable financial time series data as the foundation
+        # for any volatility modeling
+        df_prices = generate_data_step(
+            source_type=source_type, 
+            start_date=start_date, 
+            end_date=end_date, 
+            symbols=symbols,
+            anchor_prices=anchor_prices,
+            random_seed=random_seed if source_type == "synthetic" else None
+        )
+        
+        # 2. Convert prices to log returns
+        # Studies emphasize the importance of proper data transformation,
+        # especially converting prices to log returns before GARCH modeling, as returns exhibit
+        # more stationary behavior than raw price series
+        df_returns = convert_to_returns_step(df=df_prices)
+        
+        # 3. Test for stationarity using ADF test
+        # Research shows that stationarity testing is a critical preliminary step
+        # before applying time series models. Non-stationary data can lead to spurious regression
+        # and invalid statistical inferences
+        stationarity_results = test_stationarity_step(
+            df=df_returns, 
+            test_method="ADF", 
+            p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
+        )
+        
+        # 4. Scale data for GARCH modeling
+        # This preprocessing ensures numerical stability and comparable magnitude across series
+        df_scaled = scale_for_garch_step(df=df_returns)
+        
+        # 5. Run ARIMA models to capture conditional mean dynamics
+        # The standard approach in financial econometrics is to first model the
+        # conditional mean with ARIMA to remove autocorrelation in returns, then model the
+        # volatility of residuals. This two-stage approach is well-established in academic literature
+        arima_summary, arima_forecast, arima_residuals = run_arima_step(
+            df_stationary=df_scaled,
+            p=arima_p,
+            d=arima_d,
+            q=arima_q,
+            forecast_steps=arima_forecast_steps
+        )
+        
+        # Generate human-readable interpretation of ARIMA results
+        arima_interpretation = interpret_arima_results(arima_summary, arima_forecast)
+        
+        # 6. Run GARCH models on ARIMA residuals
+        # Studies typically use either normal or Student's t distributions
+        # for GARCH modeling, with t-distribution often preferred because financial returns frequently
+        # exhibit fat tails. Research shows that simple GARCH(1,1) models often perform as well as
+        # more complex specifications for many financial time series
+        garch_summary, garch_forecast, _ = run_garch_step(
+            df_residuals=arima_residuals,
+            p=garch_p,
+            q=garch_q,
+            dist=garch_dist,
+            forecast_steps=garch_forecast_steps
+        )
+        
+        # Generate human-readable interpretation of GARCH results
+        garch_interpretation = interpret_garch_results(garch_summary, garch_forecast)
 
-        # Run spillover analysis if enabled
+        # 7. Run spillover analysis if enabled
+        # Research highlights the importance of studying volatility transmission
+        # across financial markets for risk management and portfolio diversification
         spillover_results = None
-        if config.spillover_analysis_enabled:
-            # Create input data for analyze_spillover_step
-            from api.models.input import SpilloverInput
+        if pipeline_input.spillover_enabled:
+            spillover_params = pipeline_input.spillover_params
             spillover_input = SpilloverInput(
                 data=df_returns.reset_index().to_dict('records'),
-                method=config.spillover_analysis_method,
-                forecast_horizon=config.spillover_analysis_forecast_horizon,
-                window_size=config.spillover_analysis_window_size
+                method=spillover_params.get('method', 'diebold_yilmaz'),
+                forecast_horizon=spillover_params.get('forecast_horizon', 10),
+                window_size=spillover_params.get('window_size', None)
             )
             # Run spillover analysis
             spillover_results = analyze_spillover_step(spillover_input)
@@ -85,13 +163,15 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         # Record execution time
         log_execution_time(t1)
 
-        # Return results
+        # Return results with interpretations
         return {
             "stationarity_results": stationarity_results,
             "arima_summary": arima_summary,
             "arima_forecast": arima_forecast,
+            "arima_interpretation": arima_interpretation,
             "garch_summary": garch_summary,
             "garch_forecast": garch_forecast,
+            "garch_interpretation": garch_interpretation,
             "spillover_results": spillover_results
         }
     except Exception as e:
@@ -99,32 +179,6 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         raise HTTPException(
             status_code=500, detail=f"Pipeline failed: {str(e)}"
         )
-
-def update_config_from_input(config, pipeline_input: PipelineInput) -> None:
-    """Update configuration with user-provided input parameters."""
-    config.source_actual_or_synthetic_data = pipeline_input.source_actual_or_synthetic_data
-    config.data_start_date = pipeline_input.data_start_date
-    config.data_end_date = pipeline_input.data_end_date
-    config.symbols = pipeline_input.symbols or config.symbols
-    config.synthetic_anchor_prices = pipeline_input.synthetic_anchor_prices or config.synthetic_anchor_prices
-    config.synthetic_random_seed = pipeline_input.synthetic_random_seed or config.synthetic_random_seed
-    config.data_processor_scaling_method = pipeline_input.scaling_method
-
-    # Update ARIMA and GARCH model parameters
-    config.stats_model_ARIMA_fit_p = pipeline_input.arima_params.get('p', config.stats_model_ARIMA_fit_p)
-    config.stats_model_ARIMA_fit_d = pipeline_input.arima_params.get('d', config.stats_model_ARIMA_fit_d)
-    config.stats_model_ARIMA_fit_q = pipeline_input.arima_params.get('q', config.stats_model_ARIMA_fit_q)
-    
-    config.stats_model_GARCH_fit_p = pipeline_input.garch_params.get('p', config.stats_model_GARCH_fit_p)
-    config.stats_model_GARCH_fit_q = pipeline_input.garch_params.get('q', config.stats_model_GARCH_fit_q)
-    config.stats_model_GARCH_fit_dist = pipeline_input.garch_params.get('dist', config.stats_model_GARCH_fit_dist)
-
-    config.spillover_analysis_enabled = pipeline_input.spillover_enabled
-    if pipeline_input.spillover_enabled:
-        spillover_params = pipeline_input.spillover_params
-        config.spillover_analysis_method = spillover_params.get('method', 'diebold_yilmaz')
-        config.spillover_analysis_forecast_horizon = spillover_params.get('forecast_horizon', 10)
-        config.spillover_analysis_window_size = spillover_params.get('window_size', None)
 
 def log_execution_time(start_time: float) -> None:
     """Log pipeline execution time in a readable format."""

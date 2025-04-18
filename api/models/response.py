@@ -75,8 +75,10 @@ class PipelineResponse(BaseModel):
     )
     arima_summary: str = Field(..., description="ARIMA model summary")
     arima_forecast: List[float] = Field(..., description="ARIMA model forecast")
+    arima_interpretation: str = Field(..., description="Human-readable interpretation of ARIMA results")
     garch_summary: str = Field(..., description="GARCH model summary")
     garch_forecast: List[float] = Field(..., description="GARCH model forecast")
+    garch_interpretation: str = Field(..., description="Human-readable interpretation of GARCH results")
     spillover_results: Optional[SpilloverResponse] = Field(
         None,
         description="Results of spillover analysis (if enabled)"

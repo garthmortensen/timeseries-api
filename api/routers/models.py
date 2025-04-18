@@ -239,19 +239,16 @@ async def run_garch_endpoint(input_data: GARCHInput):
         # Keep only numeric columns
         numeric_df = df.select_dtypes(include=['number'])
         
-        # Configure for service layer
-        class SimpleConfig:
-            def __init__(self, p, q, dist):
-                self.stats_model_GARCH_enabled = True
-                self.stats_model_GARCH_fit_p = p
-                self.stats_model_GARCH_fit_q = q
-                self.stats_model_GARCH_fit_dist = dist
-                self.stats_model_GARCH_predict_steps = 5
+        # Call run_garch_step with explicit parameters
+        forecast_steps = 5  # Standard value for short-term volatility forecast
         
-        config = SimpleConfig(input_data.p, input_data.q, input_data.dist)
-        
-        # Delegate to service layer
-        garch_summary, garch_forecast, _ = run_garch_step(numeric_df, config)
+        garch_summary, garch_forecast, _ = run_garch_step(
+            df_residuals=numeric_df,
+            p=input_data.p,
+            q=input_data.q,
+            dist=input_data.dist or "normal",  # Default to normal if not specified
+            forecast_steps=forecast_steps
+        )
         
         results = {
             "fitted_model": garch_summary,
@@ -267,3 +264,4 @@ async def run_garch_endpoint(input_data: GARCHInput):
     except Exception as e:
         l.error(f"Error running GARCH model: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    

@@ -225,7 +225,7 @@ async def scale_data_endpoint(input_data: ScalingInput):
                   "description": "Internal Server Error - Failed to run stationarity test"
               }
           })
-async def test_stationarity_endpoint(input_data: StationarityTestInput, config=Depends(get_config)):
+async def test_stationarity_endpoint(input_data: StationarityTestInput):
     """
     Test time series data for stationarity using the Augmented Dickey-Fuller test.
     
@@ -245,8 +245,16 @@ async def test_stationarity_endpoint(input_data: StationarityTestInput, config=D
         # Process data as a DataFrame
         df = pd.DataFrame(input_data.data)
         
-        # Delegate to the service function
-        response = test_stationarity_step(df, config)
+        # Use hardcoded default values instead of config
+        p_value_threshold = 0.05  # Standard statistical significance level
+        test_method = "ADF"  # Augmented Dickey-Fuller test
+        
+        # Delegate to the service function with explicit parameters
+        response = test_stationarity_step(
+            df=df, 
+            test_method=test_method, 
+            p_value_threshold=p_value_threshold
+        )
         
         l.info(f"test_stationarity() returning results with interpretation")
         return response
