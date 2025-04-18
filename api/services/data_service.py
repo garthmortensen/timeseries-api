@@ -55,9 +55,128 @@ def convert_to_returns_step(df: pd.DataFrame) -> pd.DataFrame:
     """
     return data_processor.price_to_returns(df)
 
+def fill_missing_data_step(df: pd.DataFrame, strategy: str = "drop") -> pd.DataFrame:
+    """Fill missing values in time series data.
+    
+    Args:
+        df (pandas.DataFrame): Input data frame with potentially missing values
+        strategy (str, optional): Strategy to handle missing values.
+            Options: 'drop', 'forward_fill', 'backward_fill', 'interpolate'.
+            Defaults to "drop".
+        
+    Returns:
+        pandas.DataFrame: Data frame with missing values addressed
+    """
+    try:
+        if strategy == "drop":
+            return df.dropna()
+        elif strategy == "forward_fill" or strategy == "ffill":
+            return df.ffill()
+        elif strategy == "backward_fill" or strategy == "bfill":
+            return df.bfill()
+        elif strategy == "interpolate":
+            return df.interpolate()
+        else:
+            l.warning(f"Unknown missing value strategy '{strategy}', using 'drop' instead")
+            return df.dropna()
+    except Exception as e:
+        l.error(f"Error filling missing data: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error filling missing data: {str(e)}"
+        )
+
+def scale_data_step(df: pd.DataFrame, method: str = "standardize", convert_to_returns: bool = True) -> pd.DataFrame:
+    """Scale time series data using the specified method.
+    
+    Args:
+        df (pandas.DataFrame): Input data frame
+        method (str, optional): Scaling method. Options: 'standardize', 'minmax'. 
+            Defaults to "standardize".
+        convert_to_returns (bool, optional): Whether to convert prices to returns first.
+            Defaults to True.
+        
+    Returns:
+        pandas.DataFrame: Scaled data frame
+    """
+    try:
+        # First convert prices to returns if needed
+        if convert_to_returns:
+            df_returns = data_processor.price_to_returns(df)
+        else:
+            df_returns = df
+        
+        # Then scale using the specified method
+        return data_processor.scale_data(
+            df=df_returns, 
+            method=method
+        )
+    except Exception as e:
+        l.error(f"Error scaling data: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error scaling data: {str(e)}"
+        )
+
 def scale_for_garch_step(df: pd.DataFrame) -> pd.DataFrame:
     """Scale time series data for GARCH modeling."""
     return data_processor.scale_for_garch(df)
+
+def stationarize_data_step(df: pd.DataFrame, method: str = "difference", enabled: bool = True) -> pd.DataFrame:
+    """Make time series data stationary.
+    
+    Args:
+        df (pandas.DataFrame): Input data frame
+        method (str, optional): Method for making data stationary.
+            Options: 'difference', 'log', 'percentage_change'.
+            Defaults to "difference".
+        enabled (bool, optional): Whether to perform stationarization.
+            Defaults to True.
+        
+    Returns:
+        pandas.DataFrame: Stationary data frame
+    """
+    if enabled:
+        try:
+            return data_processor.stationarize_data(
+                df=df, 
+                method=method
+            )
+        except Exception as e:
+            l.error(f"Error making data stationary: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error making data stationary: {str(e)}"
+            )
+    return df
+
+def stationarize_data_step(df: pd.DataFrame, method: str = "difference", enabled: bool = True) -> pd.DataFrame:
+    """Make time series data stationary.
+    
+    Args:
+        df (pandas.DataFrame): Input data frame
+        method (str, optional): Method for making data stationary.
+            Options: 'difference', 'log', 'percentage_change'.
+            Defaults to "difference".
+        enabled (bool, optional): Whether to perform stationarization.
+            Defaults to True.
+        
+    Returns:
+        pandas.DataFrame: Stationary data frame
+    """
+    if enabled:
+        try:
+            return data_processor.stationarize_data(
+                df=df, 
+                method=method
+            )
+        except Exception as e:
+            l.error(f"Error making data stationary: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error making data stationary: {str(e)}"
+            )
+    return df
 
 def test_stationarity_step(df: pd.DataFrame, test_method: str, 
                           p_value_threshold: float) -> Dict[str, Any]:

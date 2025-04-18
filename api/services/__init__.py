@@ -7,7 +7,6 @@ They're called services because they provide a service to the API, which is to p
 
 from .data_service import (
     generate_data_step,
-    fill_missing_data_step,
     scale_data_step,
     stationarize_data_step,
     test_stationarity_step,
@@ -24,7 +23,6 @@ from .spillover_service import analyze_spillover_step
 
 __all__ = [
     "generate_data_step",
-    "fill_missing_data_step",
     "scale_data_step",
     "stationarize_data_step",
     "test_stationarity_step",
