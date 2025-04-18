@@ -1,0 +1,48 @@
+[1;33m=== Time Series Pipeline API Smoke Test ===[0m
+[1;33mRunning tests against: http://localhost:8001[0m
+
+[1;33mTest 1: Generate Data[0m
+[1;33mTesting /api/v1/generate_data - Generate synthetic time series data...[0m
+[0;32m✓ Success: Status code 200[0m
+Response: {"data": {"2023-01-02": {"GME": 150.0, "BYND": 200.0, "BP": 15.0}, "2023-01-03": {"GME": 150.2114, "BYND": 198.6181, "BP": 14.4283}, "2023-01-04": {"GME": 149.5267, "BYND": 199.0104, "BP": 14.5671}, "2023-01-05": {"GME": 150.0507, "BYND": 198.0532, "BP": 13.62}, "2023-01-06": {"GME": 150.0483, "BYND": 198.2155, "BP": 13.8314}, "2023-01-09": {"GME": 149.0608, "BYND": 196.0189, "BP": 11.4807}, "2023-01-10": {"GME": 150.9356, "BYND": 195.5117, "BP": 11.1695}}}
+
+[1;33mTest 2: Scale Data[0m
+[1;33mTesting /api/v1/scale_data - Scale time series data...[0m
+[0;32m✓ Success: Status code 200[0m
+Response: {"data": {"0": {"date": "2023-01-01", "price": -1.264911}, "1": {"date": "2023-01-02", "price": -0.632456}, "2": {"date": "2023-01-03", "price": 0.0}, "3": {"date": "2023-01-04", "price": 0.632456}, "4": {"date": "2023-01-05", "price": 1.264911}}}
+
+[1;33mTest 3: Test Stationarity[0m
+[1;33mTesting /api/v1/test_stationarity - Test for stationarity...[0m
+[0;32m✓ Success: Status code 200[0m
+Response: {"adf_statistic": -0.031362, "p_value": 0.95586, "critical_values": {"1%": -3.75, "5%": -3.0, "10%": -2.63}, "is_stationary": false, "interpretation": "The price series is non-stationary (p-value: 0.9559). This indicates the statistical properties change over time. The ADF test statistic of -0.0314 is not low enough to reject the null hypothesis of non-stationarity. Consider differencing or transformation before modeling to achieve stationarity."}
+
+[1;33mTest 4: Run ARIMA Model[0m
+[1;33mTesting /api/v1/run_arima - Run ARIMA model on time series...[0m
+[0;32m✓ Success: Status code 200[0m
+Response (truncated): {"fitted_model": "                               SARIMAX Results                                
+==============================================================================
+Dep. Variable:                  price   No. Observations:                   10
+Model:                 ARIMA(1, 1, 1)   Log Likelihood                  74.158
+Date:                Fri, 18 Apr 2025   AIC                           -142.316
+Time:                        08:19:25   BIC                           -142.478
+Sa...
+
+[1;33mTest 5: Run GARCH Model[0m
+[1;33mTesting /api/v1/run_garch - Run GARCH model on time series...[0m
+[0;32m✓ Success: Status code 200[0m
+Response (truncated): {"fitted_model": "                     Constant Mean - GARCH Model Results                      
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.000
+Mean Model:             Constant Mean   Adj. R-squared:                  0.000
+Vol Model:                      GARCH   Log-Likelihood:               -23.0974
+Distribution:                  Normal   AIC:                           54.1948
+Me...
+
+[1;33mTest 6: Run Complete Pipeline[0m
+[1;33mTesting /api/v1/run_pipeline - Execute the entire pipeline...[0m
+[0;32m✓ Success: Status code 200[0m
+Response (truncated): {"stationarity_results": {"adf_statistic": -7.246987, "p_value": 0.0, "critical_values": {"1%": -3.75, "5%": -3.0, "10%": -2.63}, "is_stationary": true, "interpretation": "The BYD series is stationary (p-value: 0.0000). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling. The ADF test statistic of -7.2470 is below the critical threshold, allowing us to reject the null hypothesis of non-stationarity."}, "arima_summary...
+
+[1;33m=== Test Summary ===[0m
+Passed: [0;32m6[0m / Total: 6
+[0;32mAll tests passed![0m
