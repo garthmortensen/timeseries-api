@@ -7,6 +7,12 @@ import logging as l
 import time
 from fastapi import APIRouter, HTTPException, status
 
+# database
+from fastapi import Depends
+from sqlalchemy.orm import Session
+import json
+from api.database import get_db, PipelineRun, PipelineResult
+
 from api.models.input import PipelineInput, SpilloverInput
 from api.models.response import PipelineResponse
 from api.services.data_service import (
@@ -45,11 +51,12 @@ from api.services.interpretations import interpret_arima_results, interpret_garc
           7. Fit GARCH models for volatility forecasting
           8. Run spillover analysis if enabled
           9. Return all results including forecasts and human-readable interpretations
+          10. Store results in the database for future reference
           
           All parameters have sensible defaults defined in the configuration.
           """,
           response_model=PipelineResponse)
-async def run_pipeline_endpoint(pipeline_input: PipelineInput):
+async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Depends(get_db)):
     """Execute the complete time series analysis pipeline with explicit parameters."""
     t1 = time.perf_counter()
 
@@ -59,6 +66,18 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
         start_date = pipeline_input.data_start_date
         end_date = pipeline_input.data_end_date
         symbols = pipeline_input.symbols or config.symbols
+
+        # Create pipeline run record
+        pipeline_run = PipelineRun(
+            name=f"Pipeline run for {', '.join(symbols)}",
+            status="running",
+            source_type=source_type,
+            start_date=start_date,
+            end_date=end_date
+        )
+        db.add(pipeline_run)
+        db.commit()
+        db.refresh(pipeline_run)
         
         # Extract ARIMA parameters
         arima_p = pipeline_input.arima_params.get('p', config.stats_model_ARIMA_fit_p)
@@ -173,6 +192,47 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
             # Run spillover analysis
             spillover_results = analyze_spillover_step(spillover_input)
 
+        # After executing the pipeline, store results in the database
+        for symbol in symbols:
+            # Store stationarity results
+            stationarity_db = PipelineResult(
+                pipeline_run_id=pipeline_run.id,
+                symbol=symbol,
+                result_type="stationarity",
+                is_stationary=stationarity_results["is_stationary"],
+                adf_statistic=stationarity_results["adf_statistic"],
+                p_value=stationarity_results["p_value"],
+                interpretation=stationarity_results["interpretation"]
+            )
+            db.add(stationarity_db)
+            
+            # Store ARIMA results
+            arima_db = PipelineResult(
+                pipeline_run_id=pipeline_run.id,
+                symbol=symbol,
+                result_type="arima",
+                model_summary=arima_summary,
+                forecast=json.dumps(arima_forecast),
+                interpretation=arima_interpretation
+            )
+            db.add(arima_db)
+            
+            # Store GARCH results
+            garch_db = PipelineResult(
+                pipeline_run_id=pipeline_run.id,
+                symbol=symbol,
+                result_type="garch",
+                model_summary=garch_summary,
+                forecast=json.dumps(garch_forecast),
+                interpretation=garch_interpretation
+            )
+            db.add(garch_db)
+        
+        # Update pipeline status
+        pipeline_run.status = "completed"
+        pipeline_run.end_time = datetime.datetime.utcnow()
+        db.commit()
+
         # Record execution time
         log_execution_time(t1)
 
@@ -188,6 +248,12 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput):
             "spillover_results": spillover_results
         }
     except Exception as e:
+        # Update pipeline status on error
+        if 'pipeline_run' in locals():
+            pipeline_run.status = "failed"
+            pipeline_run.end_time = datetime.datetime.utcnow()
+            db.commit()
+            
         l.error(f"Pipeline error: {e}")
         raise HTTPException(
             status_code=500, detail=f"Pipeline failed: {str(e)}"

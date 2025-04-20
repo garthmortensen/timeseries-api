@@ -1,37 +1,43 @@
+#!/usr/bin/env python3
+# timeseries-api/api/database.py
+"""Database connection and session management."""
+
 import os
 import time
-import logging
-from sqlalchemy import create_engine
+import logging as l
+from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.exc import OperationalError
+import datetime
 
-logger = logging.getLogger(__name__)
+# Database connection details from environment variables
+DB_USER = os.getenv("DB_USER", "myuser")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+DB_HOST = os.getenv("DB_HOST", "postgres")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "mydatabase")
 
-# Get database URL from environment variable
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
-
-# Connection retry settings
-MAX_RETRIES = 5
-RETRY_DELAY = 5  # seconds
+# Construct database URL
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # SQLAlchemy setup
 Base = declarative_base()
 
-def get_engine(max_retries=MAX_RETRIES, retry_delay=RETRY_DELAY):
+def get_engine(max_retries=5, retry_delay=5):
     """Create database engine with retry logic for container orchestration."""
     retries = 0
     last_exception = None
     
     while retries < max_retries:
         try:
+            l.info(f"Attempting to connect to database (attempt {retries+1}/{max_retries})...")
+            
             engine = create_engine(
                 DATABASE_URL,
                 pool_pre_ping=True,  # Verify connections before using from pool
-                pool_size=5,         # Adjust based on your workload
-                max_overflow=10,
+                pool_size=10,
+                max_overflow=20,
                 pool_recycle=3600    # Recycle connections after 1 hour
             )
             
@@ -39,16 +45,16 @@ def get_engine(max_retries=MAX_RETRIES, retry_delay=RETRY_DELAY):
             with engine.connect() as conn:
                 conn.execute("SELECT 1")
                 
-            logger.info("Successfully connected to database")
+            l.info("Successfully connected to PostgreSQL database")
             return engine
             
         except OperationalError as e:
             last_exception = e
             retries += 1
-            logger.warning(f"Database connection attempt {retries} failed. Retrying in {retry_delay} seconds...")
+            l.warning(f"Database connection failed: {str(e)}. Retrying in {retry_delay} seconds...")
             time.sleep(retry_delay)
     
-    logger.error(f"Failed to connect to database after {max_retries} attempts")
+    l.error(f"Failed to connect to database after {max_retries} attempts")
     raise last_exception or Exception("Failed to connect to the database after multiple attempts")
 
 # Create engine instance
@@ -64,3 +70,38 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def init_db():
+    """Initialize the database tables."""
+    Base.metadata.create_all(bind=engine)
+
+# Define SQLAlchemy models
+class PipelineRun(Base):
+    __tablename__ = "pipeline_runs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    source_type = Column(String)
+    start_date = Column(String)
+    end_date = Column(String) 
+    start_time = Column(DateTime, default=datetime.datetime.utcnow)
+    end_time = Column(DateTime, nullable=True)
+    
+    results = relationship("PipelineResult", back_populates="pipeline_run")
+    
+class PipelineResult(Base):
+    __tablename__ = "pipeline_results"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    pipeline_run_id = Column(Integer, ForeignKey("pipeline_runs.id"))
+    symbol = Column(String, nullable=False)
+    result_type = Column(String, nullable=False)  # 'arima', 'garch', 'stationarity'
+    is_stationary = Column(Boolean, nullable=True)
+    adf_statistic = Column(Float, nullable=True)
+    p_value = Column(Float, nullable=True)
+    model_summary = Column(Text, nullable=True)
+    forecast = Column(Text, nullable=True)  # JSON string of forecast values
+    interpretation = Column(Text, nullable=True)
+    
+    pipeline_run = relationship("PipelineRun", back_populates="results")

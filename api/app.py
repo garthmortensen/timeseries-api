@@ -32,6 +32,7 @@ import uvicorn
 # Import custom modules
 from api.utils.json_handling import RoundingJSONResponse
 from api.routers import data_router, models_router, pipeline_router
+from api.database import init_db
 
 
 ascii_banner = f"""
@@ -50,6 +51,15 @@ ascii_banner = f"""
 """
 
 from contextlib import asynccontextmanager
+
+@app.on_event("startup")
+async def startup():
+    """Initialize application on startup."""
+    l.info("Starting up application...")
+    
+    # Initialize database
+    init_db()
+    l.info("Database initialized")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
