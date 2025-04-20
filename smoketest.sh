@@ -139,13 +139,12 @@ test_5_result=$?
 # Test 6: Run Complete Pipeline
 echo -e "${YELLOW}Test 6: Run Complete Pipeline${NC}"
 test_6_payload='{
-  "start_date": "2023-01-01",
-  "end_date": "2023-01-10",
-  "anchor_prices": {
-    "GME": 150.0,
-    "BYND": 200.0,
-    "BP": 15.0
-  },
+  "source_actual_or_synthetic_data": "synthetic",
+  "data_start_date": "2023-01-01",
+  "data_end_date": "2023-01-10",
+  "symbols": ["GME", "BYND", "BP"],
+  "synthetic_anchor_prices": [150.0, 200.0, 15.0],
+  "synthetic_random_seed": 1,
   "scaling_method": "standardize",
   "arima_params": {
     "p": 1,
