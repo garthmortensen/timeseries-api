@@ -1,0 +1,20 @@
+# docker-compose file to run a postgres container
+services:
+  postgres_db:
+    container_name: my_postgres_container
+    image: postgres:alpine
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      # SELinux blocks containers from reading some mounted files. 
+      # :Z flag relabels the file in the shared volume with a "shared" object type
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:Z
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql:Z
+      # enable persistent data
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  # create a named volume to persist data
+  pgdata:
