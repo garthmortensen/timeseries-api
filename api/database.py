@@ -5,11 +5,12 @@
 import os
 import time
 import logging as l
-from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey, Text, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.exc import OperationalError
 import datetime
+
 
 # Database connection details from environment variables
 DB_USER = os.getenv("DB_USER", "myuser")
@@ -43,7 +44,7 @@ def get_engine(max_retries=5, retry_delay=5):
             
             # Test connection
             with engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute(text("SELECT 1"))
                 
             l.info("Successfully connected to PostgreSQL database")
             return engine
