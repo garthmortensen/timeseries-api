@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:alpine
-    container_name: timeseries_postgres
+    container_name: timeseries_db
     env_file:
       - .env
     environment:
