@@ -37,7 +37,6 @@ router = APIRouter(tags=["Pipeline"])
 # Add this import at the top
 from api.services.interpretations import interpret_arima_results, interpret_garch_results
 
-
 @router.post("/run_pipeline", 
           summary="Execute the complete time series analysis pipeline",
           description="""
@@ -135,18 +134,11 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
         )
 
-        if not stationarity_results["is_stationary"]:
-            l.warning("Data is not stationary after transformation - results may be unreliable")
-        
         # 4. Scale data for GARCH modeling
         # This preprocessing ensures numerical stability and comparable magnitude across series
         df_scaled = scale_for_garch_step(df=df_returns)
         
         # 5. Run ARIMA models to capture conditional mean dynamics
-        # The standard approach in financial econometrics is to first model the
-        # conditional mean with ARIMA to remove autocorrelation in returns, then model the
-        # volatility of residuals. This two-stage approach is well-established in academic literature
-
         if df_returns.shape[0] < 30:  # Check for sufficient data points
             arima_p = min(arima_p, 1)  # Reduce model complexity for small samples
             arima_q = min(arima_q, 1)
@@ -164,11 +156,8 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         arima_interpretation = interpret_arima_results(arima_summary, arima_forecast)
         
         # 6. Run GARCH models on ARIMA residuals
-        # Studies typically use either normal or Student's t distributions
-        # for GARCH modeling, with t-distribution often preferred because financial returns frequently
-        # exhibit fat tails. Research shows that simple GARCH(1,1) models often perform as well as
-        # more complex specifications for many financial time series
-        garch_summary, garch_forecast, _ = run_garch_step(
+        # Now capture the conditional volatilities (third return value)
+        garch_summary, garch_forecast, cond_vol = run_garch_step(
             df_residuals=arima_residuals,
             p=garch_p,
             q=garch_q,
@@ -180,8 +169,6 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         garch_interpretation = interpret_garch_results(garch_summary, garch_forecast)
 
         # 7. Run spillover analysis if enabled
-        # Research highlights the importance of studying volatility transmission
-        # across financial markets for risk management and portfolio diversification
         spillover_results = None
         if pipeline_input.spillover_enabled:
             spillover_params = pipeline_input.spillover_params
@@ -238,8 +225,24 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         # Record execution time
         log_execution_time(t1)
 
-        # Return results with interpretations
+        # Convert DataFrames to dictionaries for JSON serialization
+        original_data_dict = df_prices.reset_index().to_dict('records')
+        returns_data_dict = df_returns.reset_index().to_dict('records')
+        pre_garch_data_dict = arima_residuals.reset_index().to_dict('records')
+        post_garch_data_dict = cond_vol.reset_index().to_dict('records') if cond_vol is not None else None
+
+        # Include scaled data only if the data is not stationary
+        scaled_data_dict = None
+        if not stationarity_results["is_stationary"]:
+            scaled_data_dict = df_scaled.reset_index().to_dict('records')
+
+        # Return expanded results with all the requested data
         return {
+            "original_data": original_data_dict,
+            "returns_data": returns_data_dict,
+            "scaled_data": scaled_data_dict,
+            "pre_garch_data": pre_garch_data_dict,
+            "post_garch_data": post_garch_data_dict,
             "stationarity_results": stationarity_results,
             "arima_summary": arima_summary,
             "arima_forecast": arima_forecast,

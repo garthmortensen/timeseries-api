@@ -488,7 +488,7 @@
           "Pipeline"
         ],
         "summary": "Execute the complete time series analysis pipeline",
-        "description": "Run the end-to-end time series analysis pipeline with a single API call.\n          \n          This endpoint performs a complete workflow:\n          1. Generate synthetic data or fetch real market data\n          2. Convert prices to returns\n          3. Test for stationarity\n          4. Scale data for GARCH modeling\n          5. Fit ARIMA models for conditional mean\n          6. Extract ARIMA residuals\n          7. Fit GARCH models for volatility forecasting\n          8. Run spillover analysis if enabled\n          9. Return all results including forecasts and human-readable interpretations\n          \n          All parameters have sensible defaults defined in the configuration.",
+        "description": "Run the end-to-end time series analysis pipeline with a single API call.\n          \n          This endpoint performs a complete workflow:\n          1. Generate synthetic data or fetch real market data\n          2. Convert prices to returns\n          3. Test for stationarity\n          4. Scale data for GARCH modeling\n          5. Fit ARIMA models for conditional mean\n          6. Extract ARIMA residuals\n          7. Fit GARCH models for volatility forecasting\n          8. Run spillover analysis if enabled\n          9. Return all results including forecasts and human-readable interpretations\n          10. Store results in the database for future reference\n          \n          All parameters have sensible defaults defined in the configuration.",
         "operationId": "run_pipeline_endpoint_api_v1_run_pipeline_post",
         "requestBody": {
           "content": {
@@ -878,6 +878,60 @@
       },
       "PipelineResponse": {
         "properties": {
+          "original_data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Original Data",
+            "description": "The original time series data (synthetic or fetched)"
+          },
+          "returns_data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Returns Data",
+            "description": "Log returns data converted from original prices"
+          },
+          "scaled_data": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaled Data",
+            "description": "Scaled time series data (included if data is not stationary)"
+          },
+          "pre_garch_data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Pre Garch Data",
+            "description": "Data before GARCH processing (ARIMA residuals)"
+          },
+          "post_garch_data": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Post Garch Data",
+            "description": "Data after GARCH processing (conditional volatilities)"
+          },
           "stationarity_results": {
             "$ref": "#/components/schemas/StationarityTestResponse",
             "description": "Results of stationarity tests"
@@ -932,6 +986,9 @@
         },
         "type": "object",
         "required": [
+          "original_data",
+          "returns_data",
+          "pre_garch_data",
           "stationarity_results",
           "arima_summary",
           "arima_forecast",

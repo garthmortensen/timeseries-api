@@ -69,6 +69,26 @@ class SpilloverResponse(BaseModel):
 
 class PipelineResponse(BaseModel):
     """Response model for the complete pipeline."""
+    original_data: List[Dict[str, Any]] = Field(
+        ..., 
+        description="The original time series data (synthetic or fetched)"
+    )
+    returns_data: List[Dict[str, Any]] = Field(
+        ..., 
+        description="Log returns data converted from original prices"
+    )
+    scaled_data: Optional[List[Dict[str, Any]]] = Field(
+        None, 
+        description="Scaled time series data (included if data is not stationary)"
+    )
+    pre_garch_data: List[Dict[str, Any]] = Field(
+        ..., 
+        description="Data before GARCH processing (ARIMA residuals)"
+    )
+    post_garch_data: Optional[List[Dict[str, Any]]] = Field(
+        None, 
+        description="Data after GARCH processing (conditional volatilities)"
+    )
     stationarity_results: StationarityTestResponse = Field(
         ..., 
         description="Results of stationarity tests"
