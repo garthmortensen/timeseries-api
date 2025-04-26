@@ -56,7 +56,39 @@ from api.services.interpretations import interpret_arima_results, interpret_garc
           
           All parameters have sensible defaults defined in the configuration.
           """,
-          response_model=PipelineResponse)
+          response_model=PipelineResponse,
+          responses={
+              200: {
+                  "description": "Successfully executed pipeline",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "original_data": [
+                                  {"date": "2023-01-01", "GME": 150.0},
+                                  {"date": "2023-01-02", "GME": 152.3}
+                              ],
+                              "returns_data": [
+                                  {"date": "2023-01-02", "GME": 0.0153}
+                              ],
+                              # Include abbreviated examples of other fields
+                              "stationarity_results": {
+                                  "adf_statistic": -3.45,
+                                  "p_value": 0.032,
+                                  "critical_values": {"1%": -3.75, "5%": -3.0, "10%": -2.63},
+                                  "is_stationary": True,
+                                  "interpretation": "The series is stationary (p-value: 0.0320)."
+                              },
+                              "arima_summary": "ARIMA(1,1,1) Model Results...",
+                              "arima_forecast": [0.002, 0.003, 0.0025],
+                              "arima_interpretation": "The ARIMA model shows an increasing trend...",
+                              "garch_summary": "GARCH(1,1) Model Results...",
+                              "garch_forecast": [0.0025, 0.0028, 0.0030],
+                              "garch_interpretation": "The GARCH model predicts stable volatility..."
+                          }
+                      }
+                  }
+              }
+          })
 async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Depends(get_db)):
     """Execute the complete time series analysis pipeline with explicit parameters."""
     t1 = time.perf_counter()
