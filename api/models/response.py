@@ -10,9 +10,9 @@ from typing import Dict, List, Any, Optional
 
 class TimeSeriesDataResponse(BaseModel):
     """Response model for time series data endpoints."""
-    data: Dict[str, Dict[str, Any]] = Field(
+    data: List[Dict[str, Any]] = Field(
         ..., 
-        description="Time series data indexed by date"
+        description="Time series data as a list of records with date and symbol values"
     )
 
 

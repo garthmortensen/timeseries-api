@@ -40,7 +40,34 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: improve database
 
-TODO: figure out how to handle plotly
+TODO:
+
+these 2 endpoints payloads return the same data structure.
+http://localhost:8001/api/v1/generate_data
+http://localhost:8001/api/v1/fetch_market_data
+
+    ```json
+    {
+    "data": {
+        "2023-01-01": {"GME": 150.0, "BYND": 200.0},
+        "2023-01-02": {"GME": 152.3, "BYND": 198.7},
+        ...
+    }
+    }
+    ```
+
+Not this endpoint's `original_data` section though.
+http://localhost:8001/api/v1/run_pipeline
+
+    ```json
+    "original_data": [
+    {"date": "2023-01-01", "GME": 150.0, "BYND": 200.0},
+    {"date": "2023-01-02", "GME": 152.3, "BYND": 198.7},
+    ...
+    ]
+    ```
+The top 2 return a date-based dictionary, whereas the last returns a `list` of `dict`s, which is preferable bc frontend compatibility, easier to convert to pandas, straight out of db, etc.
+
 
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 

@@ -43,10 +43,10 @@ def get_config():
                      "content": {
                          "application/json": {
                              "example": {
-                                 "data": {
-                                     "2023-01-01": {"GME": 150.0, "BYND": 200.0},
-                                     "2023-01-02": {"GME": 152.3, "BYND": 198.7}
-                                 }
+                                 "data": [
+                                     {"date": "2023-01-01", "GME": 150.0, "BYND": 200.0},
+                                     {"date": "2023-01-02", "GME": 152.3, "BYND": 198.7}
+                                 ]
                              }
                          }
                      }
@@ -65,22 +65,25 @@ async def generate_data_endpoint(input_data: DataGenerationInput):
     This endpoint creates synthetic price series for multiple symbols over a specified date range.
     Each symbol starts from its anchor price and follows a random walk with drift.
     
-    The response provides a dictionary of dates, with each date containing prices for all symbols.
+    The response provides a list of records, each containing a date and values for all symbols.
     """
     try:
-        price_dict, price_df = data_generator.generate_price_series(
+        _, price_df = data_generator.generate_price_series(
             start_date=input_data.start_date,
             end_date=input_data.end_date,
             anchor_prices=input_data.anchor_prices,
         )
         
-        # Convert from ticker-based to date-based structure required by the API
-        date_based_dict = {}
-        for date, row in price_df.iterrows():
-            date_str = date.strftime('%Y-%m-%d')
-            date_based_dict[date_str] = row.to_dict()
+        # Convert DataFrame to a list of dictionaries (records format)
+        # This preserves the date and makes each row a dictionary with symbol columns
+        records = price_df.reset_index().rename(columns={'index': 'date'}).to_dict('records')
         
-        return_data = {"data": date_based_dict}
+        # Convert datetime objects to strings if present
+        for record in records:
+            if isinstance(record.get('date'), pd.Timestamp):
+                record['date'] = record['date'].strftime('%Y-%m-%d')
+        
+        return_data = {"data": records}
         l.info(f"generate_data() returning {len(return_data['data'])} data points")
         return return_data
     
@@ -97,10 +100,10 @@ async def generate_data_endpoint(input_data: DataGenerationInput):
                   "content": {
                       "application/json": {
                           "example": {
-                              "data": {
-                                  "2023-01-01": {"BYND": 150.0, "GME": 200.0},
-                                  "2023-01-02": {"BYND": 152.3, "GME": 198.7}
-                              }
+                              "data": [
+                                  {"date": "2023-01-01", "AAPL": 150.0, "MSFT": 250.0},
+                                  {"date": "2023-01-02", "AAPL": 152.3, "MSFT": 248.7}
+                              ]
                           }
                       }
                   }
@@ -122,14 +125,14 @@ async def fetch_market_data_endpoint(input_data: MarketDataInput):
     The interval parameter controls the frequency of the data (daily, weekly, monthly).
     """
     try:
-        data_dict, _ = fetch_market_data(
+        records, _ = fetch_market_data(
             symbols=input_data.symbols,
             start_date=input_data.start_date,
             end_date=input_data.end_date,
             interval=input_data.interval
         )
         
-        return {"data": data_dict}
+        return {"data": records}
     except Exception as e:
         l.error(f"Error fetching market data: {e}")
         raise HTTPException(status_code=500, detail=str(e))

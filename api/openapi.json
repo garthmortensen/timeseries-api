@@ -29,7 +29,7 @@
           "Data Operations"
         ],
         "summary": "Generate synthetic time series data",
-        "description": "Generate synthetic time series data based on input parameters.\n\nThis endpoint creates synthetic price series for multiple symbols over a specified date range.\nEach symbol starts from its anchor price and follows a random walk with drift.\n\nThe response provides a dictionary of dates, with each date containing prices for all symbols.",
+        "description": "Generate synthetic time series data based on input parameters.\n\nThis endpoint creates synthetic price series for multiple symbols over a specified date range.\nEach symbol starts from its anchor price and follows a random walk with drift.\n\nThe response provides a list of records, each containing a date and values for all symbols.",
         "operationId": "generate_data_endpoint_api_v1_generate_data_post",
         "requestBody": {
           "content": {
@@ -50,16 +50,18 @@
                   "$ref": "#/components/schemas/TimeSeriesDataResponse"
                 },
                 "example": {
-                  "data": {
-                    "2023-01-01": {
+                  "data": [
+                    {
+                      "date": "2023-01-01",
                       "GME": 150.0,
                       "BYND": 200.0
                     },
-                    "2023-01-02": {
+                    {
+                      "date": "2023-01-02",
                       "GME": 152.3,
                       "BYND": 198.7
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -110,16 +112,18 @@
                   "$ref": "#/components/schemas/TimeSeriesDataResponse"
                 },
                 "example": {
-                  "data": {
-                    "2023-01-01": {
-                      "BYND": 150.0,
-                      "GME": 200.0
+                  "data": [
+                    {
+                      "date": "2023-01-01",
+                      "AAPL": 150.0,
+                      "MSFT": 250.0
                     },
-                    "2023-01-02": {
-                      "BYND": 152.3,
-                      "GME": 198.7
+                    {
+                      "date": "2023-01-02",
+                      "AAPL": 152.3,
+                      "MSFT": 248.7
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -1177,12 +1181,12 @@
       "TimeSeriesDataResponse": {
         "properties": {
           "data": {
-            "additionalProperties": {
+            "items": {
               "type": "object"
             },
-            "type": "object",
+            "type": "array",
             "title": "Data",
-            "description": "Time series data indexed by date"
+            "description": "Time series data as a list of records with date and symbol values"
           }
         },
         "type": "object",

@@ -6,7 +6,7 @@ import pandas as pd
 import logging as l
 from typing import Dict, List, Any, Tuple
 
-def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interval: str = "1d") -> Tuple[Dict[str, Dict[str, Any]], pd.DataFrame]:
+def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interval: str = "1d") -> Tuple[List[Dict[str, Any]], pd.DataFrame]:
     """
     Fetch market data from Yahoo Finance.
     
@@ -18,19 +18,16 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
         
     Returns:
         Tuple of:
-        - Dict with dates as keys and nested dicts of symbol data as values
+        - List of dictionaries, each with date and symbol values
         - DataFrame with datetime index and columns for each symbol
     """
     l.info(f"Fetching market data for {symbols} from {start_date} to {end_date}")
-    
-    # Format to match the structure returned by generate_data()
-    data_dict = {}
     
     try:
         # Download data for all symbols at once
         data = yf.download(symbols, start=start_date, end=end_date, interval=interval)
         
-        # Ensure we have a MultiIndex or regular DataFrame with Close prices
+        # Process data to get prices DataFrame similar to generate_price_series()
         if len(symbols) == 1:
             # For single symbol, ensure we have a DataFrame with Close price column
             if isinstance(data.columns, pd.MultiIndex):
@@ -58,12 +55,15 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
         # Ensure the index is datetime 
         prices.index = pd.to_datetime(prices.index)
         
-        # Populate data_dict in the same structure as generate_price_series() found in py package
-        for date_idx, row in prices.iterrows():
-            str_date = str(date_idx)
-            data_dict[str_date] = row.to_dict()
+        # Convert to list of dictionaries (records format)
+        records = prices.reset_index().rename(columns={'index': 'date'}).to_dict('records')
         
-        return data_dict, prices
+        # Convert datetime objects to strings
+        for record in records:
+            if isinstance(record.get('date'), pd.Timestamp):
+                record['date'] = record['date'].strftime('%Y-%m-%d')
+        
+        return records, prices
     
     except Exception as e:
         l.error(f"Error fetching data from Yahoo Finance: {e}")
