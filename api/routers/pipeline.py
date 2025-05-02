@@ -170,6 +170,10 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         # This preprocessing ensures numerical stability and comparable magnitude across series
         df_scaled = scale_for_garch_step(df=df_returns)
         
+        # Ensure Date is set as index before passing to ARIMA
+        if 'Date' in df_scaled.columns:
+            df_scaled = df_scaled.set_index('Date')
+
         # 5. Run ARIMA models to capture conditional mean dynamics
         if df_returns.shape[0] < 30:  # Check for sufficient data points
             arima_p = min(arima_p, 1)  # Reduce model complexity for small samples
@@ -285,15 +289,33 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             "spillover_results": spillover_results
         }
     except Exception as e:
-        # Update pipeline status on error
+        # Get more detailed error information
+        import traceback
+        error_trace = traceback.format_exc()
+        error_location = f"{e.__class__.__name__} in {e.__traceback__.tb_frame.f_code.co_filename} at line {e.__traceback__.tb_lineno}"
+        
+        error_message = (
+            f"Pipeline error: {str(e)}\n"
+            f"Error type: {e.__class__.__name__}\n"
+            f"Error location: {error_location}"
+        )
+        
+        l.error(error_message)
+        l.debug(f"Full traceback:\n{error_trace}")
+        
+        # Update pipeline status on error with more details
         if 'pipeline_run' in locals():
             pipeline_run.status = "failed"
             pipeline_run.end_time = datetime.datetime.utcnow()
             db.commit()
-            
-        l.error(f"Pipeline error: {e}")
+        
         raise HTTPException(
-            status_code=500, detail=f"Pipeline failed: {str(e)}"
+            status_code=500, 
+            detail={
+                "message": f"Pipeline failed: {str(e)}",
+                "error_type": e.__class__.__name__,
+                "error_location": error_location
+            }
         )
 
 def log_execution_time(start_time: float) -> None:

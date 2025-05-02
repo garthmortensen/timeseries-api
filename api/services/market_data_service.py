@@ -18,8 +18,8 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
         
     Returns:
         Tuple of:
-        - List of dictionaries, each with date and symbol values
-        - DataFrame with datetime index and columns for each symbol
+        - List of dictionaries, each with date and symbol values (for API response)
+        - DataFrame with datetime index (for internal library use)
     """
     l.info(f"Fetching market data for {symbols} from {start_date} to {end_date}")
     
@@ -55,7 +55,8 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
         # Ensure the index is datetime 
         prices.index = pd.to_datetime(prices.index)
         
-        # Convert to list of dictionaries (records format)
+        # For API responses: Convert to list of dictionaries (records format)
+        # Use lowercase 'date' for API consistency
         records = prices.reset_index().rename(columns={'index': 'date'}).to_dict('records')
         
         # Convert datetime objects to strings
@@ -63,6 +64,9 @@ def fetch_market_data(symbols: List[str], start_date: str, end_date: str, interv
             if isinstance(record.get('date'), pd.Timestamp):
                 record['date'] = record['date'].strftime('%Y-%m-%d')
         
+        # Note: Keep prices DataFrame with datetime index for internal library use
+        # DO NOT reset_index() on the prices DataFrame that will be used with the library
+
         return records, prices
     
     except Exception as e:

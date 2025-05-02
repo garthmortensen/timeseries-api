@@ -18,6 +18,10 @@ def run_arima_step(df_stationary: pd.DataFrame, p: int, d: int, q: int,
                   forecast_steps: int) -> Tuple[str, List[float], pd.DataFrame]:
     """Run ARIMA model on stationary time series data."""
     try:
+        # Ensure Date is set as index before passing to the library
+        if 'Date' in df_stationary.columns:
+            df_stationary = df_stationary.set_index('Date')
+            
         # Run ARIMA models with the explicit parameters
         arima_fits, arima_forecasts = stats_model.run_arima(
             df_stationary=df_stationary,
@@ -58,6 +62,10 @@ def run_garch_step(df_residuals: pd.DataFrame, p: int, q: int, dist: str,
     performs well in most applications.
     """
     try:
+        # Ensure Date is set as index before passing to the library
+        if 'Date' in df_residuals.columns:
+            df_residuals = df_residuals.set_index('Date')
+            
         # Run GARCH models with explicit parameters
         garch_fits, garch_forecasts = stats_model.run_garch(
             df_stationary=df_residuals,
@@ -66,7 +74,7 @@ def run_garch_step(df_residuals: pd.DataFrame, p: int, q: int, dist: str,
             dist=dist,
             forecast_steps=forecast_steps
         )
-        
+
         # Extract conditional volatilities
         cond_vol = pd.DataFrame(index=df_residuals.index)
         for column in df_residuals.columns:

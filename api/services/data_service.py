@@ -182,6 +182,10 @@ def test_stationarity_step(df: pd.DataFrame, test_method: str,
                           p_value_threshold: float) -> Dict[str, Any]:
     """Test stationarity of time series data."""
     try:
+        # Ensure Date is set as index before passing to the library
+        if 'Date' in df.columns:
+            df = df.set_index('Date')
+            
         adf_results = data_processor.test_stationarity(
             df=df, 
             method=test_method
