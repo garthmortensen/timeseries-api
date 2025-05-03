@@ -40,34 +40,17 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: improve database
 
-TODO:
-
-these 2 endpoints payloads return the same data structure.
-http://localhost:8001/api/v1/generate_data
-http://localhost:8001/api/v1/fetch_market_data
-
-    ```json
+TODO: synthetic data is returning with an extra index. get rid of "index":
+```json
+  "original_data": [
     {
-    "data": {
-        "2023-01-01": {"GME": 150.0, "BYND": 200.0},
-        "2023-01-02": {"GME": 152.3, "BYND": 198.7},
-        ...
-    }
-    }
-    ```
-
-Not this endpoint's `original_data` section though.
-http://localhost:8001/api/v1/run_pipeline
-
-    ```json
-    "original_data": [
-    {"date": "2023-01-01", "GME": 150.0, "BYND": 200.0},
-    {"date": "2023-01-02", "GME": 152.3, "BYND": 198.7},
-    ...
-    ]
-    ```
-The top 2 return a date-based dictionary, whereas the last returns a `list` of `dict`s, which is preferable bc frontend compatibility, easier to convert to pandas, straight out of db, etc.
-
+      "index": 0,
+      "Date": "2023-01-02T00:00:00",
+      "SYM1": 150,
+      "SYM2": 200,
+      "SYM3": 15
+    },
+```
 
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
