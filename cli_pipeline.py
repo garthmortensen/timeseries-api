@@ -18,6 +18,9 @@ from utilities.chronicler import init_chronicler
 from utilities.configurator import load_configuration
 from timeseries_compute import data_generator, data_processor, stats_model
 
+from api.services.interpretations import interpret_granger_causality
+from statsmodels.tsa.stattools import grangercausalitytests
+
 
 def main():
     """Main function to run the pipeline."""
@@ -104,6 +107,7 @@ def main():
             l.info("\n\n+++++pipeline: analyze_spillover()+++++")
             from api.models.input import SpilloverInput
             from api.services.spillover_service import analyze_spillover_step
+            from api.services.interpretations import interpret_spillover_results
             
             spillover_input = SpilloverInput(
                 data=returns_df.reset_index().to_dict('records'),
@@ -116,6 +120,75 @@ def main():
             
             l.info(f"Total spillover index: {spillover_results['total_spillover_index']:.2f}%")
             l.info(f"Net spillover: {spillover_results['net_spillover']}")
+            
+            # Generate interpretations for the spillover results
+            interpretations = interpret_spillover_results(spillover_results, significance_threshold=0.1)
+            l.info("\n----- Spillover Analysis Interpretations -----")
+            for key, interpretation in interpretations.items():
+                l.info(f"\n{key}:\n{interpretation}")
+        
+        # Add interpretations for stationarity tests
+        from api.services.interpretations import interpret_stationarity_test
+        l.info("\n----- Stationarity Test Interpretations -----")
+        stationarity_interpretations = interpret_stationarity_test(adf_results)
+        for series, interpretation in stationarity_interpretations.items():
+            l.info(f"\n{series}:\n{interpretation}")
+        
+        # Add interpretations for ARIMA models if enabled
+        if config.stats_model_ARIMA_enabled:
+            from api.services.interpretations import interpret_arima_results
+            l.info("\n----- ARIMA Model Interpretations -----")
+            for column in scaled_returns_df.columns:
+                if column in arima_fits and column in arima_forecasts:
+                    forecast_list = arima_forecasts[column].tolist() if hasattr(arima_forecasts[column], 'tolist') else [arima_forecasts[column]]
+                    arima_interp = interpret_arima_results(str(arima_fits[column].summary()), forecast_list)
+                    l.info(f"\n{column} ARIMA Model:\n{arima_interp}")
+        
+        # Add interpretations for GARCH models if enabled
+        if config.stats_model_GARCH_enabled:
+            from api.services.interpretations import interpret_garch_results
+            l.info("\n----- GARCH Model Interpretations -----")
+            for column in arima_residuals.columns:
+                if column in garch_fits and column in garch_forecasts:
+                    forecast_list = garch_forecasts[column].tolist() if hasattr(garch_forecasts[column], 'tolist') else [garch_forecasts[column]]
+                    # Convert variance forecasts to volatility
+                    volatility_forecasts = [np.sqrt(v) for v in forecast_list]
+                    garch_interp = interpret_garch_results(str(garch_fits[column].summary()), volatility_forecasts)
+                    l.info(f"\n{column} GARCH Model:\n{garch_interp}")
+        
+        # If there are multiple assets, we can potentially do Granger causality tests
+        if len(returns_df.columns) > 1 and hasattr(config, "granger_causality_enabled") and config.granger_causality_enabled:
+            
+            l.info("\n----- Granger Causality Tests -----")
+            max_lag = config.granger_causality_max_lag if hasattr(config, "granger_causality_max_lag") else 5
+            granger_results = {}
+            
+            for source in returns_df.columns:
+                for target in returns_df.columns:
+                    if source != target:
+                        # Get the data for the pair of variables
+                        data = returns_df[[source, target]].dropna()
+                        try:
+                            # Run the Granger causality test
+                            test_result = grangercausalitytests(data, maxlag=max_lag, verbose=False)
+                            # Get the result for the first lag (can choose a different one if needed)
+                            f_stat = test_result[1][0]["ssr_ftest"][0]
+                            p_value = test_result[1][0]["ssr_ftest"][1]
+                            granger_results[f"{source}->{target}"] = {"p-value": p_value, "f-statistic": f_stat}
+                        except Exception as e:
+                            l.warning(f"Error in Granger causality test for {source}->{target}: {e}")
+            
+            granger_interpretations = interpret_granger_causality(granger_results)
+            for relation, interpretation in granger_interpretations.items():
+                l.info(f"\n{relation}:\n{interpretation}")
+        
+        # If network metrics are available (would need to be calculated elsewhere)
+        if hasattr(config, "network_metrics_enabled") and config.network_metrics_enabled and 'network_results' in locals():
+            from api.services.interpretations import interpret_network_metrics
+            l.info("\n----- Network Metrics Interpretations -----")
+            network_interpretations = interpret_network_metrics(network_results)
+            for metric, interpretation in network_interpretations.items():
+                l.info(f"\n{metric}:\n{interpretation}")
 
     except Exception as e:
         l.exception(f"\nError in pipeline:\n{e}")

@@ -30,24 +30,42 @@ def analyze_spillover_step(input_data):
             l.warning("Converting index to DatetimeIndex")
             df.index = pd.to_datetime(df.index)
 
-        # Use the forecast_horizon as max_lag if available
-        max_lag = input_data.forecast_horizon if hasattr(input_data, 'forecast_horizon') else 5
+        # Add this line to select only numeric columns for analysis
+        df_numeric = df.select_dtypes(include=['number'])
         
-        # Call run_spillover_analysis with the parameters it actually accepts
+        # Calculate a safe maximum lag based on data size
+        # Requested lag from input or config
+        requested_max_lag = input_data.forecast_horizon if hasattr(input_data, 'forecast_horizon') else 5
+        
+        # For Granger causality test, a good rule of thumb is max_lag ≤ n/3
+        # where n is the number of observations
+        safe_max_lag = min(requested_max_lag, len(df_numeric) // 3)
+        
+        # Ensure max_lag is at least 1
+        max_lag = max(1, safe_max_lag)
+        
+        if max_lag < requested_max_lag:
+            l.warning(f"Adjusted max_lag from {requested_max_lag} to {max_lag} due to insufficient observations")
+        
+        # Call run_spillover_analysis with adjusted parameters
         result = spillover_processor.run_spillover_analysis(
-            df_stationary=df,
+            df_stationary=df_numeric,
             max_lag=max_lag
         )
         
-        # Generate interpretation
-        interpretation = interpret_spillover_results(result)
-        result["interpretation"] = interpretation
+        # Generate interpretation safely
+        try:
+            interpretation = interpret_spillover_results(result)
+            result["interpretation"] = interpretation
+        except Exception as interp_error:
+            l.warning(f"Could not generate interpretation: {interp_error}")
+            result["interpretation"] = "Spillover analysis complete, but detailed interpretation unavailable."
         
-        # Format result for API response
+        # Format result with defaults for missing keys
         response = {
-            "total_spillover_index": 0.0,  # Default value
+            "total_spillover_index": result.get("total_spillover", 0.0),
             "directional_spillover": result.get("spillover_analysis", {}).get("granger_causality", {}),
-            "net_spillover": {},  # Default empty dict
+            "net_spillover": result.get("net_spillover", {}),
             "pairwise_spillover": result.get("spillover_analysis", {}).get("shock_spillover", {}),
             "interpretation": result.get("interpretation", "Spillover analysis complete.")
         }
@@ -63,20 +81,14 @@ def analyze_spillover_step(input_data):
 
 
 def interpret_spillover_results(results):
-    """Generate a human-readable interpretation of spillover results.
-    
-    Args:
-        results (dict): Spillover analysis results
-        
-    Returns:
-        str: Human-readable interpretation
-    """
-    total_spillover = results["total_spillover"]
-    net_spillover = results["net_spillover"]
+    """Generate a human-readable interpretation of spillover results."""
+    # Use .get() method with default values to avoid KeyError
+    total_spillover = results.get("total_spillover", 0.0)
+    net_spillover = results.get("net_spillover", {})
     
     # Identify top transmitters and receivers
-    top_transmitters = sorted(net_spillover.items(), key=lambda x: x[1], reverse=True)[:2]
-    top_receivers = sorted(net_spillover.items(), key=lambda x: x[1])[:2]
+    top_transmitters = sorted(net_spillover.items(), key=lambda x: x[1], reverse=True)[:2] if net_spillover else []
+    top_receivers = sorted(net_spillover.items(), key=lambda x: x[1])[:2] if net_spillover else []
     
     # Create interpretation
     interpretation = (

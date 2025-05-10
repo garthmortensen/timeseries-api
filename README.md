@@ -40,18 +40,6 @@ This project provides both a web API and CLI interface for financial and econome
 
 TODO: improve database
 
-TODO: synthetic data is returning with an extra index. get rid of "index":
-```json
-  "original_data": [
-    {
-      "index": 0,
-      "Date": "2023-01-02T00:00:00",
-      "SYM1": 150,
-      "SYM2": 200,
-      "SYM3": 15
-    },
-```
-
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
 ### Integration Overview

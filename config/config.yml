@@ -61,5 +61,5 @@ stats_model_GARCH_volatility_format: "standard_deviation"  # options: standard_d
 
 spillover_analysis_enabled: true
 spillover_analysis_method: "diebold_yilmaz"
-spillover_analysis_forecast_horizon: 10
+spillover_analysis_forecast_horizon: 3
 spillover_analysis_window_size: null
