@@ -83,6 +83,15 @@ class Config(BaseModel):
     spillover_analysis_forecast_horizon: int = Field(default=10)
     spillover_analysis_window_size: Optional[int] = Field(default=None)
 
+    # Grandger Causality
+    granger_causality_enabled: bool = Field(default=True)
+    granger_causality_max_lag: int = Field(default=5)
+    granger_causality_p_value_threshold: float = Field(default=0.05)
+
+    # Network Metrics
+    network_metrics_enabled: bool = Field(default=False)
+    spillover_significance_threshold: float = Field(default=0.1)
+
 def load_configuration(config_file: str) -> Config:
     """
     Load and validate the YAML configuration file.

@@ -1,65 +1,111 @@
 # timeseries-pipeline/config/config.yml
 
-# Metadata
+# =============================================================================
+# Metadata - Core info about the configuration version and environment
+# =============================================================================
 metadata_version: 1.0
 metadata_environment: "dev"
 
-# Data Generator - depreciated
-# data_generator_enabled: false
-# data_generator_random_seed: 1
-# data_generator_start_date: "2023-01-01"
-# data_generator_end_date: "2023-02-01"
-# data_generator_anchor_prices_GME: 150.0
-# data_generator_anchor_prices_BYND: 200.0
-# data_generator_anchor_prices_BYD: 15.0
+# =============================================================================
+# Data Source Selection - Controls whether we use real market data or synthetic
+# series, which is useful for testing or when market data is unavailable
+# =============================================================================
+source_actual_or_synthetic_data: "synthetic"  # options: actual, synthetic
 
-# pull internet data or generate synthetic data
-source_actual_or_synthetic_data: "actual"  # options: actual, synthetic
-
-# universal data sourcing options
+# =============================================================================
+# Universal data sourcing options - Defines the time window and securities to
+# analyze, regardless of whether using real or synthetic data
+# =============================================================================
 data_start_date: "2023-01-01"
 data_end_date: "2023-02-01"
 symbols: ["GME", "BYND", "BYD"]
 
-# synthetic-specific options
+# =============================================================================
+# Synthetic-specific options - Controls random walk parameters when generating
+# artificial price series for testing or simulation purposes
+# =============================================================================
 synthetic_anchor_prices: [150.0, 200.0, 15.0]
 synthetic_random_seed: 1
 
-# Data Processor - Missing Values
+# =============================================================================
+# Data Processor - Missing Values - Defines how to handle gaps in time series,
+# which is common with market data due to holidays or trading halts
+# =============================================================================
 data_processor_missing_values_enabled: true
 data_processor_missing_values_strategy: "drop"  # options: drop, forward_fill
 
+# =============================================================================
+# Returns Conversion - First transformation step that converts raw price levels 
+# to period-over-period percentage changes, addressing the non-stationarity of 
+# price levels and enabling cross-asset comparability
+# =============================================================================
 data_processor_returns_conversion_enabled: true
 
-# Data Processor - Stationary
+# =============================================================================
+# Data Processor - Stationary - Second-stage transformation applied AFTER returns
+# calculation if returns themselves still exhibit non-stationarity (e.g., in 
+# highly persistent volatility regimes)
+# =============================================================================
 data_processor_stationary_enabled: true
 data_processor_stationary_method: "difference"  # options: difference, log
 
-# Data Processor - Stationarity Test
+# =============================================================================
+# Data Processor - Stationarity Test - Tests whether time series have consistent
+# statistical properties over time
+# =============================================================================
 data_processor_stationarity_test_method: "ADF"
 data_processor_stationarity_test_p_value_threshold: 0.05
 
-# Data Processor - Scaling
+# =============================================================================
+# Data Processor - Scaling - Standardizes data ranges for better comparison and
+# numerical stability in model estimation. Numerical stability is achieved by
+# ensuring that the data is centered around zero and has a standard deviation of one.
+# =============================================================================
 data_processor_scaling_method: "standardize"  # options: standardize, minmax
 
-# ARIMA Model
+# =============================================================================
+# ARIMA Model - Models the conditional mean (expected return) of time series,
+# capturing autocorrelation and trends in financial data
+# =============================================================================
 stats_model_ARIMA_enabled: true
-stats_model_ARIMA_fit_p: 2
-stats_model_ARIMA_fit_d: 1
-stats_model_ARIMA_fit_q: 4
-stats_model_ARIMA_predict_steps: 3
+stats_model_ARIMA_fit_p: 2  # Number of autoregressive terms
+stats_model_ARIMA_fit_d: 1  # Order of differencing
+stats_model_ARIMA_fit_q: 4  # Number of moving average terms
+stats_model_ARIMA_predict_steps: 3  # Forecast horizon length
 
-# GARCH Model
+# =============================================================================
+# GARCH Model - Models volatility clustering in financial returns, which is
+# useful for risk management and option pricing
+# =============================================================================
 stats_model_GARCH_enabled: true
-stats_model_GARCH_fit_p: 1
-stats_model_GARCH_fit_q: 1
-stats_model_GARCH_fit_dist: "t"  # options: normal, t
-stats_model_GARCH_predict_steps: 3
+stats_model_GARCH_fit_p: 1  # ARCH terms (impact of past shocks)
+stats_model_GARCH_fit_q: 1  # GARCH terms (persistence of volatility)
+stats_model_GARCH_fit_dist: "t"  # Student's t-distribution captures fat tails in returns
+stats_model_GARCH_predict_steps: 3  # Volatility forecast horizon
 
-stats_model_ARIMA_residuals_as_garch_input: true
-stats_model_GARCH_volatility_format: "standard_deviation"  # options: standard_deviation, variance
+stats_model_ARIMA_residuals_as_garch_input: true  # Use ARIMA residuals as GARCH inputs
+stats_model_GARCH_volatility_format: "standard_deviation"  # Output as std. dev or variance
 
+# =============================================================================
+# Spillover Analysis - Measures how shocks in one market transmit to others,
+# critical for understanding systemic risk and contagion
+# =============================================================================
 spillover_analysis_enabled: true
-spillover_analysis_method: "diebold_yilmaz"
-spillover_analysis_forecast_horizon: 3
-spillover_analysis_window_size: null
+spillover_analysis_method: "diebold_yilmaz"  # method for spillover calculation
+spillover_analysis_forecast_horizon: 3  # forecast horizon for variance decomposition
+spillover_analysis_window_size: null  # window size for rolling analysis (null for full sample)
+spillover_significance_threshold: 0.1  # threshold for significant spillovers in interpretations
+
+# =============================================================================
+# Granger Causality Analysis - Tests whether movements in one time series help
+# predict future changes in another, identifying lead-lag relationships
+# =============================================================================
+granger_causality_enabled: true  # enable/disable Granger causality tests
+granger_causality_max_lag: 5  # maximum lag for Granger causality tests
+granger_causality_p_value_threshold: 0.05  # p-value threshold for significance
+
+# =============================================================================
+# Network Analysis - Represents market interconnections as a network, revealing
+# central assets and system-wide vulnerability to shocks
+# =============================================================================
+network_metrics_enabled: false  # enable/disable network metrics analysis
