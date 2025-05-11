@@ -103,9 +103,3 @@ spillover_significance_threshold: 0.1  # threshold for significant spillovers in
 granger_causality_enabled: true  # enable/disable Granger causality tests
 granger_causality_max_lag: 5  # maximum lag for Granger causality tests
 granger_causality_p_value_threshold: 0.05  # p-value threshold for significance
-
-# =============================================================================
-# Network Analysis - Represents market interconnections as a network, revealing
-# central assets and system-wide vulnerability to shocks
-# =============================================================================
-network_metrics_enabled: false  # enable/disable network metrics analysis

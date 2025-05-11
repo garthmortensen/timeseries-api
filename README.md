@@ -42,6 +42,68 @@ TODO: improve database
 
 TODO: i have endpoints for a pipeline, which is probably passing dfs, and modular endpoints, which might best return dictionaries. think about what each endpoint should return.
 
+## Difficult lessons
+
+- Never ever take the shortcut of using undefined dataframes/nested dicts as inputs and returns. Take the time to expand so that the function signature provides a clear and open API contract for downstream users.
+
+- I'm at odds with the iterative process in this project. By doing a first iteration across package then api then app, and and looping to 2nd full iteration, i spent the majority of time resolving integration issues. Update the package? Now everything downstream needs integrating, and it's difficult to determine what exactly broke. For this project, i needed to spend 5x more effort on determining data structures, methodology, and the entire garch pipeline before getting to work. I needed way more planning...though scope creep was also to blame.
+
+- i should've made the api much more modular:
+
+    ```py
+    # services.py
+    def make_stationary(df): …
+    def fill_missing(df): …
+    # …more steps…
+
+    # routers/transforms.py
+    from fastapi import APIRouter
+    from services import make_stationary, fill_missing
+
+    router = APIRouter(prefix="/transforms")
+    @router.post("/stationary")
+    def stationary(data: DataModel):
+        return make_stationary(data)
+
+    @router.post("/fill-missing")
+    def fill_missing_endpoint(data: DataModel):
+        return fill_missing(data)
+
+    # routers/pipeline.py
+    from fastapi import APIRouter, Depends
+    from services import make_stationary, fill_missing, … 
+
+    router = APIRouter(prefix="/pipeline")
+    @router.post("/full")
+    def full_pipeline(data: DataModel):
+        df1 = make_stationary(data)
+        df2 = fill_missing(df1)
+        # …chain the rest…
+        return df_final
+
+    # main.py
+    from fastapi import FastAPI
+    from routers import transforms, pipeline
+
+    app = FastAPI()
+    app.include_router(transforms.router)
+    app.include_router(pipeline.router)
+    ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Integration Overview
 
 ```mermaid
