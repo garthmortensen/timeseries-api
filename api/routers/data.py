@@ -187,16 +187,22 @@ async def scale_data_endpoint(input_data: ScalingInput):
         
         df_scaled = data_processor.scale_data(df=df, method=input_data.method)
         
-        # Convert DataFrame to dictionary with string keys that match the input structure
-        data_dict = {}
-        for i, (idx, row) in enumerate(df_scaled.iterrows()):
-            # Use integer keys to match the test assertion
-            data_dict[str(i)] = row.to_dict()
+        # Convert DataFrame to list of dictionaries instead of dict
+        data_list = df_scaled.reset_index().to_dict('records')
+        
+        # Convert datetime objects to strings if present
+        for record in data_list:
+            if isinstance(record.get('index'), pd.Timestamp):
+                record['date'] = record.pop('index').strftime('%Y-%m-%d')
+            elif isinstance(record.get('date'), pd.Timestamp):
+                record['date'] = record['date'].strftime('%Y-%m-%d')
             
-        return_data = {"data": data_dict}
+        return_data = {"data": data_list}
         l.info(f"scale_data() returning {len(return_data['data'])} data points")
         return return_data
 
+    except HTTPException:
+        raise
     except Exception as e:
         l.error(f"Error scaling data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -289,12 +295,15 @@ async def price_to_returns_endpoint(input_data: dict):
         # Convert to returns
         returns_df = data_processor.price_to_returns(df)
         
-        # Convert DataFrame to dictionary for API response
-        data_dict = {}
-        for i, (idx, row) in enumerate(returns_df.iterrows()):
-            data_dict[str(i)] = row.to_dict()
+        # Convert DataFrame to list of dictionaries for API response
+        data_list = returns_df.reset_index().rename(columns={'index': 'date'}).to_dict('records')
+        
+        # Convert datetime objects to strings if present
+        for record in data_list:
+            if isinstance(record.get('date'), pd.Timestamp):
+                record['date'] = record['date'].strftime('%Y-%m-%d')
             
-        return_data = {"data": data_dict}
+        return_data = {"data": data_list}
         return return_data
     
     except Exception as e:
@@ -322,12 +331,15 @@ async def scale_for_garch_endpoint(input_data: dict):
         # Scale for GARCH
         scaled_df = data_processor.scale_for_garch(df)
         
-        # Convert DataFrame to dictionary for API response
-        data_dict = {}
-        for i, (idx, row) in enumerate(scaled_df.iterrows()):
-            data_dict[str(i)] = row.to_dict()
+        # Convert DataFrame to list of dictionaries for API response
+        data_list = scaled_df.reset_index().rename(columns={'index': 'date'}).to_dict('records')
+        
+        # Convert datetime objects to strings if present
+        for record in data_list:
+            if isinstance(record.get('date'), pd.Timestamp):
+                record['date'] = record['date'].strftime('%Y-%m-%d')
             
-        return_data = {"data": data_dict}
+        return_data = {"data": data_list}
         return return_data
     
     except Exception as e:

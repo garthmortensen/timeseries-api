@@ -38,8 +38,6 @@ router = APIRouter(tags=["Pipeline"])
 # In api/routers/pipeline.py
 # Add this import at the top
 from api.services.interpretations import interpret_arima_results, interpret_garch_results
-# Import for granger causality
-from api.services.spillover_service import perform_granger_causality
 
 @router.post("/run_pipeline", 
           summary="Execute the complete time series analysis pipeline",

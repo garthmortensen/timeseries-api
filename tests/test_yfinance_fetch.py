@@ -51,34 +51,29 @@ def test_fetch_market_data(mock_download, client, market_data_input, mock_yfinan
     # Configure the mock to return our fixture data
     mock_download.return_value = mock_yfinance_data
     
-    # Mock the fetch_market_data function to return a proper tuple
-    # with the first element in the format {date_str: {symbol: price}}
-    with patch('api.routers.data.fetch_market_data') as mock_fetch:
-        # Create a properly formatted return value
-        formatted_data = {}
-        for date in mock_yfinance_data.index:
-            date_str = str(date)
-            formatted_data[date_str] = {}
-            for symbol in ["^DJI", "^HSI"]:
-                if symbol in mock_yfinance_data.columns:
-                    formatted_data[date_str][symbol] = mock_yfinance_data.loc[date, symbol]
-        
-        mock_fetch.return_value = (formatted_data, mock_yfinance_data)
-        
-        # Call the API endpoint
-        response = client.post("/api/v1/fetch_market_data", json=market_data_input)
-        
-        # Check the response
-        assert response.status_code == 200, f"Response: {response.content}"
-        data = response.json()
-        
-        # Check structure
-        assert isinstance(data, dict)
-        assert "data" in data
-        
-        # Check content
-        market_data = data["data"]
-        assert len(market_data) > 0
+    # DO NOT mock fetch_market_data - let it execute normally
+    # The real fetch_market_data function will convert the data to the correct format
+    
+    # Call the API endpoint
+    response = client.post("/api/v1/fetch_market_data", json=market_data_input)
+    
+    # Check the response
+    assert response.status_code == 200, f"Response: {response.content}"
+    data = response.json()
+    
+    # Check structure
+    assert isinstance(data, dict)
+    assert "data" in data
+    
+    # Check content - data should be a list
+    market_data = data["data"]
+    assert isinstance(market_data, list)
+    assert len(market_data) > 0
+    
+    # Each item should be a dict with date and symbol keys
+    first_record = market_data[0]
+    assert "date" in first_record
+    assert "^DJI" in first_record or "^HSI" in first_record
 
 @patch('api.services.market_data_service.yf.download')
 def test_fetch_market_data_single_symbol(mock_download, client):
@@ -118,6 +113,7 @@ def test_fetch_market_data_single_symbol(mock_download, client):
     market_data = data["data"]
     assert len(market_data) > 0
     
-    first_date = list(market_data.keys())[0]
-    assert "^DJI" in market_data[first_date]
-    
+    # Since market_data is a list, not a dict
+    first_record = market_data[0]
+    assert "date" in first_record
+    assert "^DJI" in first_record
