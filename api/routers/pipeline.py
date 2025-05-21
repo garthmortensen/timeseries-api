@@ -25,9 +25,11 @@ from api.services.data_service import (
     test_stationarity_step
 )
 from api.services.models_service import run_arima_step, run_garch_step
-from api.services.spillover_service import analyze_spillover_step
+from api.services.spillover_service import analyze_spillover_step, perform_granger_causality
 # Add import for calculate_stats
 from timeseries_compute.stats_model import calculate_stats
+# Add import for export_data
+from utilities.export_util import export_data
 
 # Get the application configuration
 from utilities.configurator import load_configuration
@@ -138,8 +140,6 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             random_seed = pipeline_input.synthetic_random_seed or config.synthetic_random_seed
         
         # 1. Data acquisition: Either generate synthetic data or fetch actual market data
-        # Research emphasizes using reliable financial time series data as the foundation
-        # for any volatility modeling
         df_prices = generate_data_step(
             source_type=source_type, 
             start_date=start_date, 
@@ -148,22 +148,30 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             anchor_prices=anchor_prices,
             random_seed=random_seed if source_type == "synthetic" else None
         )
+        # Export price data
+        export_data(df_prices, name="api_price_data")
         
         # Fill missing data if configured
         if config.data_processor_missing_values_enabled:
             l.info("Applying missing data processing as configured")
             df_prices = fill_missing_data_step(df_prices, config.data_processor_missing_values_strategy)
+            # Export processed price data
+            export_data(df_prices, name="api_processed_price_data")
         
         # 2. Convert prices to log returns
         # Studies emphasize the importance of proper data transformation,
         # especially converting prices to log returns before GARCH modeling, as returns exhibit
         # more stationary behavior than raw price series
         df_returns = convert_to_returns_step(df=df_prices)
+        # Export returns data
+        export_data(df_returns, name="api_returns_data")
         
         # Check again for missing values in returns
         if df_returns.isnull().any().any():
             l.warning("Missing values detected in returns data - applying appropriate filling strategy")
             df_returns = fill_missing_data_step(df_returns, config.data_processor_missing_values_strategy)
+            # Export cleaned returns data
+            export_data(df_returns, name="api_cleaned_returns_data")
 
         # 3. Test for stationarity using ADF test only if configured
         stationarity_results = {"is_stationary": True}  # Default if test is skipped
@@ -176,6 +184,8 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
                 test_method="ADF", 
                 p_value_threshold=config.data_processor_stationarity_test_p_value_threshold
             )
+            # Export stationarity results
+            export_data(stationarity_results, name="api_stationarity_results")
         else:
             l.info("Stationarity testing skipped per configuration")
             stationarity_results = {
@@ -199,10 +209,14 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             
             # Add statistics to stationarity results
             stationarity_results["series_stats"] = series_stats
+            # Export series statistics
+            export_data(series_stats, name="api_series_stats")
 
         # 4. Scale data for GARCH modeling
         # This preprocessing ensures numerical stability and comparable magnitude across series
         df_scaled = scale_for_garch_step(df=df_returns)
+        # Export scaled data
+        export_data(df_scaled, name="api_scaled_data")
         
         # Ensure Date is set as index before passing to ARIMA
         if 'Date' in df_scaled.columns:
@@ -221,9 +235,14 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             q=arima_q,
             forecast_steps=arima_forecast_steps
         )
+        # Export ARIMA results
+        export_data({"summary": arima_summary, "forecast": arima_forecast}, name="api_arima_results")
+        export_data(arima_residuals, name="api_arima_residuals")
         
         # Generate human-readable interpretation of ARIMA results
         arima_interpretation = interpret_arima_results(arima_summary, arima_forecast)
+        # Export ARIMA interpretation
+        export_data(arima_interpretation, name="api_arima_interpretation")
         
         # 6. Run GARCH models on ARIMA residuals
         # Now capture the conditional volatilities (third return value)
@@ -234,9 +253,15 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             dist=garch_dist,
             forecast_steps=garch_forecast_steps
         )
+        # Export GARCH results and conditional volatilities
+        export_data({"summary": garch_summary, "forecast": garch_forecast}, name="api_garch_results")
+        if cond_vol is not None:
+            export_data(cond_vol, name="api_conditional_volatility")
         
         # Generate human-readable interpretation of GARCH results
         garch_interpretation = interpret_garch_results(garch_summary, garch_forecast)
+        # Export GARCH interpretation
+        export_data(garch_interpretation, name="api_garch_interpretation")
 
         # 7. Run spillover analysis if enabled
         spillover_results = None
@@ -251,6 +276,8 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             )
             # Run spillover analysis
             spillover_results = analyze_spillover_step(spillover_input)
+            # Export spillover results
+            export_data(spillover_results, name="api_spillover_results")
             
             # Run Granger causality analysis
             granger_causality_results = perform_granger_causality(
@@ -258,6 +285,8 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
                 max_lag=spillover_params.get('max_lag', 5),
                 alpha=spillover_params.get('alpha', 0.05)
             )
+            # Export Granger causality results
+            export_data(granger_causality_results, name="api_granger_causality_results")
 
         # After executing the pipeline, store results in the database
         for symbol in symbols:
@@ -315,14 +344,14 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             scaled_data_dict = df_scaled.reset_index().to_dict('records')
 
         # Return expanded results with all the requested data
-        return {
+        pipeline_results = {
             "original_data": original_data_dict,
             "returns_data": returns_data_dict,
             "scaled_data": scaled_data_dict,
             "pre_garch_data": pre_garch_data_dict,
             "post_garch_data": post_garch_data_dict,
             "stationarity_results": stationarity_results,
-            "series_stats": series_stats if stationarity_results["is_stationary"] else None,  # Add calculated statistics
+            "series_stats": series_stats if stationarity_results["is_stationary"] else None,
             "arima_summary": arima_summary,
             "arima_forecast": arima_forecast,
             "arima_interpretation": arima_interpretation,
@@ -332,6 +361,12 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             "spillover_results": spillover_results,
             "granger_causality_results": granger_causality_results
         }
+        
+        # Export complete pipeline results
+        export_data(pipeline_results, name="api_pipeline_complete_results")
+        
+        return pipeline_results
+        
     except Exception as e:
         # Get more detailed error information
         import traceback

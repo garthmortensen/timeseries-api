@@ -34,7 +34,7 @@ class Config(BaseModel):
     metadata_environment: str = Field(default="dev")
     
     # Data Source Selection
-    source_actual_or_synthetic_data: str = Field(default="synthetic", pattern="^(actual|synthetic)$")
+    source_actual_or_synthetic_data: str = Field(default="synthetic", pattern="^(synthetic|actual_yfinance|actual_stooq)$")
     data_start_date: str = Field(default="2023-01-01")
     data_end_date: str = Field(default="2023-02-01")
     symbols: List[str] = Field(default=["GME", "BYND", "BYD"])

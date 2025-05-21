@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, List
 
 from timeseries_compute import data_generator, data_processor
 from .interpretations import interpret_stationarity_test
-from api.services.market_data_service import fetch_market_data
+from api.services.market_data_service import fetch_market_data_yfinance, fetch_market_data_stooq
 
 
 def generate_data_step(source_type: str, start_date: str, end_date: str, 
@@ -27,8 +27,15 @@ def generate_data_step(source_type: str, start_date: str, end_date: str,
                 random_seed=random_seed
             )
             return df
-        elif source_type == "actual":
-            _, df = fetch_market_data(
+        elif source_type == "actual_yfinance":
+            _, df = fetch_market_data_yfinance(
+                symbols=symbols,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            return df
+        elif source_type == "actual_stooq":
+            _, df = fetch_market_data_stooq(
                 symbols=symbols,
                 start_date=start_date,
                 end_date=end_date,

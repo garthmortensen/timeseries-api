@@ -160,12 +160,23 @@ test_6_payload='{
 run_test "/api/v1/run_pipeline" "Execute the entire pipeline" "$test_6_payload"
 test_6_result=$?
 
+# Test for Stooq Data
+echo -e "${YELLOW}Test: Fetch Stooq Data${NC}"
+stooq_test_payload='{
+  "symbols": ["AAPL.US", "MSFT.US"],
+  "start_date": "2023-01-01",
+  "end_date": "2023-01-10",
+  "interval": "1d"
+}'
+run_test "/api/v1/fetch_stooq_data" "Fetch market data from Stooq" "$stooq_test_payload"
+stooq_test_result=$?
+
 # Summary
 echo -e "${YELLOW}=== Test Summary ===${NC}"
-total_tests=6
+total_tests=7
 passed_tests=0
 
-for test_result in $test_1_result $test_2_result $test_3_result $test_4_result $test_5_result $test_6_result; do
+for test_result in $test_1_result $test_2_result $test_3_result $test_4_result $test_5_result $test_6_result $stooq_test_result; do
   if [[ $test_result -eq 0 ]]; then
     passed_tests=$((passed_tests+1))
   fi

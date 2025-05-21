@@ -12,7 +12,7 @@ from timeseries_compute import data_generator, data_processor
 from timeseries_compute import data_generator, data_processor
 from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
 from api.models.response import TimeSeriesDataResponse, StationarityTestResponse
-from api.services.market_data_service import fetch_market_data
+from api.services.market_data_service import fetch_market_data_yfinance, fetch_market_data_stooq
 from api.services.interpretations import interpret_stationarity_test
 from api.services.data_service import (
     generate_data_step,
@@ -125,7 +125,7 @@ async def fetch_market_data_endpoint(input_data: MarketDataInput):
     The interval parameter controls the frequency of the data (daily, weekly, monthly).
     """
     try:
-        records, _ = fetch_market_data(
+        records, _ = fetch_market_data_yfinance(
             symbols=input_data.symbols,
             start_date=input_data.start_date,
             end_date=input_data.end_date,
@@ -344,4 +344,47 @@ async def scale_for_garch_endpoint(input_data: dict):
     
     except Exception as e:
         l.error(f"Error scaling data for GARCH: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/fetch_stooq_data", 
+          summary="Fetch real market data from Stooq", 
+          response_model=TimeSeriesDataResponse,
+          responses={
+              200: {
+                  "description": "Successfully fetched market data from Stooq"
+              },
+              400: {
+                  "description": "Bad Request - Invalid parameters"
+              },
+              500: {
+                  "description": "Internal Server Error - Failed to fetch market data"
+              }
+          })
+async def fetch_stooq_data_endpoint(input_data: MarketDataInput):
+    """
+    Fetch market data from Stooq data service.
+    
+    This endpoint fetches real market data for the specified symbols and date range
+    from the Stooq data service.
+    """
+    try:
+        _, df = fetch_market_data_stooq(
+            symbols=input_data.symbols,
+            start_date=input_data.start_date,
+            end_date=input_data.end_date,
+            interval=input_data.interval
+        )
+        
+        # Convert DataFrame to list of dictionaries for API response
+        data_dict = {}
+        for idx, row in df.iterrows():
+            date_str = idx.strftime('%Y-%m-%d') if isinstance(idx, pd.Timestamp) else str(idx)
+            data_dict[date_str] = row.to_dict()
+        
+        return {"data": data_dict}
+    
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        l.error(f"Error fetching Stooq market data: {e}")
         raise HTTPException(status_code=500, detail=str(e))

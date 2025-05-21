@@ -6,10 +6,16 @@ These models are used to validate the input data for the API endpoints.
 
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
+from enum import Enum
 
 # Get the application configuration for default values
 from utilities.configurator import load_configuration
 config = load_configuration("config.yml")
+
+class DataSourceType(str, Enum):
+    SYNTHETIC = "synthetic"
+    ACTUAL_YFINANCE = "actual_yfinance"
+    ACTUAL_STOOQ = "actual_stooq"
 
 class DataGenerationInput(BaseModel):
     """Input model for data generation endpoint."""
@@ -54,10 +60,9 @@ class GARCHInput(BaseModel):
 
 class PipelineInput(BaseModel):
     """Input model for full pipeline endpoint."""
-    source_actual_or_synthetic_data: Optional[str] = Field(
-        default=config.source_actual_or_synthetic_data, 
-        description="Choose between actual market data or synthetic data",
-        pattern="^(actual|synthetic)$"
+    source_actual_or_synthetic_data: DataSourceType = Field(
+        default=DataSourceType.SYNTHETIC,
+        description="Source of data to use: synthetic, actual_yfinance, or actual_stooq"
     )
     data_start_date: str = Field(
         default=config.data_start_date, 

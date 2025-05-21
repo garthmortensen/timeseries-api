@@ -7,7 +7,6 @@ This module contains Pydantic models for validating API response data.
 from pydantic import BaseModel, Field
 from typing import Dict, List, Any, Optional
 
-
 class TimeSeriesDataResponse(BaseModel):
     """Response model for time series data endpoints."""
     data: List[Dict[str, Any]] = Field(
@@ -44,13 +43,14 @@ class GARCHModelResponse(BaseModel):
     fitted_model: str = Field(..., description="Summary of the fitted GARCH model")
     forecast: List[float] = Field(..., description="Forecasted volatility values")
 
+
 class SpilloverResponse(BaseModel):
     """Response model for spillover analysis."""
     total_spillover_index: float = Field(
         ..., 
         description="Overall system-wide spillover"
     )
-    directional_spillover: Dict[str, Dict[str, float]] = Field(
+    directional_spillover: Dict[str, Any] = Field(
         ..., 
         description="Spillover from each variable to others and from others to each variable"
     )
@@ -58,7 +58,7 @@ class SpilloverResponse(BaseModel):
         ..., 
         description="Net spillover (directional to others minus directional from others)"
     )
-    pairwise_spillover: Dict[str, Dict[str, float]] = Field(
+    pairwise_spillover: Dict[str, Any] = Field(
         ..., 
         description="Pairwise spillover between each pair of variables"
     )

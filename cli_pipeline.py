@@ -17,6 +17,8 @@ from utilities.chronicler import init_chronicler
 
 from utilities.configurator import load_configuration
 from timeseries_compute import data_generator, data_processor, stats_model
+# Add export_data import
+from utilities.export_util import export_data
 
 from api.services.interpretations import interpret_granger_causality
 from timeseries_compute.spillover_processor import test_granger_causality
@@ -43,6 +45,8 @@ def main():
             end_date=config.data_end_date,
             anchor_prices=anchor_prices,
         )
+        # Export price data
+        export_data(price_df, name="price_data")
         
         # Check if missing value processing is enabled in config
         if config.data_processor_missing_values_enabled:
@@ -57,6 +61,8 @@ def main():
                 remaining_missing = price_df.isnull().sum().sum()
                 if remaining_missing > 0:
                     l.warning(f"There are still {remaining_missing} missing values after processing")
+                # Export processed price data
+                export_data(price_df, name="processed_price_data")
         else:
             # Log if missing values exist but handling is disabled
             missing_count = price_df.isnull().sum().sum()
@@ -66,6 +72,8 @@ def main():
         # Calculate log returns
         l.info("\n\n+++++pipeline: price_to_returns()+++++")
         returns_df = data_processor.price_to_returns(price_df)
+        # Export returns data
+        export_data(returns_df, name="returns_data")
 
         # Test for stationarity
         l.info("\n\n+++++pipeline: test_stationarity()+++++")
@@ -73,6 +81,8 @@ def main():
         for col, result in adf_results.items():
             l.info(f"{col}: p-value={result['p-value']:.4e} "
                    f"{'(Stationary)' if result['p-value'] < 0.05 else '(Non-stationary)'}")
+        # Export stationarity results
+        export_data(adf_results, name="stationarity_results")
         
         # Generate and log stationarity interpretations immediately
         from api.services.interpretations import interpret_stationarity_test
@@ -80,10 +90,14 @@ def main():
         stationarity_interpretations = interpret_stationarity_test(adf_results)
         for series, interpretation in stationarity_interpretations.items():
             l.info(f"\n{series}:\n{interpretation}")
+        # Export stationarity interpretations
+        export_data(stationarity_interpretations, name="stationarity_interpretations")
         
         # Scale data for GARCH modeling
         l.info("\n\n+++++pipeline: scale_for_garch()+++++")
         scaled_returns_df = data_processor.scale_for_garch(returns_df)
+        # Export scaled returns
+        export_data(scaled_returns_df, name="scaled_returns")
 
         # Run ARIMA models if enabled
         if config.stats_model_ARIMA_enabled:
@@ -95,20 +109,28 @@ def main():
                 q=config.stats_model_ARIMA_fit_q,
                 forecast_steps=config.stats_model_ARIMA_predict_steps,
             )
+            # Export ARIMA forecasts
+            export_data(arima_forecasts, name="arima_forecasts")
             
             # Extract ARIMA residuals for GARCH modeling
             arima_residuals = pd.DataFrame(index=scaled_returns_df.index)
             for column in scaled_returns_df.columns:
                 arima_residuals[column] = arima_fits[column].resid
+            # Export ARIMA residuals
+            export_data(arima_residuals, name="arima_residuals")
                 
             # Generate and log ARIMA interpretations immediately
             from api.services.interpretations import interpret_arima_results
             l.info("\n----- ARIMA Model Interpretations -----")
+            arima_interpretations = {}
             for column in scaled_returns_df.columns:
                 if column in arima_fits and column in arima_forecasts:
                     forecast_list = arima_forecasts[column].tolist() if hasattr(arima_forecasts[column], 'tolist') else [arima_forecasts[column]]
                     arima_interp = interpret_arima_results(str(arima_fits[column].summary()), forecast_list)
+                    arima_interpretations[column] = arima_interp
                     l.info(f"\n{column} ARIMA Model:\n{arima_interp}")
+            # Export ARIMA interpretations
+            export_data(arima_interpretations, name="arima_interpretations")
         else:
             arima_residuals = scaled_returns_df  # Use scaled returns if ARIMA is disabled
 
@@ -122,11 +144,15 @@ def main():
                 dist=config.stats_model_GARCH_fit_dist,
                 forecast_steps=config.stats_model_GARCH_predict_steps,
             )
+            # Export GARCH forecasts
+            export_data(garch_forecasts, name="garch_forecasts")
             
             # Extract conditional volatilities
             cond_vol = pd.DataFrame(index=arima_residuals.index)
             for column in arima_residuals.columns:
                 cond_vol[column] = np.sqrt(garch_fits[column].conditional_volatility)
+            # Export conditional volatilities
+            export_data(cond_vol, name="conditional_volatilities")
             
             # Display volatility forecasts
             l.info("GARCH volatility forecasts:")
@@ -141,13 +167,17 @@ def main():
             # Generate and log GARCH interpretations immediately
             from api.services.interpretations import interpret_garch_results
             l.info("\n----- GARCH Model Interpretations -----")
+            garch_interpretations = {}
             for column in arima_residuals.columns:
                 if column in garch_fits and column in garch_forecasts:
                     forecast_list = garch_forecasts[column].tolist() if hasattr(garch_forecasts[column], 'tolist') else [garch_forecasts[column]]
                     # Convert variance forecasts to volatility
                     volatility_forecasts = [np.sqrt(v) for v in forecast_list]
                     garch_interp = interpret_garch_results(str(garch_fits[column].summary()), volatility_forecasts)
+                    garch_interpretations[column] = garch_interp
                     l.info(f"\n{column} GARCH Model:\n{garch_interp}")
+            # Export GARCH interpretations
+            export_data(garch_interpretations, name="garch_interpretations")
 
         if config.spillover_analysis_enabled:
             l.info("\n\n+++++pipeline: analyze_spillover()+++++")
@@ -163,12 +193,17 @@ def main():
             )
             
             spillover_results = analyze_spillover_step(spillover_input)
+            # Export spillover results
+            export_data(spillover_results, name="spillover_results")
             
             l.info(f"Total spillover index: {spillover_results['total_spillover_index']:.2f}%")
             l.info(f"Net spillover: {spillover_results['net_spillover']}")
             
             # Generate interpretations for the spillover results immediately
             interpretations = interpret_spillover_results(spillover_results, significance_threshold=0.1)
+            # Export spillover interpretations
+            export_data(interpretations, name="spillover_interpretations")
+            
             l.info("\n----- Spillover Analysis Interpretations -----")
             for key, interpretation in interpretations.items():
                 l.info(f"\n{key}:\n{interpretation}")
@@ -202,8 +237,14 @@ def main():
                         except Exception as e:
                             l.warning(f"Error in Granger causality test for {source}->{target}: {e}")
             
+            # Export Granger causality results
+            export_data(granger_results, name="granger_causality_results")
+            
             # Generate and log Granger causality interpretations immediately
             granger_interpretations = interpret_granger_causality(granger_results)
+            # Export Granger causality interpretations
+            export_data(granger_interpretations, name="granger_causality_interpretations")
+            
             for relation, interpretation in granger_interpretations.items():
                 l.info(f"\n{relation}:\n{interpretation}")
 

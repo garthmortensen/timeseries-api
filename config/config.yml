@@ -10,7 +10,7 @@ metadata_environment: "dev"
 # Data Source Selection - Controls whether we use real market data or synthetic
 # series, which is useful for testing or when market data is unavailable
 # =============================================================================
-source_actual_or_synthetic_data: "synthetic"  # options: actual, synthetic
+source_actual_or_synthetic_data: "actual_stooq"  # options: synthetic, actual_yfinance, actual_stooq
 
 # =============================================================================
 # Universal data sourcing options - Defines the time window and securities to

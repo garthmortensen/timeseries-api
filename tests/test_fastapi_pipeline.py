@@ -86,6 +86,21 @@ def test_run_pipeline_input():
         "spillover_enabled": False  # Keep it false for testing
     }
 
+@pytest.fixture
+def pipeline_stooq_input():
+    """Fixture to provide input data for the run_pipeline endpoint with Stooq data."""
+    return {
+        "source_actual_or_synthetic_data": "actual_stooq",
+        "data_start_date": "2023-01-01",
+        "data_end_date": "2023-01-10",
+        "symbols": ["AAPL.US", "MSFT.US", "GOOG.US"],
+        "scaling_method": "standardize",
+        "arima_params": {"p": 1, "d": 1, "q": 1},
+        "garch_params": {"p": 1, "q": 1, "dist": "t"},
+        "spillover_enabled": True,
+        "spillover_params": {"method": "diebold_yilmaz", "forecast_horizon": 10}
+    }
+
 def test_generate_data(data_generation_input):
     """Test the /api/v1/generate_data endpoint."""
     response = client.post("/api/v1/generate_data", json=data_generation_input)
@@ -167,3 +182,21 @@ def test_scale_for_garch():
     data = response.json()
     assert "data" in data
     assert len(data["data"]) == len(returns_data)
+
+def test_run_pipeline(test_run_pipeline_input):
+    """Test the run_pipeline endpoint."""
+    response = client.post("/api/v1/run_pipeline", json=test_run_pipeline_input)
+    assert response.status_code == 200, f"Response: {response.content}"
+    data = response.json()
+    assert "stationarity_results" in data
+    assert "scaling_results" in data
+    assert "arima_results" in data
+    assert "garch_results" in data
+
+def test_run_pipeline_stooq(client, pipeline_stooq_input):
+    """Test the run_pipeline endpoint with Stooq data."""
+    response = client.post("/api/v1/run_pipeline", json=pipeline_stooq_input)
+    assert response.status_code == 200
+    data = response.json()
+    assert "stationarity_results" in data
+    # Add more assertions as needed

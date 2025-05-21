@@ -356,6 +356,54 @@
         }
       }
     },
+    "/api/v1/fetch_stooq_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Fetch real market data from Stooq",
+        "description": "Fetch market data from Stooq data service.\n\nThis endpoint fetches real market data for the specified symbols and date range\nfrom the Stooq data service.",
+        "operationId": "fetch_stooq_data_endpoint_api_v1_fetch_stooq_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully fetched market data from Stooq",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid parameters"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to fetch market data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/run_arima": {
       "post": {
         "tags": [
@@ -690,6 +738,15 @@
         "title": "DataGenerationInput",
         "description": "Input model for data generation endpoint."
       },
+      "DataSourceType": {
+        "type": "string",
+        "enum": [
+          "synthetic",
+          "actual_yfinance",
+          "actual_stooq"
+        ],
+        "title": "DataSourceType"
+      },
       "GARCHInput": {
         "properties": {
           "p": {
@@ -799,17 +856,8 @@
       "PipelineInput": {
         "properties": {
           "source_actual_or_synthetic_data": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(actual|synthetic)$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source Actual Or Synthetic Data",
-            "description": "Choose between actual market data or synthetic data",
+            "$ref": "#/components/schemas/DataSourceType",
+            "description": "Source of data to use: synthetic, actual_yfinance, or actual_stooq",
             "default": "synthetic"
           },
           "data_start_date": {

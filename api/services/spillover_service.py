@@ -253,3 +253,65 @@ def interpret_spillover_results(results):
             )
     
     return interpretation
+def perform_granger_causality(df_returns, max_lag=5, alpha=0.05):
+    """
+    Perform Granger causality tests between all pairs of variables in the dataset.
+    
+    Args:
+        df_returns: DataFrame containing returns data
+        max_lag: Maximum lag to consider for Granger causality test
+        alpha: Significance level for hypothesis testing
+        
+    Returns:
+        Dictionary containing Granger causality test results
+    """
+    try:
+        # Ensure we have enough data points for reliable testing
+        min_observations = max_lag * 3
+        if len(df_returns) < min_observations:
+            l.warning(f"Insufficient data for Granger causality tests. Need at least {min_observations} observations for max_lag={max_lag}")
+            return {"error": f"Insufficient data for Granger causality testing with max_lag={max_lag}"}
+        
+        # Run Granger causality tests between all pairs of variables
+        results = {}
+        symbols = df_returns.columns
+        
+        for source in symbols:
+            for target in symbols:
+                if source != target:  # Skip self-causality
+                    test_result = run_granger_causality_test(
+                        series1=df_returns[source],
+                        series2=df_returns[target],
+                        max_lag=max_lag,
+                        significance_level=alpha
+                    )
+                    
+                    # Store the result
+                    key = f"{source}->{target}"
+                    results[key] = test_result
+        
+        # Generate interpretations for the results
+        from api.services.interpretations import interpret_granger_causality
+        interpretations = interpret_granger_causality(results)
+        
+        # Create the response with both raw results and interpretations
+        response = {
+            "causality_results": results,
+            "interpretations": interpretations
+        }
+        
+        # Convert NumPy values in the response to Python native types
+        import json
+        import numpy as np
+        
+        # Use JSON serialization/deserialization to convert NumPy values to native types
+        result_str = json.dumps(response, default=lambda obj: float(obj) if isinstance(obj, (np.integer, np.floating)) 
+                                else (obj.tolist() if isinstance(obj, np.ndarray) 
+                                      else (str(obj) if isinstance(obj, np.bool_) else None)))
+        response = json.loads(result_str)
+        
+        return response
+        
+    except Exception as e:
+        l.error(f"Error in Granger causality analysis: {e}")
+        return {"error": str(e)}
