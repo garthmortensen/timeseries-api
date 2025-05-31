@@ -94,12 +94,13 @@ async def ignore_favicon():
     return Response(status_code=204)
 
 # Import routers after app is defined
-from api.routers import data_router, models_router, pipeline_router
+from api.routers import data_router, models_router, pipeline_router, spillover_router
 
 # Add routers
 app.include_router(data_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(pipeline_router, prefix="/api/v1")
+app.include_router(spillover_router, prefix="/api/v1")
 
 # Root endpoint
 @app.get("/", tags=["Health"])

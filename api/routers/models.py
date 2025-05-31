@@ -7,7 +7,7 @@ This module contains the API endpoints for running statistical models on time se
 import logging as l
 import pandas as pd
 import numpy as np
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
 from statsmodels.tsa.arima.model import ARIMA
 
 from timeseries_compute import stats_model

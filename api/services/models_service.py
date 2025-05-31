@@ -12,10 +12,10 @@ from statsmodels.tsa.arima.model import ARIMA
 
 from timeseries_compute import stats_model
 
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union, Dict
 
 def run_arima_step(df_stationary: pd.DataFrame, p: int, d: int, q: int,
-                  forecast_steps: int) -> Tuple[str, List[float], pd.DataFrame]:
+                  forecast_steps: int) -> Tuple[Dict[str, str], Dict[str, List[float]], pd.DataFrame]:
     """Run ARIMA model on stationary time series data."""
     try:
         # Ensure Date is set as index before passing to the library
@@ -36,22 +36,23 @@ def run_arima_step(df_stationary: pd.DataFrame, p: int, d: int, q: int,
         for column in df_stationary.columns:
             arima_residuals[column] = arima_fits[column].resid
         
-        # Get first column for API response
-        column_name = list(arima_fits.keys())[0]
-        arima_summary = str(arima_fits[column_name].summary())
+        # Process results for all symbols
+        all_summaries = {}
+        all_forecasts = {}
         
-        # Process forecasts for API response
-        forecast_values = arima_forecasts[column_name]
-        arima_forecast_values = process_forecast_values(forecast_values)
+        for symbol in arima_fits.keys():
+            all_summaries[symbol] = str(arima_fits[symbol].summary())
+            forecast_values = arima_forecasts[symbol]
+            all_forecasts[symbol] = process_forecast_values(forecast_values)
         
-        return arima_summary, arima_forecast_values, arima_residuals
+        return all_summaries, all_forecasts, arima_residuals
         
     except Exception as e:
         l.error(f"Error running ARIMA model: {e}")
         raise Exception(f"Error running ARIMA model: {str(e)}")
 
 def run_garch_step(df_residuals: pd.DataFrame, p: int, q: int, dist: str,
-                  forecast_steps: int) -> Tuple[str, List[float], Optional[pd.DataFrame]]:
+                  forecast_steps: int) -> Tuple[Dict[str, str], Dict[str, List[float]], Optional[pd.DataFrame]]:
     """Run GARCH model on ARIMA residuals.
     
     BEST PRACTICE: Academic research demonstrates that GARCH models effectively capture 
@@ -80,20 +81,21 @@ def run_garch_step(df_residuals: pd.DataFrame, p: int, q: int, dist: str,
         for column in df_residuals.columns:
             cond_vol[column] = np.sqrt(garch_fits[column].conditional_volatility)
         
-        # Get first column for API response
-        column_name = list(garch_fits.keys())[0]
-        garch_summary = str(garch_fits[column_name].summary())
+        # Process results for all symbols
+        all_summaries = {}
+        all_forecasts = {}
         
-        # Process forecasts for API response
-        forecast_values = garch_forecasts[column_name]
+        for symbol in garch_fits.keys():
+            all_summaries[symbol] = str(garch_fits[symbol].summary())
+            forecast_values = garch_forecasts[symbol]
+            
+            # Convert variance forecasts to volatility
+            if hasattr(forecast_values, '__iter__'):
+                all_forecasts[symbol] = [float(np.sqrt(x)) for x in forecast_values]
+            else:
+                all_forecasts[symbol] = [float(np.sqrt(forecast_values))]
         
-        # Convert variance forecasts to volatility
-        if hasattr(forecast_values, '__iter__'):
-            garch_forecast_values = [float(np.sqrt(x)) for x in forecast_values]
-        else:
-            garch_forecast_values = [float(np.sqrt(forecast_values))]
-        
-        return garch_summary, garch_forecast_values, cond_vol
+        return all_summaries, all_forecasts, cond_vol
         
     except Exception as e:
         l.error(f"Error running GARCH model: {e}")
@@ -111,7 +113,12 @@ def process_forecast_values(forecast_values: Union[float, np.ndarray, pd.Series,
         return [float(x) for x in forecast_values]
     else:
         try:
+            # Handle other iterable types
             return [float(x) for x in forecast_values]
-        except:
-            l.warning(f"Could not convert forecast values of type {type(forecast_values)}")
-            return []
+        except (TypeError, ValueError):
+            l.warning(f"Could not convert forecast values of type {type(forecast_values)}: {forecast_values}")
+            # Return as single value if it's numeric, otherwise empty list
+            try:
+                return [float(forecast_values)]
+            except:
+                return []

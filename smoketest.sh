@@ -1,4 +1,12 @@
 #!/bin/bash
+#
+# === FILE META OPENING ===
+# file: ./timeseries-api/smoketest.sh
+# role: testing
+# desc: comprehensive smoke test script that validates all API endpoints with sample data
+# === FILE META CLOSING ===
+#
+
 # smoketest.sh - API Smoke Test Script for Time Series Pipeline API
 
 # Text formatting

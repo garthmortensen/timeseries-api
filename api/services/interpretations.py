@@ -27,30 +27,87 @@ def interpret_stationarity_test(adf_results: Dict[str, Dict[str, float]],
         try:
             adf_stat = result["ADF Statistic"]
             p_value = result["p-value"]
+            critical_1 = result.get("Critical Values", {}).get("1%", None)
+            critical_5 = result.get("Critical Values", {}).get("5%", None)
+            
+            # Start with detailed p-value explanation
+            p_value_percent = p_value * 100
             
             if p_value < p_value_threshold:
+                # Determine which critical value thresholds are passed
+                passes_1_percent = critical_1 is not None and adf_stat < critical_1
+                passes_5_percent = critical_5 is not None and adf_stat < critical_5
+                
+                # Stationary case - but be precise about confidence levels
                 interpretation = (
-                    f"The {series_name} series is stationary (p-value: {p_value:.4f}). "
-                    f"This means the statistical properties like mean and variance "
-                    f"remain constant over time, making it suitable for time series modeling. "
-                    f"The ADF test statistic of {adf_stat:.4f} is below the critical threshold, "
-                    f"allowing us to reject the null hypothesis of non-stationarity. "
-                    f"In simple terms, this data exhibits consistent statistical properties over time. "
-                    f"For financial markets, this indicates price movements that don't show persistent trends "
-                    f"and tend to revert to a stable average - supporting the efficient market hypothesis "
-                    f"where future price changes are independent of past movements."
+                    f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a p-value of {p_value:.4f}. "
+                    f"That number tells us there's only about a {p_value_percent:.2f}% chance of seeing a test statistic this extreme "
+                    f"if the series really were non-stationary (i.e., wandering randomly or drifting). "
+                )
+                
+                # Be precise about which significance levels we can reject at
+                if passes_1_percent:
+                    interpretation += (
+                        f"Because that probability is so low—well below both 5% and 1% cutoffs—we can confidently reject "
+                        f"the 'unit root' (non-stationary) hypothesis with high confidence (99% level).\n\n"
+                    )
+                elif passes_5_percent:
+                    interpretation += (
+                        f"Because that probability is below the 5% cutoff, we can reject the 'unit root' (non-stationary) hypothesis "
+                        f"with moderate confidence (95% level), though not quite at the 1% level.\n\n"
+                    )
+                else:
+                    # This shouldn't happen if p-value < 0.05 but critical values don't support it
+                    interpretation += (
+                        f"While the p-value suggests significance, the test statistic doesn't exceed the standard critical value thresholds, "
+                        f"creating some ambiguity in the conclusion.\n\n"
+                    )
+                
+                # Add critical value context
+                interpretation += f"The test statistic itself, {adf_stat:.4f}, "
+                
+                if passes_1_percent:
+                    interpretation += f"exceeds both the 5% critical value ({critical_5:.4f}) and the stricter 1% critical value ({critical_1:.4f})"
+                elif passes_5_percent:
+                    interpretation += f"exceeds the 5% critical value ({critical_5:.4f}) but falls short of the 1% critical value ({critical_1:.4f})"
+                elif critical_5 is not None:
+                    interpretation += f"doesn't reach the 5% critical value threshold of {critical_5:.4f}"
+                
+                interpretation += (
+                    f". Put simply, the data's mean and variance aren't shifting around over time; "
+                    f"they stick close to their long-term levels.\n\n"
+                    
+                    f"In practical terms for modeling, this stability means you don't have to first difference or otherwise "
+                    f"transform the series to get rid of trends. It behaves like a mean-reverting process: shocks may sway it "
+                    f"up or down, but it tends to pull back toward its average. That behavior lines up with the efficient market "
+                    f"idea that prices jitter around a fair value without drifting in predictable ways—and makes the {series_name} "
+                    f"a solid candidate for models that assume constant statistical properties over time."
                 )
             else:
+                # Non-stationary case
                 interpretation = (
-                    f"The {series_name} series is non-stationary (p-value: {p_value:.4f}). "
-                    f"This indicates the statistical properties change over time. "
-                    f"The ADF test statistic of {adf_stat:.4f} is not low enough to reject "
-                    f"the null hypothesis of non-stationarity. Consider differencing or "
-                    f"transformation before modeling to achieve stationarity. "
-                    f"In financial terms, this means the market data shows persistent trends or changing volatility patterns. "
-                    f"Such behavior is common in many financial time series and suggests that historical price patterns "
-                    f"may continue to influence future movements. Using price differences (returns) instead of raw prices "
-                    f"typically helps achieve the stationarity needed for reliable statistical forecasting."
+                    f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a p-value of {p_value:.4f}. "
+                    f"That number tells us there's about a {p_value_percent:.2f}% chance of seeing a test statistic this extreme "
+                    f"even if the series really were stationary. Because that probability is above common significance thresholds "
+                    f"(like 5% or 1%), we cannot reject the 'unit root' (non-stationary) hypothesis with confidence.\n\n"
+                    
+                    f"The test statistic of {adf_stat:.4f} doesn't reach the critical threshold needed to declare stationarity"
+                )
+                
+                # Add critical value context if available
+                if critical_5 is not None:
+                    interpretation += f" (it would need to be more negative than {critical_5:.4f} at 5% significance)"
+                
+                interpretation += (
+                    f". This suggests the series exhibits changing statistical properties over time—perhaps a wandering mean, "
+                    f"evolving variance, or persistent trends.\n\n"
+                    
+                    f"In practical modeling terms, this non-stationarity means you'll likely need to transform the data before "
+                    f"applying standard time series models. Common approaches include taking first differences (converting prices "
+                    f"to returns) or applying other transformations to remove trends and achieve stability. The current behavior "
+                    f"suggests that shocks to the series tend to have permanent effects rather than temporary ones, creating "
+                    f"persistent deviations from any long-term average. This is typical of many financial price series where "
+                    f"market movements can establish new price levels that persist over time."
                 )
                 
             interpretations[series_name] = interpretation
@@ -96,13 +153,12 @@ def interpret_arima_results(model_summary: str, forecast: list) -> str:
             implication = ""
             
         interpretation = (
-            f"The ARIMA model has been fitted successfully. "
-            f"The forecast shows {trend} trend over the forecast horizon. "
-            f"The first forecasted value is {forecast[0]:.4f} and the last is {forecast[-1]:.4f}. "
-            f"In market analysis terms, the data is projected to follow a {plain_trend} trajectory {implication}. "
             f"This model incorporates both autoregressive components (past values) and moving averages (past errors) "
             f"to generate forecasts, similar to technical analysis methods that consider recent price movements "
-            f"and error corrections to predict future market behavior."
+            f"and error corrections to predict future market behavior. "
+            f"The ARIMA model has been fitted successfully. "
+            f"The forecast shows {trend} trend over the forecast horizon. "
+            f"In market analysis terms, the data is projected to follow a {plain_trend} trajectory {implication}."
         )
         
         return interpretation
@@ -130,29 +186,33 @@ def interpret_garch_results(model_summary: str, forecast: list) -> str:
                 implication = "suggesting growing market uncertainty"
                 plain_desc = "becoming more volatile with expanding price ranges"
                 market_impact = "potentially requiring wider stop-loss orders and indicating heightened market risk"
+                vix_context = "This pattern often coincides with rising VIX levels, reflecting increased investor fear and uncertainty in the broader market."
             elif forecast[-1] < forecast[0]:
                 trend = "a decreasing"
                 implication = "suggesting decreasing market uncertainty"
                 plain_desc = "becoming more stable with narrower price ranges"
-                market_impact = "potentially allowing for tighter stop-loss orders and indicating reduced market risk"
+                market_impact = "indicating a calming market environment with reduced risk premiums"
+                vix_context = "This trend typically aligns with declining VIX levels, suggesting increased investor confidence and market stability."
             else:
                 trend = "a stable"
                 implication = "suggesting stable market conditions"
                 plain_desc = "maintaining its current volatility level"
                 market_impact = "indicating consistent market risk levels in the forecast period"
+                vix_context = "This stable pattern reflects steady market conditions, similar to when VIX remains within normal trading ranges."
         else:
             trend = "an unknown"
             implication = ""
             plain_desc = "showing unclear volatility patterns"
             market_impact = ""
+            vix_context = ""
             
         interpretation = (
-            f"The GARCH model has been fitted successfully. "
+            f"The GARCH model has been fitted successfully, capturing the time-varying nature of volatility. "
             f"The volatility forecast shows {trend} trend {implication}. "
-            f"The first forecasted volatility is {forecast[0]:.6f} and the last is {forecast[-1]:.6f}. "
             f"In financial market terms, the asset prices are expected to be {plain_desc}, {market_impact}. "
-            f"Volatility in this context quantifies price fluctuation magnitude - a key measure of market risk. "
-            f"{'Rising volatility often coincides with market stress periods and may signal increased trading opportunities but with higher risk.' if forecast[-1] > forecast[0] else 'Falling volatility typically indicates market confidence and may reduce option premiums.' if forecast[-1] < forecast[0] else 'Stable volatility suggests consistent market conditions without significant changes in risk profile.'}"
+            f"Volatility clustering—periods of high volatility followed by high volatility and low volatility periods followed by low volatility—is a key feature that GARCH models capture effectively. "
+            f"{vix_context} "
+            f"Understanding these volatility patterns is crucial for risk management, option pricing, and portfolio allocation decisions."
         )
         
         return interpretation

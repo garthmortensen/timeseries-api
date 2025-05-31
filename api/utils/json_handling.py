@@ -16,7 +16,16 @@ from fastapi.responses import JSONResponse
 # Round values and handle special cases for json serialization
 # without this, tests will fail on macOS due to numpy float serialization
 def round_for_json(obj, decimals=6):
-    """Round float values in objects and handle special cases for JSON serialization."""
+    """
+    Round float values in objects and handle special cases for JSON serialization.
+    
+    Args:
+        obj: Object to process (dict, list, float, etc.)
+        decimals (int): Number of decimal places to round to
+        
+    Returns:
+        Processed object with rounded values
+    """
     if isinstance(obj, dict):
         # recursively round values in dict
         return {k: round_for_json(v, decimals) for k, v in obj.items()}

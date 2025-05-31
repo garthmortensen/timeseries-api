@@ -188,17 +188,32 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             export_data(stationarity_results, name="api_stationarity_results")
         else:
             l.info("Stationarity testing skipped per configuration")
+            # Create a mock structure matching the new format
+            mock_results = {}
+            for symbol in symbols:
+                mock_results[symbol] = {
+                    "adf_statistic": None,
+                    "p_value": None,
+                    "critical_values": None,
+                    "is_stationary": True,
+                    "interpretation": "Stationarity testing skipped per configuration."
+                }
             stationarity_results = {
-                "is_stationary": True,  # Assume stationary
-                "adf_statistic": None,
-                "p_value": None,
-                "critical_values": None,
-                "interpretation": "Stationarity testing skipped per configuration."
+                "all_symbols_stationarity": mock_results
             }
-            
+    
         # Calculate comprehensive statistics if data is stationary
+        # So one series may be stationary while others are not. Tricky
         series_stats = {}
-        if stationarity_results["is_stationary"]:
+        # Check if any symbol is stationary (or all if we want to be more strict)
+        any_stationary = False
+        if "all_symbols_stationarity" in stationarity_results:
+            any_stationary = any(result["is_stationary"] for result in stationarity_results["all_symbols_stationarity"].values())
+        else:
+            # Fallback for when stationarity testing is disabled
+            any_stationary = stationarity_results.get("is_stationary", True)
+            
+        if any_stationary:
             l.info("Calculating comprehensive statistics for stationary data")
             for column in df_returns.columns:
                 if column != 'Date':
@@ -228,7 +243,7 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             arima_q = min(arima_q, 1)
             l.info("Reduced ARIMA order due to limited sample size")
             
-        arima_summary, arima_forecast, arima_residuals = run_arima_step(
+        all_arima_summaries, all_arima_forecasts, arima_residuals = run_arima_step(
             df_stationary=df_scaled,
             p=arima_p,
             d=arima_d,
@@ -236,17 +251,22 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             forecast_steps=arima_forecast_steps
         )
         # Export ARIMA results
-        export_data({"summary": arima_summary, "forecast": arima_forecast}, name="api_arima_results")
+        export_data({"summaries": all_arima_summaries, "forecasts": all_arima_forecasts}, name="api_arima_results")
         export_data(arima_residuals, name="api_arima_residuals")
         
-        # Generate human-readable interpretation of ARIMA results
-        arima_interpretation = interpret_arima_results(arima_summary, arima_forecast)
-        # Export ARIMA interpretation
-        export_data(arima_interpretation, name="api_arima_interpretation")
+        # Generate human-readable interpretations of ARIMA results for all symbols
+        all_arima_interpretations = {}
+        for symbol in all_arima_summaries.keys():
+            all_arima_interpretations[symbol] = interpret_arima_results(
+                all_arima_summaries[symbol], 
+                all_arima_forecasts[symbol]
+            )
+        # Export ARIMA interpretations
+        export_data(all_arima_interpretations, name="api_arima_interpretations")
         
         # 6. Run GARCH models on ARIMA residuals
         # Now capture the conditional volatilities (third return value)
-        garch_summary, garch_forecast, cond_vol = run_garch_step(
+        all_garch_summaries, all_garch_forecasts, cond_vol = run_garch_step(
             df_residuals=arima_residuals,
             p=garch_p,
             q=garch_q,
@@ -254,51 +274,64 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             forecast_steps=garch_forecast_steps
         )
         # Export GARCH results and conditional volatilities
-        export_data({"summary": garch_summary, "forecast": garch_forecast}, name="api_garch_results")
+        export_data({"summaries": all_garch_summaries, "forecasts": all_garch_forecasts}, name="api_garch_results")
         if cond_vol is not None:
             export_data(cond_vol, name="api_conditional_volatility")
         
-        # Generate human-readable interpretation of GARCH results
-        garch_interpretation = interpret_garch_results(garch_summary, garch_forecast)
-        # Export GARCH interpretation
-        export_data(garch_interpretation, name="api_garch_interpretation")
+        # Generate human-readable interpretations of GARCH results for all symbols
+        all_garch_interpretations = {}
+        for symbol in all_garch_summaries.keys():
+            all_garch_interpretations[symbol] = interpret_garch_results(
+                all_garch_summaries[symbol], 
+                all_garch_forecasts[symbol]
+            )
+        # Export GARCH interpretations
+        export_data(all_garch_interpretations, name="api_garch_interpretations")
 
         # 7. Run spillover analysis if enabled
+        # --- SPILLOVER ANALYSIS INPUT SELECTION ---
+        # We must use returns for Diebold-Yilmaz (DY) spillover, but GARCH-based spillover requires
+        # the conditional volatility series. Using the wrong input will give meaningless results.
         spillover_results = None
         granger_causality_results = None
         if pipeline_input.spillover_enabled:
             spillover_params = pipeline_input.spillover_params
+            spillover_method = spillover_params.get('method', 'diebold_yilmaz')
+            if spillover_method == 'diebold_yilmaz':
+                spillover_data = df_returns.reset_index().to_dict('records')
+            elif spillover_method == 'garch_spillover' and cond_vol is not None:
+                spillover_data = cond_vol.reset_index().to_dict('records')
+            else:
+                # Default to returns if method is unknown or GARCH volatility is missing
+                spillover_data = df_returns.reset_index().to_dict('records')
             spillover_input = SpilloverInput(
-                data=df_returns.reset_index().to_dict('records'),
-                method=spillover_params.get('method', 'diebold_yilmaz'),
+                data=spillover_data,
+                method=spillover_method,
                 forecast_horizon=spillover_params.get('forecast_horizon', 10),
                 window_size=spillover_params.get('window_size', None)
             )
-            # Run spillover analysis
             spillover_results = analyze_spillover_step(spillover_input)
-            # Export spillover results
             export_data(spillover_results, name="api_spillover_results")
-            
-            # Run Granger causality analysis
             granger_causality_results = perform_granger_causality(
                 df_returns, 
                 max_lag=spillover_params.get('max_lag', 5),
                 alpha=spillover_params.get('alpha', 0.05)
             )
-            # Export Granger causality results
             export_data(granger_causality_results, name="api_granger_causality_results")
 
         # After executing the pipeline, store results in the database
         for symbol in symbols:
-            # Store stationarity results
+            # Store stationarity results - get results for this specific symbol
+            symbol_stationarity = stationarity_results.get("all_symbols_stationarity", {}).get(symbol, {})
+            
             stationarity_db = PipelineResult(
                 pipeline_run_id=pipeline_run.id,
                 symbol=symbol,
                 result_type="stationarity",
-                is_stationary=stationarity_results["is_stationary"],
-                adf_statistic=stationarity_results["adf_statistic"],
-                p_value=stationarity_results["p_value"],
-                interpretation=stationarity_results["interpretation"]
+                is_stationary=symbol_stationarity.get("is_stationary", True),
+                adf_statistic=symbol_stationarity.get("adf_statistic"),
+                p_value=symbol_stationarity.get("p_value"),
+                interpretation=symbol_stationarity.get("interpretation", "No results available")
             )
             db.add(stationarity_db)
             
@@ -307,9 +340,9 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
                 pipeline_run_id=pipeline_run.id,
                 symbol=symbol,
                 result_type="arima",
-                model_summary=arima_summary,
-                forecast=json.dumps(arima_forecast),
-                interpretation=arima_interpretation
+                model_summary=all_arima_summaries.get(symbol, "No summary available"),
+                forecast=json.dumps(all_arima_forecasts.get(symbol, [])),
+                interpretation=all_arima_interpretations.get(symbol, "No interpretation available")
             )
             db.add(arima_db)
             
@@ -318,9 +351,9 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
                 pipeline_run_id=pipeline_run.id,
                 symbol=symbol,
                 result_type="garch",
-                model_summary=garch_summary,
-                forecast=json.dumps(garch_forecast),
-                interpretation=garch_interpretation
+                model_summary=all_garch_summaries.get(symbol, "No summary available"),
+                forecast=json.dumps(all_garch_forecasts.get(symbol, [])),
+                interpretation=all_garch_interpretations.get(symbol, "No interpretation available")
             )
             db.add(garch_db)
         
@@ -340,9 +373,13 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
 
         # Include scaled data only if the data is not stationary
         scaled_data_dict = None
-        if not stationarity_results["is_stationary"]:
+        # Check if any symbol is non-stationary
+        any_non_stationary = False
+        if "all_symbols_stationarity" in stationarity_results:
+            any_non_stationary = any(not result["is_stationary"] for result in stationarity_results["all_symbols_stationarity"].values())
+        
+        if any_non_stationary:
             scaled_data_dict = df_scaled.reset_index().to_dict('records')
-
         # Return expanded results with all the requested data
         pipeline_results = {
             "original_data": original_data_dict,
@@ -351,16 +388,32 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             "pre_garch_data": pre_garch_data_dict,
             "post_garch_data": post_garch_data_dict,
             "stationarity_results": stationarity_results,
-            "series_stats": series_stats if stationarity_results["is_stationary"] else None,
-            "arima_summary": arima_summary,
-            "arima_forecast": arima_forecast,
-            "arima_interpretation": arima_interpretation,
-            "garch_summary": garch_summary,
-            "garch_forecast": garch_forecast,
-            "garch_interpretation": garch_interpretation,
+            "series_stats": series_stats,
+            "arima_results": {
+                "all_symbols_arima": {
+                    symbol: {
+                        "summary": all_arima_summaries[symbol],
+                        "forecast": all_arima_forecasts[symbol],
+                        "interpretation": all_arima_interpretations[symbol]
+                    }
+                    for symbol in all_arima_summaries.keys()
+                }
+            },
+            "garch_results": {
+                "all_symbols_garch": {
+                    symbol: {
+                        "summary": all_garch_summaries[symbol],
+                        "forecast": all_garch_forecasts[symbol],
+                        "interpretation": all_garch_interpretations[symbol]
+                    }
+                    for symbol in all_garch_summaries.keys()
+                }
+            },
             "spillover_results": spillover_results,
             "granger_causality_results": granger_causality_results
         }
+
+        l.info(f"pipeline_results: {pipeline_results}")
         
         # Export complete pipeline results
         export_data(pipeline_results, name="api_pipeline_complete_results")

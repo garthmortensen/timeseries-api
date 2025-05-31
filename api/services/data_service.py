@@ -157,37 +157,8 @@ def stationarize_data_step(df: pd.DataFrame, method: str = "difference", enabled
             )
     return df
 
-def stationarize_data_step(df: pd.DataFrame, method: str = "difference", enabled: bool = True) -> pd.DataFrame:
-    """Make time series data stationary.
-    
-    Args:
-        df (pandas.DataFrame): Input data frame
-        method (str, optional): Method for making data stationary.
-            Options: 'difference', 'log', 'percentage_change'.
-            Defaults to "difference".
-        enabled (bool, optional): Whether to perform stationarization.
-            Defaults to True.
-        
-    Returns:
-        pandas.DataFrame: Stationary data frame
-    """
-    if enabled:
-        try:
-            return data_processor.stationarize_data(
-                df=df, 
-                method=method
-            )
-        except Exception as e:
-            l.error(f"Error making data stationary: {e}")
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Error making data stationary: {str(e)}"
-            )
-    return df
-
 def test_stationarity_step(df: pd.DataFrame, test_method: str, 
                           p_value_threshold: float) -> Dict[str, Any]:
-    """Test stationarity of time series data."""
     try:
         # Ensure Date is set as index before passing to the library
         if 'Date' in df.columns:
@@ -198,31 +169,34 @@ def test_stationarity_step(df: pd.DataFrame, test_method: str,
             method=test_method
         )
         
-        # Get first column results
-        column = list(adf_results.keys())[0]
-        result = adf_results[column]
-        
-        # Get critical values with fallback defaults
-        critical_values = result.get("Critical Values", {
-            "1%": -3.75,
-            "5%": -3.0,
-            "10%": -2.63
-        })
-        
         # Add interpretation
         interpretation_dict = interpret_stationarity_test(
             adf_results, 
             p_value_threshold=p_value_threshold
         )
         
-        # Build response
+        # Prepare all symbols stationarity results
+        all_symbols_stationarity = {}
+        for symbol, symbol_result in adf_results.items():
+            symbol_critical_values = symbol_result.get("Critical Values", {
+                "1%": -3.75,
+                "5%": -3.0,
+                "10%": -2.63
+            })
+            
+            all_symbols_stationarity[symbol] = {
+                "adf_statistic": float(symbol_result["ADF Statistic"]),
+                "p_value": float(symbol_result["p-value"]),
+                "critical_values": symbol_critical_values,
+                "is_stationary": float(symbol_result["p-value"]) < p_value_threshold,
+                "interpretation": interpretation_dict.get(symbol, "No interpretation available")
+            }
+        
+        # Build response with all symbols
         return {
-            "adf_statistic": float(result["ADF Statistic"]),
-            "p_value": float(result["p-value"]),
-            "critical_values": critical_values,
-            "is_stationary": float(result["p-value"]) < p_value_threshold,
-            "interpretation": interpretation_dict.get(column, "No interpretation available")
+            "all_symbols_stationarity": all_symbols_stationarity
         }
+
     except Exception as e:
         l.error(f"Error testing stationarity: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -17,17 +17,15 @@ class TimeSeriesDataResponse(BaseModel):
 
 class StationarityTestResponse(BaseModel):
     """Response model for stationarity test results."""
-    adf_statistic: float = Field(..., description="ADF test statistic")
-    p_value: float = Field(..., description="P-value of the test")
-    critical_values: Dict[str, float] = Field(
-        ..., 
-        description="Critical values at different significance levels"
+    all_symbols_stationarity: Dict[str, Dict[str, Any]] = Field(
+        ...,
+        description="Stationarity test results for each symbol"
     )
-    is_stationary: bool = Field(
-        ..., 
-        description="Whether the time series is considered stationary"
+    
+    series_stats: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Comprehensive statistics for each series (mean, std, skew, kurtosis)"
     )
-    interpretation: str = Field(..., description="Human-readable interpretation of results")
 
 
 class ARIMAModelResponse(BaseModel):
@@ -93,13 +91,25 @@ class PipelineResponse(BaseModel):
         ..., 
         description="Results of stationarity tests"
     )
-    arima_summary: str = Field(..., description="ARIMA model summary")
-    arima_forecast: List[float] = Field(..., description="ARIMA model forecast")
-    arima_interpretation: str = Field(..., description="Human-readable interpretation of ARIMA results")
-    garch_summary: str = Field(..., description="GARCH model summary")
-    garch_forecast: List[float] = Field(..., description="GARCH model forecast")
-    garch_interpretation: str = Field(..., description="Human-readable interpretation of GARCH results")
+    
+    series_stats: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Comprehensive statistics for each series (mean, std, skew, kurtosis)"
+    )
+    arima_results: Dict[str, Dict[str, Any]] = Field(
+        ..., 
+        description="ARIMA results for all symbols"
+    )
+    garch_results: Dict[str, Dict[str, Any]] = Field(
+        ..., 
+        description="GARCH results for all symbols"
+    )
     spillover_results: Optional[SpilloverResponse] = Field(
         None,
         description="Results of spillover analysis (if enabled)"
+    )
+    
+    granger_causality_results: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Results of Granger causality analysis (if enabled)"
     )

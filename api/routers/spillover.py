@@ -7,7 +7,6 @@ This module contains API endpoints for spillover analysis between multiple time 
 import logging as l
 from fastapi import APIRouter, HTTPException, Depends
 
-from timeseries_compute import spillover_analyzer
 from api.models.input import SpilloverInput
 from api.models.response import SpilloverResponse
 from api.services.spillover_service import analyze_spillover_step
@@ -38,24 +37,9 @@ async def analyze_spillover_endpoint(input_data: SpilloverInput):
     The analysis provides metrics on directional and net spillovers between series.
     """
     try:
-        result = spillover_analyzer.compute_spillover_index(
-            returns_data=input_data.data,
-            method=input_data.method,
-            forecast_horizon=input_data.forecast_horizon,
-            window_size=input_data.window_size
-        )
-        
-        # Format result for API response
-        response = {
-            "total_spillover_index": result["total_spillover"],
-            "directional_spillover": result["directional_spillover"],
-            "net_spillover": result["net_spillover"],
-            "pairwise_spillover": result["pairwise_spillover"],
-            "interpretation": result.get("interpretation", "Spillover analysis complete.")
-        }
-        
+        result = analyze_spillover_step(input_data)
         l.info(f"analyze_spillover() returning complete analysis")
-        return response
+        return result
     
     except Exception as e:
         l.error(f"Error analyzing spillover: {e}")
@@ -83,4 +67,3 @@ async def rolling_spillover_endpoint(input_data: SpilloverInput):
     except Exception as e:
         l.error(f"Error in rolling spillover analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    

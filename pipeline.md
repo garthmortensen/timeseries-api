@@ -1,3 +1,11 @@
+<!--
+# === FILE META OPENING ===
+# file: ./timeseries-api/pipeline.md
+# role: documentation
+# desc: detailed methodology and flowchart documentation for the spillover analysis pipeline
+# === FILE META CLOSING ===
+-->
+
 # Spillover Methodology
 
 ## 1. Convert Prices to Log Returns

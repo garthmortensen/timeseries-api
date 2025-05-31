@@ -9,7 +9,6 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Depends, status
 
 from timeseries_compute import data_generator, data_processor
-from timeseries_compute import data_generator, data_processor
 from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
 from api.models.response import TimeSeriesDataResponse, StationarityTestResponse
 from api.services.market_data_service import fetch_market_data_yfinance, fetch_market_data_stooq
