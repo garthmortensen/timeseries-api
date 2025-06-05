@@ -1,0 +1,103 @@
+{
+  "total_spillover_index": 0.0,
+  "directional_spillover": {
+    "^DJI_to_^HSI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.7161597718765429,
+        "2": 0.8260478711728048,
+        "3": 0.943841707946184
+      },
+      "optimal_lag": null
+    },
+    "^DJI_to_^FCHI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.6717686038161681,
+        "2": 0.822084512269567,
+        "3": 0.9266896179488818
+      },
+      "optimal_lag": null
+    },
+    "^HSI_to_^DJI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.34858102916353695,
+        "2": 0.44440335277782744,
+        "3": 0.6042128079635122
+      },
+      "optimal_lag": null
+    },
+    "^HSI_to_^FCHI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.97609047896675,
+        "2": 0.9058831228280035,
+        "3": 0.9797268671032792
+      },
+      "optimal_lag": null
+    },
+    "^FCHI_to_^DJI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.32108129745577707,
+        "2": 0.3623213830713346,
+        "3": 0.5939397163037883
+      },
+      "optimal_lag": null
+    },
+    "^FCHI_to_^HSI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.9390463988954426,
+        "2": 0.9801878011054318,
+        "3": 0.989486448308778
+      },
+      "optimal_lag": null
+    }
+  },
+  "net_spillover": {},
+  "pairwise_spillover": {
+    "^DJI_to_^HSI": {
+      "significant_lags": [
+        2
+      ],
+      "r_squared": 0.09072522764885872
+    },
+    "^DJI_to_^FCHI": {
+      "significant_lags": [],
+      "r_squared": 0.06356421057794326
+    },
+    "^HSI_to_^DJI": {
+      "significant_lags": [
+        1,
+        2
+      ],
+      "r_squared": 0.14045860499576066
+    },
+    "^HSI_to_^FCHI": {
+      "significant_lags": [
+        1,
+        2
+      ],
+      "r_squared": 0.1368289462327669
+    },
+    "^FCHI_to_^DJI": {
+      "significant_lags": [
+        1,
+        2,
+        3
+      ],
+      "r_squared": 0.3319269937592867
+    },
+    "^FCHI_to_^HSI": {
+      "significant_lags": [
+        1,
+        2,
+        3
+      ],
+      "r_squared": 0.21994605283616983
+    }
+  },
+  "interpretation": "The system shows a total spillover index of 0.00%, indicating the overall level of interconnectedness between the variables. This relatively low level of spillover suggests limited interconnections, with shocks tending to remain contained within individual markets. This environment may offer good diversification opportunities. "
+}
