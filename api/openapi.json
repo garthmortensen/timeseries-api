@@ -1,0 +1,1395 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Timeseries API API",
+    "summary": "A statistical time series analysis for financial and econometric modeling with REST and GraphQL APIs",
+    "description": "Econometric time series modeling API with ARIMA and GARCH capabilities. Includes GraphQL interface.",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/favicon.ico": {
+      "get": {
+        "summary": "Ignore Favicon",
+        "operationId": "ignore_favicon_favicon_ico_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/generate_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Generate synthetic time series data",
+        "description": "Generate synthetic time series data based on input parameters.\n\nThis endpoint creates synthetic price series for multiple symbols over a specified date range.\nEach symbol starts from its anchor price and follows a random walk with drift.\n\nThe response provides a list of records, each containing a date and values for all symbols.",
+        "operationId": "generate_data_endpoint_api_v1_generate_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataGenerationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully generated time series data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "date": "2023-01-01",
+                      "GME": 150.0,
+                      "BYND": 200.0
+                    },
+                    {
+                      "date": "2023-01-02",
+                      "GME": 152.3,
+                      "BYND": 198.7
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid date format or other input parameters"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to generate time series data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fetch_market_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Fetch real market data from external sources",
+        "description": "Fetch real market data from external sources like Yahoo Finance.\n\nThis endpoint retrieves historical price data for specified symbols over a date range.\nData is obtained from Yahoo Finance via the yfinance library.\n\nThe interval parameter controls the frequency of the data (daily, weekly, monthly).",
+        "operationId": "fetch_market_data_endpoint_api_v1_fetch_market_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully fetched market data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "date": "2023-01-01",
+                      "AAPL": 150.0,
+                      "MSFT": 250.0
+                    },
+                    {
+                      "date": "2023-01-02",
+                      "AAPL": 152.3,
+                      "MSFT": 248.7
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid symbols or date range"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to fetch data from external source"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scale_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Scale time series data",
+        "description": "Scale time series data using the specified method.\n\nThis endpoint takes raw price data and applies a scaling transformation.\nSupported methods include:\n- standardize: Transforms data to have mean=0 and standard deviation=1\n- minmax: Scales data to a range between 0 and 1\n\nThe input data must contain 'date' and 'price' columns.",
+        "operationId": "scale_data_endpoint_api_v1_scale_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScalingInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully scaled time series data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                },
+                "example": {
+                  "data": {
+                    "0": {
+                      "date": "2023-01-01",
+                      "price": 0.0
+                    },
+                    "1": {
+                      "date": "2023-01-02",
+                      "price": 0.5
+                    },
+                    "2": {
+                      "date": "2023-01-03",
+                      "price": -0.3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid data format or missing required columns"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to scale data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/test_stationarity": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Test for stationarity",
+        "description": "Test time series data for stationarity using the Augmented Dickey-Fuller test.\n\nStationarity is a key property for time series analysis, indicating that statistical\nproperties like mean, variance, and autocorrelation are constant over time.\n\nThe test returns:\n- ADF statistic: More negative values suggest stationarity\n- p-value: Smaller values suggest stationarity\n- Critical values: Threshold values at different significance levels\n- is_stationary: Boolean indication based on p-value threshold\n- interpretation: Human-readable explanation of the results\n\nA p-value less than the threshold (default 0.05) indicates stationarity.",
+        "operationId": "test_stationarity_endpoint_api_v1_test_stationarity_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StationarityTestInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully tested time series for stationarity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StationarityTestResponse"
+                },
+                "example": {
+                  "adf_statistic": -3.45,
+                  "p_value": 0.032,
+                  "critical_values": {
+                    "1%": -3.75,
+                    "5%": -3.0,
+                    "10%": -2.63
+                  },
+                  "is_stationary": true,
+                  "interpretation": "The series is stationary (p-value: 0.0320). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid data format or insufficient data points"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to run stationarity test"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/price_to_returns": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Convert price data to log returns",
+        "description": "Convert price time series data to log returns.\n\nThis endpoint takes price data and calculates the log returns,\nwhich are typically more suitable for statistical modeling.\n\nReturns data represents the percentage change between consecutive price observations.",
+        "operationId": "price_to_returns_endpoint_api_v1_price_to_returns_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Input Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scale_for_garch": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Scale data for GARCH modeling",
+        "description": "Scale time series data specifically for GARCH modeling.\n\nThis endpoint takes return data and applies the appropriate scaling\nfor GARCH volatility modeling.",
+        "operationId": "scale_for_garch_endpoint_api_v1_scale_for_garch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Input Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fetch_stooq_data": {
+      "post": {
+        "tags": [
+          "Data Operations"
+        ],
+        "summary": "Fetch real market data from Stooq",
+        "description": "Fetch market data from Stooq data service.\n\nThis endpoint fetches real market data for the specified symbols and date range\nfrom the Stooq data service.",
+        "operationId": "fetch_stooq_data_endpoint_api_v1_fetch_stooq_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully fetched market data from Stooq",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid parameters"
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to fetch market data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/run_arima": {
+      "post": {
+        "tags": [
+          "Statistical Models"
+        ],
+        "summary": "Run ARIMA model on time series",
+        "description": "Run an ARIMA (AutoRegressive Integrated Moving Average) model on time series data.\n\nARIMA is a statistical model for analyzing and forecasting time series data.\nIt combines three components:\n- AR(p): AutoRegressive - uses the relationship between an observation and p lagged observations\n- I(d): Integrated - differencing to make the time series stationary\n- MA(q): Moving Average - uses the dependency between an observation and q lagged residuals\n\nParameters:\n- p: Order of the AutoRegressive component (number of lag observations)\n- d: Order of differencing required to make the series stationary\n- q: Order of the Moving Average component (size of the moving average window)\n\nReturns:\n- fitted_model: Summary of the fitted model with diagnostics\n- parameters: Estimated coefficients for the model\n- p_values: Statistical significance of each parameter\n- forecast: Future predictions from the model",
+        "operationId": "run_arima_endpoint_api_v1_run_arima_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ARIMAInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully fitted ARIMA model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ARIMAModelResponse"
+                },
+                "example": {
+                  "fitted_model": "ARIMA(2,1,2) Results\nAIC: 123.45\nBIC: 134.56\n...",
+                  "parameters": {
+                    "ar.L1": 0.5,
+                    "ar.L2": 0.3,
+                    "ma.L1": 0.2,
+                    "ma.L2": 0.1,
+                    "const": 0.02
+                  },
+                  "p_values": {
+                    "ar.L1": 0.001,
+                    "ar.L2": 0.01,
+                    "ma.L1": 0.005,
+                    "ma.L2": 0.05,
+                    "const": 0.22
+                  },
+                  "forecast": [
+                    101.2,
+                    102.3,
+                    103.5,
+                    104.1,
+                    105.2
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid model parameters or insufficient data"
+          },
+          "500": {
+            "description": "Internal Server Error - Model fitting failed"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/run_garch": {
+      "post": {
+        "tags": [
+          "Statistical Models"
+        ],
+        "summary": "Run GARCH model on time series",
+        "description": "Run a GARCH (Generalized AutoRegressive Conditional Heteroskedasticity) model on time series data.\n\nGARCH models are used to estimate and forecast volatility in financial time series.\nThey are particularly useful for asset returns that exhibit volatility clustering.\n\nParameters:\n- p: ARCH order (lag volatility terms)\n- q: GARCH order (lag residual terms)\n- dist: Error distribution assumption (normal, t, skewed-t)\n\nThe model captures how volatility evolves over time, accounting for:\n- Persistence of volatility (p)\n- Impact of past shocks on current volatility (q)\n\nReturns:\n- fitted_model: Summary of the fitted model with diagnostics\n- forecast: Predicted future volatility values",
+        "operationId": "run_garch_endpoint_api_v1_run_garch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GARCHInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully fitted GARCH model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GARCHModelResponse"
+                },
+                "example": {
+                  "fitted_model": "GARCH(1,1) Results\nAIC: 235.67\nBIC: 245.89\n...",
+                  "forecast": [
+                    0.0025,
+                    0.0028,
+                    0.003,
+                    0.0027,
+                    0.0026
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid model parameters or insufficient data"
+          },
+          "500": {
+            "description": "Internal Server Error - Model fitting failed"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/run_pipeline": {
+      "post": {
+        "tags": [
+          "Pipeline"
+        ],
+        "summary": "Execute the complete time series analysis pipeline",
+        "description": "Run the end-to-end time series analysis pipeline with a single API call.\n          \n          This endpoint performs a complete workflow:\n          1. Generate synthetic data or fetch real market data\n          2. Fill missing data (if configured)\n          3. Convert prices to returns\n          4. Test for stationarity (if configured)\n          5. Scale data for GARCH modeling\n          6. Fit ARIMA models for conditional mean\n          7. Extract ARIMA residuals\n          8. Fit GARCH models for volatility forecasting\n          9. Run spillover analysis and Granger causality if enabled\n          10. Return all results including forecasts and human-readable interpretations\n          11. Store results in the database for future reference\n          \n          All parameters have sensible defaults defined in the configuration.",
+        "operationId": "run_pipeline_endpoint_api_v1_run_pipeline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully executed pipeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineResponse"
+                },
+                "example": {
+                  "original_data": [
+                    {
+                      "date": "2023-01-01",
+                      "GME": 150.0
+                    },
+                    {
+                      "date": "2023-01-02",
+                      "GME": 152.3
+                    }
+                  ],
+                  "returns_data": [
+                    {
+                      "date": "2023-01-02",
+                      "GME": 0.0153
+                    }
+                  ],
+                  "stationarity_results": {
+                    "adf_statistic": -3.45,
+                    "p_value": 0.032,
+                    "critical_values": {
+                      "1%": -3.75,
+                      "5%": -3.0,
+                      "10%": -2.63
+                    },
+                    "is_stationary": true,
+                    "interpretation": "The series is stationary (p-value: 0.0320)."
+                  },
+                  "arima_summary": "ARIMA(1,1,1) Model Results...",
+                  "arima_forecast": [
+                    0.002,
+                    0.003,
+                    0.0025
+                  ],
+                  "arima_interpretation": "The ARIMA model shows an increasing trend...",
+                  "garch_summary": "GARCH(1,1) Model Results...",
+                  "garch_forecast": [
+                    0.0025,
+                    0.0028,
+                    0.003
+                  ],
+                  "garch_interpretation": "The GARCH model predicts stable volatility..."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyze_spillover": {
+      "post": {
+        "tags": [
+          "Spillover Analysis"
+        ],
+        "summary": "Analyze spillover effects between time series",
+        "description": "Analyze spillover effects between multiple time series.\n\nThis endpoint examines how shocks in one time series propagate to others over time,\nwhich is crucial for understanding risk transmission in financial markets.\n\nThe analysis provides metrics on directional and net spillovers between series.",
+        "operationId": "analyze_spillover_endpoint_api_v1_analyze_spillover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpilloverInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpilloverResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rolling_spillover": {
+      "post": {
+        "tags": [
+          "Spillover Analysis"
+        ],
+        "summary": "Compute rolling window spillover analysis",
+        "description": "Perform rolling window spillover analysis to capture time-varying dynamics.\n\nThis endpoint calculates spillover metrics across a rolling window of observations,\nallowing the detection of changes in interconnectedness over time.\n\nReturns time series of total, directional, and net spillover indices.",
+        "operationId": "rolling_spillover_endpoint_api_v1_rolling_spillover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpilloverInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpilloverResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Root",
+        "description": "Root endpoint for API health check.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ARIMAInput": {
+        "properties": {
+          "p": {
+            "type": "integer",
+            "title": "P"
+          },
+          "d": {
+            "type": "integer",
+            "title": "D"
+          },
+          "q": {
+            "type": "integer",
+            "title": "Q"
+          },
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p",
+          "d",
+          "q",
+          "data"
+        ],
+        "title": "ARIMAInput",
+        "description": "Input model for ARIMA model endpoint."
+      },
+      "ARIMAModelResponse": {
+        "properties": {
+          "fitted_model": {
+            "type": "string",
+            "title": "Fitted Model",
+            "description": "Summary of the fitted ARIMA model"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parameters",
+            "description": "Model parameters"
+          },
+          "p_values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "P Values",
+            "description": "P-values for model parameters"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast",
+            "description": "Forecasted values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fitted_model",
+          "parameters",
+          "p_values",
+          "forecast"
+        ],
+        "title": "ARIMAModelResponse",
+        "description": "Response model for ARIMA model results."
+      },
+      "DataGenerationInput": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date"
+          },
+          "anchor_prices": {
+            "type": "object",
+            "title": "Anchor Prices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "end_date",
+          "anchor_prices"
+        ],
+        "title": "DataGenerationInput",
+        "description": "Input model for data generation endpoint."
+      },
+      "DataSourceType": {
+        "type": "string",
+        "enum": [
+          "synthetic",
+          "actual_yfinance",
+          "actual_stooq"
+        ],
+        "title": "DataSourceType"
+      },
+      "GARCHInput": {
+        "properties": {
+          "p": {
+            "type": "integer",
+            "title": "P"
+          },
+          "q": {
+            "type": "integer",
+            "title": "Q"
+          },
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          },
+          "dist": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dist",
+            "default": "normal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p",
+          "q",
+          "data"
+        ],
+        "title": "GARCHInput",
+        "description": "Input model for GARCH model endpoint."
+      },
+      "GARCHModelResponse": {
+        "properties": {
+          "fitted_model": {
+            "type": "string",
+            "title": "Fitted Model",
+            "description": "Summary of the fitted GARCH model"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast",
+            "description": "Forecasted volatility values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fitted_model",
+          "forecast"
+        ],
+        "title": "GARCHModelResponse",
+        "description": "Response model for GARCH model results."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MarketDataInput": {
+        "properties": {
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Symbols"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date"
+          },
+          "interval": {
+            "type": "string",
+            "title": "Interval",
+            "default": "1d"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbols",
+          "start_date",
+          "end_date"
+        ],
+        "title": "MarketDataInput",
+        "description": "Input model for market data fetch endpoint."
+      },
+      "PipelineInput": {
+        "properties": {
+          "source_actual_or_synthetic_data": {
+            "$ref": "#/components/schemas/DataSourceType",
+            "description": "Source of data to use: synthetic, actual_yfinance, or actual_stooq",
+            "default": "synthetic"
+          },
+          "data_start_date": {
+            "type": "string",
+            "title": "Data Start Date",
+            "description": "Start date for data generation/fetching (YYYY-MM-DD)",
+            "default": "2023-01-01"
+          },
+          "data_end_date": {
+            "type": "string",
+            "title": "Data End Date",
+            "description": "End date for data generation/fetching (YYYY-MM-DD)",
+            "default": "2023-02-01"
+          },
+          "symbols": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbols",
+            "description": "Symbols to generate or fetch data for",
+            "default": [
+              "GME",
+              "BYND",
+              "BYD"
+            ]
+          },
+          "synthetic_anchor_prices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Anchor Prices",
+            "description": "Anchor prices for synthetic data generation",
+            "default": [
+              150.0,
+              200.0,
+              15.0
+            ]
+          },
+          "synthetic_random_seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Random Seed",
+            "description": "Random seed for synthetic data generation",
+            "default": 1
+          },
+          "scaling_method": {
+            "type": "string",
+            "title": "Scaling Method",
+            "description": "Scaling method",
+            "default": "standardize"
+          },
+          "arima_params": {
+            "type": "object",
+            "title": "Arima Params",
+            "description": "ARIMA parameters",
+            "default": {
+              "p": 2,
+              "d": 1,
+              "q": 4
+            }
+          },
+          "garch_params": {
+            "type": "object",
+            "title": "Garch Params",
+            "description": "GARCH parameters",
+            "default": {
+              "p": 1,
+              "q": 1,
+              "dist": "t"
+            }
+          },
+          "spillover_enabled": {
+            "type": "boolean",
+            "title": "Spillover Enabled",
+            "description": "Enable spillover analysis",
+            "default": false
+          },
+          "spillover_params": {
+            "type": "object",
+            "title": "Spillover Params",
+            "description": "Spillover analysis parameters",
+            "default": {
+              "method": "diebold_yilmaz",
+              "forecast_horizon": 10
+            }
+          }
+        },
+        "type": "object",
+        "title": "PipelineInput",
+        "description": "Input model for full pipeline endpoint."
+      },
+      "PipelineResponse": {
+        "properties": {
+          "original_data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Original Data",
+            "description": "The original time series data (synthetic or fetched)"
+          },
+          "returns_data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Returns Data",
+            "description": "Log returns data converted from original prices"
+          },
+          "scaled_data": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaled Data",
+            "description": "Scaled time series data (included if data is not stationary)"
+          },
+          "pre_garch_data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Pre Garch Data",
+            "description": "Data before GARCH processing (ARIMA residuals)"
+          },
+          "post_garch_data": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Post Garch Data",
+            "description": "Data after GARCH processing (conditional volatilities)"
+          },
+          "stationarity_results": {
+            "$ref": "#/components/schemas/StationarityTestResponse",
+            "description": "Results of stationarity tests"
+          },
+          "series_stats": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Stats",
+            "description": "Comprehensive statistics for each series (mean, std, skew, kurtosis)"
+          },
+          "arima_results": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Arima Results",
+            "description": "ARIMA results for all symbols"
+          },
+          "garch_results": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Garch Results",
+            "description": "GARCH results for all symbols"
+          },
+          "spillover_results": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpilloverResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Results of spillover analysis (if enabled)"
+          },
+          "granger_causality_results": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granger Causality Results",
+            "description": "Results of Granger causality analysis (if enabled)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "original_data",
+          "returns_data",
+          "pre_garch_data",
+          "stationarity_results",
+          "arima_results",
+          "garch_results"
+        ],
+        "title": "PipelineResponse",
+        "description": "Response model for the complete pipeline."
+      },
+      "ScalingInput": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "data"
+        ],
+        "title": "ScalingInput",
+        "description": "Input model for data scaling endpoint."
+      },
+      "SpilloverInput": {
+        "properties": {
+          "data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Method for spillover calculation",
+            "default": "diebold_yilmaz"
+          },
+          "forecast_horizon": {
+            "type": "integer",
+            "title": "Forecast Horizon",
+            "description": "Forecast horizon for variance decomposition",
+            "default": 10
+          },
+          "window_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Size",
+            "description": "Window size for rolling analysis (None for full sample)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SpilloverInput",
+        "description": "Input model for spillover analysis endpoint."
+      },
+      "SpilloverResponse": {
+        "properties": {
+          "total_spillover_index": {
+            "type": "number",
+            "title": "Total Spillover Index",
+            "description": "Overall system-wide spillover"
+          },
+          "directional_spillover": {
+            "type": "object",
+            "title": "Directional Spillover",
+            "description": "Spillover from each variable to others and from others to each variable"
+          },
+          "net_spillover": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Net Spillover",
+            "description": "Net spillover (directional to others minus directional from others)"
+          },
+          "pairwise_spillover": {
+            "type": "object",
+            "title": "Pairwise Spillover",
+            "description": "Pairwise spillover between each pair of variables"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation",
+            "description": "Human-readable interpretation of spillover results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_spillover_index",
+          "directional_spillover",
+          "net_spillover",
+          "pairwise_spillover",
+          "interpretation"
+        ],
+        "title": "SpilloverResponse",
+        "description": "Response model for spillover analysis."
+      },
+      "StationarityTestInput": {
+        "properties": {
+          "data": {
+            "items": {},
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "StationarityTestInput",
+        "description": "Input model for stationarity test endpoint."
+      },
+      "StationarityTestResponse": {
+        "properties": {
+          "all_symbols_stationarity": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "All Symbols Stationarity",
+            "description": "Stationarity test results for each symbol"
+          },
+          "series_stats": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Stats",
+            "description": "Comprehensive statistics for each series (mean, std, skew, kurtosis)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "all_symbols_stationarity"
+        ],
+        "title": "StationarityTestResponse",
+        "description": "Response model for stationarity test results."
+      },
+      "TimeSeriesDataResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "Time series data as a list of records with date and symbol values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "TimeSeriesDataResponse",
+        "description": "Response model for time series data endpoints."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

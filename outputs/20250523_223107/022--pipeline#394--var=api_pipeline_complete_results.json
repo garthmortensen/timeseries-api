@@ -1,0 +1,881 @@
+{
+  "original_data": [
+    {
+      "index": "2023-01-02 00:00:00",
+      "^DJI": 150.0,
+      "^HSI": 200.0,
+      "^FCHI": 15.0
+    },
+    {
+      "index": "2023-01-03 00:00:00",
+      "^DJI": 151.0703,
+      "^HSI": 201.1994,
+      "^FCHI": 15.9227
+    },
+    {
+      "index": "2023-01-04 00:00:00",
+      "^DJI": 150.4775,
+      "^HSI": 200.3445,
+      "^FCHI": 15.2925
+    },
+    {
+      "index": "2023-01-05 00:00:00",
+      "^DJI": 149.7794,
+      "^HSI": 199.3146,
+      "^FCHI": 14.5899
+    },
+    {
+      "index": "2023-01-06 00:00:00",
+      "^DJI": 149.3377,
+      "^HSI": 199.2034,
+      "^FCHI": 14.1866
+    },
+    {
+      "index": "2023-01-09 00:00:00",
+      "^DJI": 148.4382,
+      "^HSI": 198.2481,
+      "^FCHI": 12.9431
+    },
+    {
+      "index": "2023-01-10 00:00:00",
+      "^DJI": 150.3021,
+      "^HSI": 199.9381,
+      "^FCHI": 15.0468
+    },
+    {
+      "index": "2023-01-11 00:00:00",
+      "^DJI": 151.2041,
+      "^HSI": 200.562,
+      "^FCHI": 15.9462
+    },
+    {
+      "index": "2023-01-12 00:00:00",
+      "^DJI": 151.1438,
+      "^HSI": 201.0699,
+      "^FCHI": 16.1992
+    },
+    {
+      "index": "2023-01-13 00:00:00",
+      "^DJI": 151.7361,
+      "^HSI": 202.3071,
+      "^FCHI": 17.3708
+    },
+    {
+      "index": "2023-01-16 00:00:00",
+      "^DJI": 152.106,
+      "^HSI": 201.7084,
+      "^FCHI": 17.0776
+    },
+    {
+      "index": "2023-01-17 00:00:00",
+      "^DJI": 152.2972,
+      "^HSI": 202.4145,
+      "^FCHI": 17.6829
+    },
+    {
+      "index": "2023-01-18 00:00:00",
+      "^DJI": 153.2889,
+      "^HSI": 202.4944,
+      "^FCHI": 17.8135
+    },
+    {
+      "index": "2023-01-19 00:00:00",
+      "^DJI": 153.5813,
+      "^HSI": 201.3839,
+      "^FCHI": 16.84
+    },
+    {
+      "index": "2023-01-20 00:00:00",
+      "^DJI": 153.1256,
+      "^HSI": 202.9127,
+      "^FCHI": 17.9541
+    },
+    {
+      "index": "2023-01-23 00:00:00",
+      "^DJI": 153.4789,
+      "^HSI": 203.2397,
+      "^FCHI": 18.101
+    },
+    {
+      "index": "2023-01-24 00:00:00",
+      "^DJI": 151.9939,
+      "^HSI": 203.7673,
+      "^FCHI": 18.3541
+    },
+    {
+      "index": "2023-01-25 00:00:00",
+      "^DJI": 152.3055,
+      "^HSI": 202.4603,
+      "^FCHI": 17.2206
+    },
+    {
+      "index": "2023-01-26 00:00:00",
+      "^DJI": 152.5295,
+      "^HSI": 202.8236,
+      "^FCHI": 17.0372
+    },
+    {
+      "index": "2023-01-27 00:00:00",
+      "^DJI": 151.9002,
+      "^HSI": 203.2251,
+      "^FCHI": 17.5932
+    },
+    {
+      "index": "2023-01-30 00:00:00",
+      "^DJI": 151.4353,
+      "^HSI": 202.8746,
+      "^FCHI": 16.9843
+    },
+    {
+      "index": "2023-01-31 00:00:00",
+      "^DJI": 151.6433,
+      "^HSI": 203.5067,
+      "^FCHI": 17.3059
+    },
+    {
+      "index": "2023-02-01 00:00:00",
+      "^DJI": 150.9535,
+      "^HSI": 203.3566,
+      "^FCHI": 17.4599
+    }
+  ],
+  "returns_data": [
+    {
+      "index": "2023-01-03 00:00:00",
+      "^DJI": 0.007109997291787397,
+      "^HSI": 0.005979089565745138,
+      "^FCHI": 0.05969556292386339
+    },
+    {
+      "index": "2023-01-04 00:00:00",
+      "^DJI": -0.003931720036729716,
+      "^HSI": -0.004258071367511739,
+      "^FCHI": -0.04038325189149067
+    },
+    {
+      "index": "2023-01-05 00:00:00",
+      "^DJI": -0.004650026413399748,
+      "^HSI": -0.005153903813248892,
+      "^FCHI": -0.04703300363297304
+    },
+    {
+      "index": "2023-01-06 00:00:00",
+      "^DJI": -0.0029533605471214978,
+      "^HSI": -0.0005580676550922567,
+      "^FCHI": -0.028031651395492352
+    },
+    {
+      "index": "2023-01-09 00:00:00",
+      "^DJI": -0.006041474383477617,
+      "^HSI": -0.004807136667661162,
+      "^FCHI": -0.09173502949162547
+    },
+    {
+      "index": "2023-01-10 00:00:00",
+      "^DJI": 0.012478558709894031,
+      "^HSI": 0.008488542032759243,
+      "^FCHI": 0.15060251638786348
+    },
+    {
+      "index": "2023-01-11 00:00:00",
+      "^DJI": 0.005983311062697382,
+      "^HSI": 0.0031156072354713476,
+      "^FCHI": 0.058055212329659
+    },
+    {
+      "index": "2023-01-12 00:00:00",
+      "^DJI": -0.0003988782511769077,
+      "^HSI": 0.0025291829196987933,
+      "^FCHI": 0.015741301970908263
+    },
+    {
+      "index": "2023-01-13 00:00:00",
+      "^DJI": 0.003911126192458983,
+      "^HSI": 0.006134231151136451,
+      "^FCHI": 0.06982877730863997
+    },
+    {
+      "index": "2023-01-16 00:00:00",
+      "^DJI": 0.0024348184977729657,
+      "^HSI": -0.002963749847414207,
+      "^FCHI": -0.017022972346809977
+    },
+    {
+      "index": "2023-01-17 00:00:00",
+      "^DJI": 0.0012562287462455429,
+      "^HSI": 0.003494485061551902,
+      "^FCHI": 0.03483040764308409
+    },
+    {
+      "index": "2023-01-18 00:00:00",
+      "^DJI": 0.00649050124603527,
+      "^HSI": 0.00039465667974728196,
+      "^FCHI": 0.007358525896099427
+    },
+    {
+      "index": "2023-01-19 00:00:00",
+      "^DJI": 0.0019056922991642052,
+      "^HSI": -0.005499195171242324,
+      "^FCHI": -0.05619958798975541
+    },
+    {
+      "index": "2023-01-20 00:00:00",
+      "^DJI": -0.002971568851744856,
+      "^HSI": 0.007562800611023955,
+      "^FCHI": 0.06406149229426678
+    },
+    {
+      "index": "2023-01-23 00:00:00",
+      "^DJI": 0.0023045986368095683,
+      "^HSI": 0.0016102333540573284,
+      "^FCHI": 0.008148684255968233
+    },
+    {
+      "index": "2023-01-24 00:00:00",
+      "^DJI": -0.009722709833435525,
+      "^HSI": 0.00259258585489678,
+      "^FCHI": 0.013885797421180802
+    },
+    {
+      "index": "2023-01-25 00:00:00",
+      "^DJI": 0.0020479837220207455,
+      "^HSI": -0.006434838548268729,
+      "^FCHI": -0.06374664118744729
+    },
+    {
+      "index": "2023-01-26 00:00:00",
+      "^DJI": 0.0014696477787491259,
+      "^HSI": 0.0017928178114639383,
+      "^FCHI": -0.010707152947692934
+    },
+    {
+      "index": "2023-01-27 00:00:00",
+      "^DJI": -0.004134293706250586,
+      "^HSI": 0.0019775959428103354,
+      "^FCHI": 0.03211327509962561
+    },
+    {
+      "index": "2023-01-30 00:00:00",
+      "^DJI": -0.003065255230650452,
+      "^HSI": -0.0017261775225727086,
+      "^FCHI": -0.03522307582166121
+    },
+    {
+      "index": "2023-01-31 00:00:00",
+      "^DJI": 0.0013725814534951148,
+      "^HSI": 0.003110873998208926,
+      "^FCHI": 0.018758095896660342
+    },
+    {
+      "index": "2023-02-01 00:00:00",
+      "^DJI": -0.004559210109763067,
+      "^HSI": -0.0007378399910222159,
+      "^FCHI": 0.008859339193112124
+    }
+  ],
+  "scaled_data": null,
+  "pre_garch_data": [
+    {
+      "index": "2023-01-03 00:00:00",
+      "^DJI": 13.824725510373677,
+      "^HSI": 13.756746528161322,
+      "^FCHI": 10.92544638093302
+    },
+    {
+      "index": "2023-01-04 00:00:00",
+      "^DJI": -21.46825784985417,
+      "^HSI": -23.551723576698283,
+      "^FCHI": -18.315051805413866
+    },
+    {
+      "index": "2023-01-05 00:00:00",
+      "^DJI": -12.373619963938214,
+      "^HSI": -16.772877199779476,
+      "^FCHI": -11.523687593127606
+    },
+    {
+      "index": "2023-01-06 00:00:00",
+      "^DJI": -8.860309084051323,
+      "^HSI": -2.4231568831088346,
+      "^FCHI": -6.160258529457303
+    },
+    {
+      "index": "2023-01-09 00:00:00",
+      "^DJI": -1.5977894677921771,
+      "^HSI": -0.40894162372868337,
+      "^FCHI": -8.333810659524403
+    },
+    {
+      "index": "2023-01-10 00:00:00",
+      "^DJI": 25.93925506978548,
+      "^HSI": 16.74189737088603,
+      "^FCHI": 28.017997124396963
+    },
+    {
+      "index": "2023-01-11 00:00:00",
+      "^DJI": 5.873686941458661,
+      "^HSI": 12.356833973125593,
+      "^FCHI": 10.344808278496274
+    },
+    {
+      "index": "2023-01-12 00:00:00",
+      "^DJI": 0.07616713404886366,
+      "^HSI": 5.736714075544502,
+      "^FCHI": 4.876596366703246
+    },
+    {
+      "index": "2023-01-13 00:00:00",
+      "^DJI": -2.3946100484332984,
+      "^HSI": 6.565402888713545,
+      "^FCHI": 0.8886134431204695
+    },
+    {
+      "index": "2023-01-16 00:00:00",
+      "^DJI": 7.245865275470701,
+      "^HSI": -0.7554917861615085,
+      "^FCHI": 5.807564899884453
+    },
+    {
+      "index": "2023-01-17 00:00:00",
+      "^DJI": 1.2810212965115766,
+      "^HSI": -1.7770452279162345,
+      "^FCHI": -5.0551640447036545
+    },
+    {
+      "index": "2023-01-18 00:00:00",
+      "^DJI": 2.372291392703401,
+      "^HSI": 3.1959866543782027,
+      "^FCHI": 3.172831527798399
+    },
+    {
+      "index": "2023-01-19 00:00:00",
+      "^DJI": 4.524693141588532,
+      "^HSI": -13.802640660849145,
+      "^FCHI": -10.274769281095121
+    },
+    {
+      "index": "2023-01-20 00:00:00",
+      "^DJI": -8.706550087526995,
+      "^HSI": 11.722080919929676,
+      "^FCHI": 6.028894044833061
+    },
+    {
+      "index": "2023-01-23 00:00:00",
+      "^DJI": -3.4891193458834,
+      "^HSI": 8.224334018463601,
+      "^FCHI": 4.898031757363638
+    },
+    {
+      "index": "2023-01-24 00:00:00",
+      "^DJI": -14.480850103481949,
+      "^HSI": -2.781678417290351,
+      "^FCHI": -4.845418593391247
+    },
+    {
+      "index": "2023-01-25 00:00:00",
+      "^DJI": 6.021228272759579,
+      "^HSI": -15.346515717319908,
+      "^FCHI": -12.016251513381045
+    },
+    {
+      "index": "2023-01-26 00:00:00",
+      "^DJI": -5.0243710435833755,
+      "^HSI": 6.738922655520594,
+      "^FCHI": 3.104327900254934
+    },
+    {
+      "index": "2023-01-27 00:00:00",
+      "^DJI": -1.6737706346700785,
+      "^HSI": -4.347264885724926,
+      "^FCHI": -3.0194860718363934
+    },
+    {
+      "index": "2023-01-30 00:00:00",
+      "^DJI": -10.993280175431085,
+      "^HSI": 3.6227466115532,
+      "^FCHI": 1.094070450102536
+    },
+    {
+      "index": "2023-01-31 00:00:00",
+      "^DJI": 3.0317181817568994,
+      "^HSI": -2.8964265457117637,
+      "^FCHI": -3.8506393314479874
+    },
+    {
+      "index": "2023-02-01 00:00:00",
+      "^DJI": -3.737720151247413,
+      "^HSI": 1.7335233026496168,
+      "^FCHI": 3.591294144021244
+    }
+  ],
+  "post_garch_data": [
+    {
+      "index": "2023-01-03 00:00:00",
+      "^DJI": 3.305572216078894,
+      "^HSI": 3.3431722551733807,
+      "^FCHI": 3.2580059784784274
+    },
+    {
+      "index": "2023-01-04 00:00:00",
+      "^DJI": 3.2560327393470208,
+      "^HSI": 3.2998241164943294,
+      "^FCHI": 3.2024950822686504
+    },
+    {
+      "index": "2023-01-05 00:00:00",
+      "^DJI": 3.207235694192674,
+      "^HSI": 3.25703803751754,
+      "^FCHI": 3.1479299980814486
+    },
+    {
+      "index": "2023-01-06 00:00:00",
+      "^DJI": 3.1591699540621745,
+      "^HSI": 3.2148067304918384,
+      "^FCHI": 3.09429461090198
+    },
+    {
+      "index": "2023-01-09 00:00:00",
+      "^DJI": 3.1118245591524163,
+      "^HSI": 3.173123002160743,
+      "^FCHI": 3.0415730802890186
+    },
+    {
+      "index": "2023-01-10 00:00:00",
+      "^DJI": 3.0651887139118656,
+      "^HSI": 3.1319797525372497,
+      "^FCHI": 2.989749835696736
+    },
+    {
+      "index": "2023-01-11 00:00:00",
+      "^DJI": 3.019251784579014,
+      "^HSI": 3.0913699736945004,
+      "^FCHI": 2.938809571876205
+    },
+    {
+      "index": "2023-01-12 00:00:00",
+      "^DJI": 2.97400329675772,
+      "^HSI": 3.051286748572139,
+      "^FCHI": 2.8887372443552466
+    },
+    {
+      "index": "2023-01-13 00:00:00",
+      "^DJI": 2.9294329330288944,
+      "^HSI": 3.01172324979814,
+      "^FCHI": 2.839518064995305
+    },
+    {
+      "index": "2023-01-16 00:00:00",
+      "^DJI": 2.885530530597977,
+      "^HSI": 2.972672738525912,
+      "^FCHI": 2.7911374976240237
+    },
+    {
+      "index": "2023-01-17 00:00:00",
+      "^DJI": 2.8422860789776725,
+      "^HSI": 2.9341285632864915,
+      "^FCHI": 2.7435812537422417
+    },
+    {
+      "index": "2023-01-18 00:00:00",
+      "^DJI": 2.7996897177054163,
+      "^HSI": 2.8960841588556048,
+      "^FCHI": 2.6968352883041367
+    },
+    {
+      "index": "2023-01-19 00:00:00",
+      "^DJI": 2.757731734095051,
+      "^HSI": 2.8585330451354336,
+      "^FCHI": 2.6508857955692733
+    },
+    {
+      "index": "2023-01-20 00:00:00",
+      "^DJI": 2.716402561022198,
+      "^HSI": 2.8214688260508742,
+      "^FCHI": 2.6057192050253297
+    },
+    {
+      "index": "2023-01-23 00:00:00",
+      "^DJI": 2.675692774742822,
+      "^HSI": 2.784885188460111,
+      "^FCHI": 2.561322177380297
+    },
+    {
+      "index": "2023-01-24 00:00:00",
+      "^DJI": 2.6355930927444904,
+      "^HSI": 2.7487759010793167,
+      "^FCHI": 2.5176816006229714
+    },
+    {
+      "index": "2023-01-25 00:00:00",
+      "^DJI": 2.596094371629837,
+      "^HSI": 2.7131348134212945,
+      "^FCHI": 2.4747845861505713
+    },
+    {
+      "index": "2023-01-26 00:00:00",
+      "^DJI": 2.5571876050317504,
+      "^HSI": 2.6779558547478857,
+      "^FCHI": 2.4326184649623417
+    },
+    {
+      "index": "2023-01-27 00:00:00",
+      "^DJI": 2.5188639215598028,
+      "^HSI": 2.6432330330359597,
+      "^FCHI": 2.3911707839180156
+    },
+    {
+      "index": "2023-01-30 00:00:00",
+      "^DJI": 2.4811145827774674,
+      "^HSI": 2.6089604339568138,
+      "^FCHI": 2.3504293020600326
+    },
+    {
+      "index": "2023-01-31 00:00:00",
+      "^DJI": 2.4439309812096455,
+      "^HSI": 2.575132219868806,
+      "^FCHI": 2.3103819869984266
+    },
+    {
+      "index": "2023-02-01 00:00:00",
+      "^DJI": 2.407304638380059,
+      "^HSI": 2.5417426288230525,
+      "^FCHI": 2.2710170113573134
+    }
+  ],
+  "stationarity_results": {
+    "results_by_symbol": {
+      "^DJI": {
+        "adf_statistic": -3.7024434978552,
+        "p_value": 0.004078915138150799,
+        "critical_values": {
+          "1%": -3.75,
+          "5%": -3.0,
+          "10%": -2.63
+        },
+        "is_stationary": true,
+        "interpretation": "The ^DJI series is stationary (p-value: 0.0041). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling. The ADF test statistic of -3.7024 is below the critical threshold, allowing us to reject the null hypothesis of non-stationarity. In simple terms, this data exhibits consistent statistical properties over time. For financial markets, this indicates price movements that don't show persistent trends and tend to revert to a stable average - supporting the efficient market hypothesis where future price changes are independent of past movements."
+      },
+      "^HSI": {
+        "adf_statistic": -5.672617459196598,
+        "p_value": 8.850878588179399e-07,
+        "critical_values": {
+          "1%": -3.75,
+          "5%": -3.0,
+          "10%": -2.63
+        },
+        "is_stationary": true,
+        "interpretation": "The ^HSI series is stationary (p-value: 0.0000). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling. The ADF test statistic of -5.6726 is below the critical threshold, allowing us to reject the null hypothesis of non-stationarity. In simple terms, this data exhibits consistent statistical properties over time. For financial markets, this indicates price movements that don't show persistent trends and tend to revert to a stable average - supporting the efficient market hypothesis where future price changes are independent of past movements."
+      },
+      "^FCHI": {
+        "adf_statistic": -5.026463817250727,
+        "p_value": 1.9666732197604703e-05,
+        "critical_values": {
+          "1%": -3.75,
+          "5%": -3.0,
+          "10%": -2.63
+        },
+        "is_stationary": true,
+        "interpretation": "The ^FCHI series is stationary (p-value: 0.0000). This means the statistical properties like mean and variance remain constant over time, making it suitable for time series modeling. The ADF test statistic of -5.0265 is below the critical threshold, allowing us to reject the null hypothesis of non-stationarity. In simple terms, this data exhibits consistent statistical properties over time. For financial markets, this indicates price movements that don't show persistent trends and tend to revert to a stable average - supporting the efficient market hypothesis where future price changes are independent of past movements."
+      }
+    },
+    "series_stats": {
+      "^DJI": {
+        "n": 22,
+        "mean": 0.00028802492151728886,
+        "median": 0.0013144050998703288,
+        "min": -0.009722709833435525,
+        "max": 0.012478558709894031,
+        "std": 0.005142957295211583,
+        "skew": 0.3358504398891926,
+        "kurt": 0.22154654381047312,
+        "annualized_vol": 0.0813172948092379
+      },
+      "^HSI": {
+        "n": 22,
+        "mean": 0.000756532801569872,
+        "median": 0.0017015255827606333,
+        "min": -0.006434838548268729,
+        "max": 0.008488542032759243,
+        "std": 0.004346296236181566,
+        "skew": -0.03599655645054708,
+        "kurt": -0.8698718875579132,
+        "annualized_vol": 0.06872097746075438
+      },
+      "^FCHI": {
+        "n": 22,
+        "mean": 0.006902573723453781,
+        "median": 0.008504011724540178,
+        "min": -0.09173502949162547,
+        "max": 0.15060251638786348,
+        "std": 0.054639015050262384,
+        "skew": 0.5658150577594045,
+        "kurt": 0.9461976181896175,
+        "annualized_vol": 0.8639186833352429
+      }
+    }
+  },
+  "series_stats": {
+    "^DJI": {
+      "n": 22,
+      "mean": 0.00028802492151728886,
+      "median": 0.0013144050998703288,
+      "min": -0.009722709833435525,
+      "max": 0.012478558709894031,
+      "std": 0.005142957295211583,
+      "skew": 0.3358504398891926,
+      "kurt": 0.22154654381047312,
+      "annualized_vol": 0.0813172948092379
+    },
+    "^HSI": {
+      "n": 22,
+      "mean": 0.000756532801569872,
+      "median": 0.0017015255827606333,
+      "min": -0.006434838548268729,
+      "max": 0.008488542032759243,
+      "std": 0.004346296236181566,
+      "skew": -0.03599655645054708,
+      "kurt": -0.8698718875579132,
+      "annualized_vol": 0.06872097746075438
+    },
+    "^FCHI": {
+      "n": 22,
+      "mean": 0.006902573723453781,
+      "median": 0.008504011724540178,
+      "min": -0.09173502949162547,
+      "max": 0.15060251638786348,
+      "std": 0.054639015050262384,
+      "skew": 0.5658150577594045,
+      "kurt": 0.9461976181896175,
+      "annualized_vol": 0.8639186833352429
+    }
+  },
+  "arima_summaries": {
+    "^DJI": "                               SARIMAX Results                                \n==============================================================================\nDep. Variable:                   ^DJI   No. Observations:                   22\nModel:                 ARIMA(2, 1, 4)   Log Likelihood                 -75.906\nDate:                Fri, 23 May 2025   AIC                            165.812\nTime:                        22:34:36   BIC                            173.124\nSample:                    01-03-2023   HQIC                           167.399\n                         - 02-01-2023                                         \nCovariance Type:                  opg                                         \n==============================================================================\n                 coef    std err          z      P>|z|      [0.025      0.975]\n------------------------------------------------------------------------------\nar.L1         -1.1640      0.339     -3.438      0.001      -1.828      -0.500\nar.L2         -0.9589      0.322     -2.973      0.003      -1.591      -0.327\nma.L1          0.4084      4.104      0.100      0.921      -7.635       8.452\nma.L2          0.0236      5.405      0.004      0.997     -10.571      10.618\nma.L3         -0.9633      7.754     -0.124      0.901     -16.162      14.235\nma.L4         -0.4092      3.677     -0.111      0.911      -7.616       6.798\nsigma2        59.3250    515.590      0.115      0.908    -951.212    1069.862\n===================================================================================\nLjung-Box (L1) (Q):                   0.37   Jarque-Bera (JB):                 4.83\nProb(Q):                              0.55   Prob(JB):                         0.09\nHeteroskedasticity (H):               0.49   Skew:                             0.89\nProb(H) (two-sided):                  0.37   Kurtosis:                         4.54\n===================================================================================\n\nWarnings:\n[1] Covariance matrix calculated using the outer product of gradients (complex-step).",
+    "^HSI": "                               SARIMAX Results                                \n==============================================================================\nDep. Variable:                   ^HSI   No. Observations:                   22\nModel:                 ARIMA(2, 1, 4)   Log Likelihood                 -76.148\nDate:                Fri, 23 May 2025   AIC                            166.296\nTime:                        22:34:36   BIC                            173.607\nSample:                    01-03-2023   HQIC                           167.882\n                         - 02-01-2023                                         \nCovariance Type:                  opg                                         \n==============================================================================\n                 coef    std err          z      P>|z|      [0.025      0.975]\n------------------------------------------------------------------------------\nar.L1         -1.6315      0.072    -22.815      0.000      -1.772      -1.491\nar.L2         -0.9945      0.132     -7.553      0.000      -1.253      -0.736\nma.L1          0.8161     21.990      0.037      0.970     -42.283      43.915\nma.L2         -0.6001     24.781     -0.024      0.981     -49.170      47.970\nma.L3         -1.0826      3.036     -0.357      0.721      -7.032       4.867\nma.L4         -0.1335      0.415     -0.322      0.748      -0.946       0.679\nsigma2        58.1793      1.216     47.857      0.000      55.797      60.562\n===================================================================================\nLjung-Box (L1) (Q):                   0.28   Jarque-Bera (JB):                 0.69\nProb(Q):                              0.59   Prob(JB):                         0.71\nHeteroskedasticity (H):               0.50   Skew:                            -0.27\nProb(H) (two-sided):                  0.38   Kurtosis:                         2.30\n===================================================================================\n\nWarnings:\n[1] Covariance matrix calculated using the outer product of gradients (complex-step).\n[2] Covariance matrix is singular or near-singular, with condition number 4.7e+20. Standard errors may be unstable.",
+    "^FCHI": "                               SARIMAX Results                                \n==============================================================================\nDep. Variable:                  ^FCHI   No. Observations:                   22\nModel:                 ARIMA(2, 1, 4)   Log Likelihood                 -75.672\nDate:                Fri, 23 May 2025   AIC                            165.344\nTime:                        22:34:36   BIC                            172.656\nSample:                    01-03-2023   HQIC                           166.931\n                         - 02-01-2023                                         \nCovariance Type:                  opg                                         \n==============================================================================\n                 coef    std err          z      P>|z|      [0.025      0.975]\n------------------------------------------------------------------------------\nar.L1         -1.5894      0.088    -18.019      0.000      -1.762      -1.417\nar.L2         -0.9789      0.100     -9.751      0.000      -1.176      -0.782\nma.L1          0.9644     52.753      0.018      0.985    -102.429     104.358\nma.L2         -0.5498     96.885     -0.006      0.995    -190.440     189.340\nma.L3         -1.1648     65.020     -0.018      0.986    -128.601     126.272\nma.L4         -0.2446     11.482     -0.021      0.983     -22.749      22.260\nsigma2        54.7077   2448.244      0.022      0.982   -4743.762    4853.177\n===================================================================================\nLjung-Box (L1) (Q):                   0.19   Jarque-Bera (JB):                 6.31\nProb(Q):                              0.66   Prob(JB):                         0.04\nHeteroskedasticity (H):               0.24   Skew:                             1.03\nProb(H) (two-sided):                  0.08   Kurtosis:                         4.71\n===================================================================================\n\nWarnings:\n[1] Covariance matrix calculated using the outer product of gradients (complex-step)."
+  },
+  "arima_forecasts": {
+    "^DJI": [
+      4.842465815006932
+    ],
+    "^HSI": [
+      1.6917169545253543
+    ],
+    "^FCHI": [
+      -0.4070446374548369
+    ]
+  },
+  "arima_interpretations": {
+    "^DJI": "The ARIMA model has been fitted successfully. The forecast shows an unknown trend over the forecast horizon. The first forecasted value is 4.8425 and the last is 4.8425. In market analysis terms, the data is projected to follow a unclear trajectory . This model incorporates both autoregressive components (past values) and moving averages (past errors) to generate forecasts, similar to technical analysis methods that consider recent price movements and error corrections to predict future market behavior.",
+    "^HSI": "The ARIMA model has been fitted successfully. The forecast shows an unknown trend over the forecast horizon. The first forecasted value is 1.6917 and the last is 1.6917. In market analysis terms, the data is projected to follow a unclear trajectory . This model incorporates both autoregressive components (past values) and moving averages (past errors) to generate forecasts, similar to technical analysis methods that consider recent price movements and error corrections to predict future market behavior.",
+    "^FCHI": "The ARIMA model has been fitted successfully. The forecast shows an unknown trend over the forecast horizon. The first forecasted value is -0.4070 and the last is -0.4070. In market analysis terms, the data is projected to follow a unclear trajectory . This model incorporates both autoregressive components (past values) and moving averages (past errors) to generate forecasts, similar to technical analysis methods that consider recent price movements and error corrections to predict future market behavior."
+  },
+  "garch_summaries": {
+    "^DJI": "                        Constant Mean - GARCH Model Results                         \n====================================================================================\nDep. Variable:                         ^DJI   R-squared:                       0.000\nMean Model:                   Constant Mean   Adj. R-squared:                  0.000\nVol Model:                            GARCH   Log-Likelihood:               -79.5867\nDistribution:      Standardized Student's t   AIC:                           169.173\nMethod:                  Maximum Likelihood   BIC:                           174.629\n                                              No. Observations:                   22\nDate:                      Fri, May 23 2025   Df Residuals:                       21\nTime:                              22:34:36   Df Model:                            1\n                               Mean Model                               \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nmu            -1.6846      2.013     -0.837      0.403 [ -5.630,  2.260]\n                            Volatility Model                            \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nomega      9.8089e-07     20.219  4.851e-08      1.000 [-39.629, 39.629]\nalpha[1]       0.0000  6.935e-02      0.000      1.000 [ -0.136,  0.136]\nbeta[1]        0.9414      0.193      4.889  1.014e-06 [  0.564,  1.319]\n                              Distribution                              \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nnu            18.5793     41.460      0.448      0.654 [-62.681, 99.840]\n========================================================================\n\nCovariance estimator: robust",
+    "^HSI": "                        Constant Mean - GARCH Model Results                         \n====================================================================================\nDep. Variable:                         ^HSI   R-squared:                       0.000\nMean Model:                   Constant Mean   Adj. R-squared:                  0.000\nVol Model:                            GARCH   Log-Likelihood:               -80.7419\nDistribution:      Standardized Student's t   AIC:                           171.484\nMethod:                  Maximum Likelihood   BIC:                           176.939\n                                              No. Observations:                   22\nDate:                      Fri, May 23 2025   Df Residuals:                       21\nTime:                              22:34:36   Df Model:                            1\n                               Mean Model                               \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nmu             0.2816      3.219  8.749e-02      0.930 [ -6.027,  6.591]\n                            Volatility Model                            \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nomega      1.0366e-06     19.657  5.273e-08      1.000 [-38.526, 38.526]\nalpha[1]       0.0000      0.274      0.000      1.000 [ -0.538,  0.538]\nbeta[1]        0.9491      0.195      4.858  1.187e-06 [  0.566,  1.332]\n                               Distribution                               \n==========================================================================\n                 coef    std err          t      P>|t|    95.0% Conf. Int.\n--------------------------------------------------------------------------\nnu           198.1724    100.875      1.965  4.947e-02 [  0.461,3.959e+02]\n==========================================================================\n\nCovariance estimator: robust",
+    "^FCHI": "                        Constant Mean - GARCH Model Results                         \n====================================================================================\nDep. Variable:                        ^FCHI   R-squared:                       0.000\nMean Model:                   Constant Mean   Adj. R-squared:                  0.000\nVol Model:                            GARCH   Log-Likelihood:               -78.6224\nDistribution:      Standardized Student's t   AIC:                           167.245\nMethod:                  Maximum Likelihood   BIC:                           172.700\n                                              No. Observations:                   22\nDate:                      Fri, May 23 2025   Df Residuals:                       21\nTime:                              22:34:36   Df Model:                            1\n                               Mean Model                               \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nmu            -0.3248      1.538     -0.211      0.833 [ -3.338,  2.689]\n                            Volatility Model                            \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nomega      9.3745e-07      8.680  1.080e-07      1.000 [-17.012, 17.012]\nalpha[1]       0.0000  9.457e-02      0.000      1.000 [ -0.185,  0.185]\nbeta[1]        0.9336  7.950e-02     11.744  7.626e-32 [  0.778,  1.089]\n                              Distribution                              \n========================================================================\n                 coef    std err          t      P>|t|  95.0% Conf. Int.\n------------------------------------------------------------------------\nnu            15.9268     21.890      0.728      0.467 [-26.978, 58.831]\n========================================================================\n\nCovariance estimator: robust"
+  },
+  "garch_forecasts": {
+    "^DJI": [
+      5.63619740954835,
+      5.468527850827209,
+      5.305846249307531
+    ],
+    "^HSI": [
+      6.294364520466081,
+      6.132195199927931,
+      5.974204048006154
+    ],
+    "^FCHI": [
+      4.984733005932431,
+      4.8163173763683185,
+      4.653591892615665
+    ]
+  },
+  "garch_interpretations": {
+    "^DJI": "The GARCH model has been fitted successfully. The volatility forecast shows a decreasing trend suggesting decreasing market uncertainty. The first forecasted volatility is 5.636197 and the last is 5.305846. In financial market terms, the asset prices are expected to be becoming more stable with narrower price ranges, potentially allowing for tighter stop-loss orders and indicating reduced market risk. Volatility in this context quantifies price fluctuation magnitude - a key measure of market risk. Falling volatility typically indicates market confidence and may reduce option premiums.",
+    "^HSI": "The GARCH model has been fitted successfully. The volatility forecast shows a decreasing trend suggesting decreasing market uncertainty. The first forecasted volatility is 6.294365 and the last is 5.974204. In financial market terms, the asset prices are expected to be becoming more stable with narrower price ranges, potentially allowing for tighter stop-loss orders and indicating reduced market risk. Volatility in this context quantifies price fluctuation magnitude - a key measure of market risk. Falling volatility typically indicates market confidence and may reduce option premiums.",
+    "^FCHI": "The GARCH model has been fitted successfully. The volatility forecast shows a decreasing trend suggesting decreasing market uncertainty. The first forecasted volatility is 4.984733 and the last is 4.653592. In financial market terms, the asset prices are expected to be becoming more stable with narrower price ranges, potentially allowing for tighter stop-loss orders and indicating reduced market risk. Volatility in this context quantifies price fluctuation magnitude - a key measure of market risk. Falling volatility typically indicates market confidence and may reduce option premiums."
+  },
+  "spillover_results": {
+    "total_spillover_index": 0.0,
+    "directional_spillover": {
+      "^DJI_to_^HSI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.7161597718765429,
+          "2": 0.8260478711728048,
+          "3": 0.943841707946184
+        },
+        "optimal_lag": null
+      },
+      "^DJI_to_^FCHI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.6717686038161681,
+          "2": 0.822084512269567,
+          "3": 0.9266896179488818
+        },
+        "optimal_lag": null
+      },
+      "^HSI_to_^DJI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.34858102916353695,
+          "2": 0.44440335277782744,
+          "3": 0.6042128079635122
+        },
+        "optimal_lag": null
+      },
+      "^HSI_to_^FCHI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.97609047896675,
+          "2": 0.9058831228280035,
+          "3": 0.9797268671032792
+        },
+        "optimal_lag": null
+      },
+      "^FCHI_to_^DJI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.32108129745577707,
+          "2": 0.3623213830713346,
+          "3": 0.5939397163037883
+        },
+        "optimal_lag": null
+      },
+      "^FCHI_to_^HSI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.9390463988954426,
+          "2": 0.9801878011054318,
+          "3": 0.989486448308778
+        },
+        "optimal_lag": null
+      }
+    },
+    "net_spillover": {},
+    "pairwise_spillover": {
+      "^DJI_to_^HSI": {
+        "significant_lags": [
+          2
+        ],
+        "r_squared": 0.09072522764885872
+      },
+      "^DJI_to_^FCHI": {
+        "significant_lags": [],
+        "r_squared": 0.06356421057794326
+      },
+      "^HSI_to_^DJI": {
+        "significant_lags": [
+          1,
+          2
+        ],
+        "r_squared": 0.14045860499576066
+      },
+      "^HSI_to_^FCHI": {
+        "significant_lags": [
+          1,
+          2
+        ],
+        "r_squared": 0.1368289462327669
+      },
+      "^FCHI_to_^DJI": {
+        "significant_lags": [
+          1,
+          2,
+          3
+        ],
+        "r_squared": 0.3319269937592867
+      },
+      "^FCHI_to_^HSI": {
+        "significant_lags": [
+          1,
+          2,
+          3
+        ],
+        "r_squared": 0.21994605283616983
+      }
+    },
+    "interpretation": "The system shows a total spillover index of 0.00%, indicating the overall level of interconnectedness between the variables. This relatively low level of spillover suggests limited interconnections, with shocks tending to remain contained within individual markets. This environment may offer good diversification opportunities. "
+  },
+  "granger_causality_results": {
+    "causality_results": {
+      "^DJI->^HSI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.7161597718765429,
+          "2": 0.8260478711728048,
+          "3": 0.943841707946184,
+          "4": 0.909038096317117,
+          "5": 0.9719783118808583
+        },
+        "optimal_lag": null
+      },
+      "^DJI->^FCHI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.6717686038161681,
+          "2": 0.822084512269567,
+          "3": 0.9266896179488818,
+          "4": 0.9548123401775555,
+          "5": 0.9954564966605975
+        },
+        "optimal_lag": null
+      },
+      "^HSI->^DJI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.34858102916353695,
+          "2": 0.44440335277782744,
+          "3": 0.6042128079635122,
+          "4": 0.33841619403292467,
+          "5": 0.6381668077419218
+        },
+        "optimal_lag": null
+      },
+      "^HSI->^FCHI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.97609047896675,
+          "2": 0.9058831228280035,
+          "3": 0.9797268671032792,
+          "4": 0.7783249970716091,
+          "5": 0.4515469860584399
+        },
+        "optimal_lag": null
+      },
+      "^FCHI->^DJI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.32108129745577707,
+          "2": 0.3623213830713346,
+          "3": 0.5939397163037883,
+          "4": 0.5342779063925958,
+          "5": 0.8161272588460905
+        },
+        "optimal_lag": null
+      },
+      "^FCHI->^HSI": {
+        "causality": false,
+        "p_values": {
+          "1": 0.9390463988954426,
+          "2": 0.9801878011054318,
+          "3": 0.989486448308778,
+          "4": 0.6303813945619536,
+          "5": 0.2579579193855486
+        },
+        "optimal_lag": null
+      }
+    },
+    "interpretations": {
+      "^DJI->^HSI": "The test indicates that ^DJI does not Granger-cause ^HSI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^DJI do not contain significant additional information for predicting future values of ^HSI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^HSI's price movements cannot be predicted using ^DJI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+      "^DJI->^FCHI": "The test indicates that ^DJI does not Granger-cause ^FCHI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^DJI do not contain significant additional information for predicting future values of ^FCHI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^FCHI's price movements cannot be predicted using ^DJI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+      "^HSI->^DJI": "The test indicates that ^HSI does not Granger-cause ^DJI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^HSI do not contain significant additional information for predicting future values of ^DJI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^DJI's price movements cannot be predicted using ^HSI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+      "^HSI->^FCHI": "The test indicates that ^HSI does not Granger-cause ^FCHI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^HSI do not contain significant additional information for predicting future values of ^FCHI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^FCHI's price movements cannot be predicted using ^HSI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+      "^FCHI->^DJI": "The test indicates that ^FCHI does not Granger-cause ^DJI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^FCHI do not contain significant additional information for predicting future values of ^DJI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^DJI's price movements cannot be predicted using ^FCHI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+      "^FCHI->^HSI": "The test indicates that ^FCHI does not Granger-cause ^HSI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^FCHI do not contain significant additional information for predicting future values of ^HSI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^HSI's price movements cannot be predicted using ^FCHI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships."
+    }
+  }
+}

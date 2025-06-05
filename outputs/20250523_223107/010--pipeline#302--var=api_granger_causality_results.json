@@ -1,0 +1,78 @@
+{
+  "causality_results": {
+    "^DJI->^HSI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.7161597718765429,
+        "2": 0.8260478711728048,
+        "3": 0.943841707946184,
+        "4": 0.909038096317117,
+        "5": 0.9719783118808583
+      },
+      "optimal_lag": null
+    },
+    "^DJI->^FCHI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.6717686038161681,
+        "2": 0.822084512269567,
+        "3": 0.9266896179488818,
+        "4": 0.9548123401775555,
+        "5": 0.9954564966605975
+      },
+      "optimal_lag": null
+    },
+    "^HSI->^DJI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.34858102916353695,
+        "2": 0.44440335277782744,
+        "3": 0.6042128079635122,
+        "4": 0.33841619403292467,
+        "5": 0.6381668077419218
+      },
+      "optimal_lag": null
+    },
+    "^HSI->^FCHI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.97609047896675,
+        "2": 0.9058831228280035,
+        "3": 0.9797268671032792,
+        "4": 0.7783249970716091,
+        "5": 0.4515469860584399
+      },
+      "optimal_lag": null
+    },
+    "^FCHI->^DJI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.32108129745577707,
+        "2": 0.3623213830713346,
+        "3": 0.5939397163037883,
+        "4": 0.5342779063925958,
+        "5": 0.8161272588460905
+      },
+      "optimal_lag": null
+    },
+    "^FCHI->^HSI": {
+      "causality": false,
+      "p_values": {
+        "1": 0.9390463988954426,
+        "2": 0.9801878011054318,
+        "3": 0.989486448308778,
+        "4": 0.6303813945619536,
+        "5": 0.2579579193855486
+      },
+      "optimal_lag": null
+    }
+  },
+  "interpretations": {
+    "^DJI->^HSI": "The test indicates that ^DJI does not Granger-cause ^HSI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^DJI do not contain significant additional information for predicting future values of ^HSI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^HSI's price movements cannot be predicted using ^DJI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+    "^DJI->^FCHI": "The test indicates that ^DJI does not Granger-cause ^FCHI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^DJI do not contain significant additional information for predicting future values of ^FCHI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^FCHI's price movements cannot be predicted using ^DJI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+    "^HSI->^DJI": "The test indicates that ^HSI does not Granger-cause ^DJI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^HSI do not contain significant additional information for predicting future values of ^DJI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^DJI's price movements cannot be predicted using ^HSI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+    "^HSI->^FCHI": "The test indicates that ^HSI does not Granger-cause ^FCHI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^HSI do not contain significant additional information for predicting future values of ^FCHI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^FCHI's price movements cannot be predicted using ^HSI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+    "^FCHI->^DJI": "The test indicates that ^FCHI does not Granger-cause ^DJI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^FCHI do not contain significant additional information for predicting future values of ^DJI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^DJI's price movements cannot be predicted using ^FCHI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships.",
+    "^FCHI->^HSI": "The test indicates that ^FCHI does not Granger-cause ^HSI (p-value: 1.0000, F-statistic: 0.0000). This suggests that past values of ^FCHI do not contain significant additional information for predicting future values of ^HSI. In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, suggesting that ^HSI's price movements cannot be predicted using ^FCHI's historical data. This independence implies that these markets process information separately and do not exhibit exploitable lead-lag relationships."
+  }
+}
