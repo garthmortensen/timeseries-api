@@ -105,17 +105,20 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         end_date = pipeline_input.data_end_date
         symbols = pipeline_input.symbols or config.symbols
 
-        # Create pipeline run record
-        pipeline_run = PipelineRun(
-            name=f"Pipeline run for {', '.join(symbols)}",
-            status="running",
-            source_type=source_type,
-            start_date=start_date,
-            end_date=end_date
-        )
-        db.add(pipeline_run)
-        db.commit()
-        db.refresh(pipeline_run)
+        # Create pipeline run record only if db is enabled
+        if db is not None:
+            pipeline_run = PipelineRun(
+                name=f"Pipeline run for {', '.join(symbols)}",
+                status="running",
+                source_type=source_type,
+                start_date=start_date,
+                end_date=end_date
+            )
+            db.add(pipeline_run)
+            db.commit()
+            db.refresh(pipeline_run)
+        else:
+            pipeline_run = None
         
         # Extract ARIMA parameters
         arima_p = pipeline_input.arima_params.get('p', config.stats_model_ARIMA_fit_p)
@@ -320,47 +323,46 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             export_data(granger_causality_results, name="api_granger_causality_results")
 
         # After executing the pipeline, store results in the database
-        for symbol in symbols:
-            # Store stationarity results - get results for this specific symbol
-            symbol_stationarity = stationarity_results.get("all_symbols_stationarity", {}).get(symbol, {})
-            
-            stationarity_db = PipelineResult(
-                pipeline_run_id=pipeline_run.id,
-                symbol=symbol,
-                result_type="stationarity",
-                is_stationary=symbol_stationarity.get("is_stationary", True),
-                adf_statistic=symbol_stationarity.get("adf_statistic"),
-                p_value=symbol_stationarity.get("p_value"),
-                interpretation=symbol_stationarity.get("interpretation", "No results available")
-            )
-            db.add(stationarity_db)
-            
-            # Store ARIMA results
-            arima_db = PipelineResult(
-                pipeline_run_id=pipeline_run.id,
-                symbol=symbol,
-                result_type="arima",
-                model_summary=all_arima_summaries.get(symbol, "No summary available"),
-                forecast=json.dumps(all_arima_forecasts.get(symbol, [])),
-                interpretation=all_arima_interpretations.get(symbol, "No interpretation available")
-            )
-            db.add(arima_db)
-            
-            # Store GARCH results
-            garch_db = PipelineResult(
-                pipeline_run_id=pipeline_run.id,
-                symbol=symbol,
-                result_type="garch",
-                model_summary=all_garch_summaries.get(symbol, "No summary available"),
-                forecast=json.dumps(all_garch_forecasts.get(symbol, [])),
-                interpretation=all_garch_interpretations.get(symbol, "No interpretation available")
-            )
-            db.add(garch_db)
-        
-        # Update pipeline status
-        pipeline_run.status = "completed"
-        pipeline_run.end_time = datetime.datetime.utcnow()
-        db.commit()
+        if db is not None and pipeline_run is not None:
+            for symbol in symbols:
+                # Store stationarity results - get results for this specific symbol
+                symbol_stationarity = stationarity_results.get("all_symbols_stationarity", {}).get(symbol, {})
+                stationarity_db = PipelineResult(
+                    pipeline_run_id=pipeline_run.id,
+                    symbol=symbol,
+                    result_type="stationarity",
+                    is_stationary=symbol_stationarity.get("is_stationary", True),
+                    adf_statistic=symbol_stationarity.get("adf_statistic"),
+                    p_value=symbol_stationarity.get("p_value"),
+                    interpretation=symbol_stationarity.get("interpretation", "No results available")
+                )
+                db.add(stationarity_db)
+                
+                # Store ARIMA results
+                arima_db = PipelineResult(
+                    pipeline_run_id=pipeline_run.id,
+                    symbol=symbol,
+                    result_type="arima",
+                    model_summary=all_arima_summaries.get(symbol, "No summary available"),
+                    forecast=json.dumps(all_arima_forecasts.get(symbol, [])),
+                    interpretation=all_arima_interpretations.get(symbol, "No interpretation available")
+                )
+                db.add(arima_db)
+                
+                # Store GARCH results
+                garch_db = PipelineResult(
+                    pipeline_run_id=pipeline_run.id,
+                    symbol=symbol,
+                    result_type="garch",
+                    model_summary=all_garch_summaries.get(symbol, "No summary available"),
+                    forecast=json.dumps(all_garch_forecasts.get(symbol, [])),
+                    interpretation=all_garch_interpretations.get(symbol, "No interpretation available")
+                )
+                db.add(garch_db)
+            # Update pipeline status
+            pipeline_run.status = "completed"
+            pipeline_run.end_time = datetime.datetime.utcnow()
+            db.commit()
 
         # Record execution time
         log_execution_time(t1)
@@ -417,9 +419,7 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         
         # Export complete pipeline results
         export_data(pipeline_results, name="api_pipeline_complete_results")
-        
         return pipeline_results
-        
     except Exception as e:
         # Get more detailed error information
         import traceback
@@ -436,7 +436,7 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         l.debug(f"Full traceback:\n{error_trace}")
         
         # Update pipeline status on error with more details
-        if 'pipeline_run' in locals():
+        if db is not None and 'pipeline_run' in locals() and pipeline_run is not None:
             pipeline_run.status = "failed"
             pipeline_run.end_time = datetime.datetime.utcnow()
             db.commit()

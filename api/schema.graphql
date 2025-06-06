@@ -1,0 +1,99 @@
+# GraphQL Query root.
+type Query {
+  health: String
+  fetchMarketData(input: MarketDataInputType!): [TimeSeriesDataPointType]
+  testStationarity(input: StationarityTestInputType!): StationarityResultsType
+}
+
+# A single data point in a time series.
+type TimeSeriesDataPointType {
+  date: String!
+  values: JSONString
+}
+
+# Allows use of a JSON String for input / output from the GraphQL schema.
+#
+# Use of this type is *not recommended* as you lose the benefits of having a defined, static
+# schema (one of the key benefits of GraphQL).
+scalar JSONString
+
+# Input for market data fetching.
+input MarketDataInputType {
+  symbols: [String]!
+  startDate: String!
+  endDate: String!
+  interval: String = "1d"
+}
+
+# Complete stationarity test results.
+type StationarityResultsType {
+  allSymbolsStationarity: JSONString!
+  seriesStats: JSONString
+}
+
+# Input for stationarity testing.
+input StationarityTestInputType {
+  data: JSONString!
+}
+
+# GraphQL Mutation root.
+type Mutation {
+  runPipeline(input: PipelineInputType!): PipelineResultsType
+  runArimaModel(input: ARIMAInputType!): JSONString
+  runGarchModel(input: GARCHInputType!): JSONString
+}
+
+# Complete pipeline analysis results.
+type PipelineResultsType {
+  originalData: [TimeSeriesDataPointType]!
+  returnsData: [TimeSeriesDataPointType]!
+  scaledData: [TimeSeriesDataPointType]
+  preGarchData: [TimeSeriesDataPointType]!
+  postGarchData: [TimeSeriesDataPointType]
+  stationarityResults: StationarityResultsType!
+  seriesStats: JSONString
+  arimaResults: JSONString!
+  garchResults: JSONString!
+  spilloverResults: SpilloverAnalysisType
+  grangerCausalityResults: JSONString
+}
+
+# Spillover analysis results.
+type SpilloverAnalysisType {
+  totalSpilloverIndex: Float!
+  directionalSpillover: JSONString!
+  netSpillover: JSONString!
+  pairwiseSpillover: JSONString!
+  interpretation: String!
+}
+
+# Input for pipeline analysis.
+input PipelineInputType {
+  sourceActualOrSyntheticData: String = "synthetic"
+  dataStartDate: String!
+  dataEndDate: String!
+  symbols: [String]
+  syntheticAnchorPrices: [Float]
+  syntheticRandomSeed: Int
+  scalingMethod: String = "standard"
+  arimaParams: JSONString!
+  garchParams: JSONString!
+  spilloverEnabled: Boolean = false
+  spilloverParams: JSONString!
+}
+
+# Input for ARIMA modeling.
+input ARIMAInputType {
+  p: Int!
+  d: Int!
+  q: Int!
+  data: JSONString!
+}
+
+# Input for GARCH modeling.
+input GARCHInputType {
+  p: Int!
+  q: Int!
+  data: JSONString!
+  dist: String = "normal"
+}

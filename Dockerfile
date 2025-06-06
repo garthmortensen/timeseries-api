@@ -20,14 +20,21 @@ COPY --chown=timeseriesapiapp:timeseriesapiapp requirements.txt ./requirements.t
 # Install dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
 
+# Install gunicorn and uvicorn for production
+RUN pip install --no-cache-dir --user gunicorn uvicorn
+
 # Add .local/bin to PATH to ensure installed executables are found
 ENV PATH="/home/timeseriesapiapp/.local/bin:${PATH}"
 
 # Copy application files (as the user)
 COPY --chown=timeseriesapiapp:timeseriesapiapp ./ /app
 
+# Expose port 8000 for FastAPI
 EXPOSE 8000
 
-# Run the FastAPI app
+# Set environment variable for frontend to reach API (example, adjust as needed)
+ENV API_URL="http://timeseries-api:8000"
+
+# Run the FastAPI app with uvicorn in production mode
 # Docker recommended: this json format avoids shell string parsing issues
-CMD ["python", "fastapi_pipeline.py"]
+CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Timeseries API API",
-    "summary": "A statistical time series analysis for financial and econometric modeling",
-    "description": "Econometric time series modeling API with ARIMA and GARCH capabilities",
+    "summary": "A statistical time series analysis for financial and econometric modeling with REST and GraphQL APIs",
+    "description": "Econometric time series modeling API with ARIMA and GARCH capabilities. Includes GraphQL interface.",
     "version": "0.0.1"
   },
   "paths": {
@@ -619,6 +619,90 @@
         }
       }
     },
+    "/api/v1/analyze_spillover": {
+      "post": {
+        "tags": [
+          "Spillover Analysis"
+        ],
+        "summary": "Analyze spillover effects between time series",
+        "description": "Analyze spillover effects between multiple time series.\n\nThis endpoint examines how shocks in one time series propagate to others over time,\nwhich is crucial for understanding risk transmission in financial markets.\n\nThe analysis provides metrics on directional and net spillovers between series.",
+        "operationId": "analyze_spillover_endpoint_api_v1_analyze_spillover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpilloverInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpilloverResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rolling_spillover": {
+      "post": {
+        "tags": [
+          "Spillover Analysis"
+        ],
+        "summary": "Compute rolling window spillover analysis",
+        "description": "Perform rolling window spillover analysis to capture time-varying dynamics.\n\nThis endpoint calculates spillover metrics across a rolling window of observations,\nallowing the detection of changes in interconnectedness over time.\n\nReturns time series of total, directional, and net spillover indices.",
+        "operationId": "rolling_spillover_endpoint_api_v1_rolling_spillover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpilloverInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpilloverResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "tags": [
@@ -1031,41 +1115,39 @@
             "$ref": "#/components/schemas/StationarityTestResponse",
             "description": "Results of stationarity tests"
           },
-          "arima_summary": {
-            "type": "string",
-            "title": "Arima Summary",
-            "description": "ARIMA model summary"
+          "series_stats": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Stats",
+            "description": "Comprehensive statistics for each series (mean, std, skew, kurtosis)"
           },
-          "arima_forecast": {
-            "items": {
-              "type": "number"
+          "arima_results": {
+            "additionalProperties": {
+              "type": "object"
             },
-            "type": "array",
-            "title": "Arima Forecast",
-            "description": "ARIMA model forecast"
+            "type": "object",
+            "title": "Arima Results",
+            "description": "ARIMA results for all symbols"
           },
-          "arima_interpretation": {
-            "type": "string",
-            "title": "Arima Interpretation",
-            "description": "Human-readable interpretation of ARIMA results"
-          },
-          "garch_summary": {
-            "type": "string",
-            "title": "Garch Summary",
-            "description": "GARCH model summary"
-          },
-          "garch_forecast": {
-            "items": {
-              "type": "number"
+          "garch_results": {
+            "additionalProperties": {
+              "type": "object"
             },
-            "type": "array",
-            "title": "Garch Forecast",
-            "description": "GARCH model forecast"
-          },
-          "garch_interpretation": {
-            "type": "string",
-            "title": "Garch Interpretation",
-            "description": "Human-readable interpretation of GARCH results"
+            "type": "object",
+            "title": "Garch Results",
+            "description": "GARCH results for all symbols"
           },
           "spillover_results": {
             "anyOf": [
@@ -1077,6 +1159,18 @@
               }
             ],
             "description": "Results of spillover analysis (if enabled)"
+          },
+          "granger_causality_results": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granger Causality Results",
+            "description": "Results of Granger causality analysis (if enabled)"
           }
         },
         "type": "object",
@@ -1085,12 +1179,8 @@
           "returns_data",
           "pre_garch_data",
           "stationarity_results",
-          "arima_summary",
-          "arima_forecast",
-          "arima_interpretation",
-          "garch_summary",
-          "garch_forecast",
-          "garch_interpretation"
+          "arima_results",
+          "garch_results"
         ],
         "title": "PipelineResponse",
         "description": "Response model for the complete pipeline."
@@ -1115,6 +1205,47 @@
         "title": "ScalingInput",
         "description": "Input model for data scaling endpoint."
       },
+      "SpilloverInput": {
+        "properties": {
+          "data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Method for spillover calculation",
+            "default": "diebold_yilmaz"
+          },
+          "forecast_horizon": {
+            "type": "integer",
+            "title": "Forecast Horizon",
+            "description": "Forecast horizon for variance decomposition",
+            "default": 10
+          },
+          "window_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Size",
+            "description": "Window size for rolling analysis (None for full sample)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SpilloverInput",
+        "description": "Input model for spillover analysis endpoint."
+      },
       "SpilloverResponse": {
         "properties": {
           "total_spillover_index": {
@@ -1123,12 +1254,6 @@
             "description": "Overall system-wide spillover"
           },
           "directional_spillover": {
-            "additionalProperties": {
-              "additionalProperties": {
-                "type": "number"
-              },
-              "type": "object"
-            },
             "type": "object",
             "title": "Directional Spillover",
             "description": "Spillover from each variable to others and from others to each variable"
@@ -1142,12 +1267,6 @@
             "description": "Net spillover (directional to others minus directional from others)"
           },
           "pairwise_spillover": {
-            "additionalProperties": {
-              "additionalProperties": {
-                "type": "number"
-              },
-              "type": "object"
-            },
             "type": "object",
             "title": "Pairwise Spillover",
             "description": "Pairwise spillover between each pair of variables"
@@ -1186,42 +1305,36 @@
       },
       "StationarityTestResponse": {
         "properties": {
-          "adf_statistic": {
-            "type": "number",
-            "title": "Adf Statistic",
-            "description": "ADF test statistic"
-          },
-          "p_value": {
-            "type": "number",
-            "title": "P Value",
-            "description": "P-value of the test"
-          },
-          "critical_values": {
+          "all_symbols_stationarity": {
             "additionalProperties": {
-              "type": "number"
+              "type": "object"
             },
             "type": "object",
-            "title": "Critical Values",
-            "description": "Critical values at different significance levels"
+            "title": "All Symbols Stationarity",
+            "description": "Stationarity test results for each symbol"
           },
-          "is_stationary": {
-            "type": "boolean",
-            "title": "Is Stationary",
-            "description": "Whether the time series is considered stationary"
-          },
-          "interpretation": {
-            "type": "string",
-            "title": "Interpretation",
-            "description": "Human-readable interpretation of results"
+          "series_stats": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Stats",
+            "description": "Comprehensive statistics for each series (mean, std, skew, kurtosis)"
           }
         },
         "type": "object",
         "required": [
-          "adf_statistic",
-          "p_value",
-          "critical_values",
-          "is_stationary",
-          "interpretation"
+          "all_symbols_stationarity"
         ],
         "title": "StationarityTestResponse",
         "description": "Response model for stationarity test results."

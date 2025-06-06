@@ -27,6 +27,10 @@ from fastapi import FastAPI, Response
 import uvicorn
 from contextlib import asynccontextmanager
 
+# Import GraphQL with Graphene
+from starlette_graphene3 import GraphQLApp, make_playground_handler
+from api.gql import schema
+
 # Import custom modules
 from api.utils.json_handling import RoundingJSONResponse
 from api.database import init_db
@@ -42,13 +46,15 @@ async def lifespan(app: FastAPI):
     l.info(f"Swagger UI:     {Fore.YELLOW}{base_url}{app.docs_url}")
     l.info(f"ReDoc:          {Fore.YELLOW}{base_url}{app.redoc_url}")
     l.info(f"OpenAPI schema: {Fore.YELLOW}{base_url}{app.openapi_url}")
+    l.info(f"GraphQL:        {Fore.YELLOW}{base_url}/v1/graphql")
+    l.info(f"GraphQL Playground: {Fore.YELLOW}{base_url}/v1/graphql")
 
     # Initialize database
     init_db()
     l.info("Database initialized")
 
     # log all endpoints but avoid logging the interactive docs
-    skip_paths = {app.docs_url, app.redoc_url, app.openapi_url}
+    skip_paths = {app.docs_url, app.redoc_url, app.openapi_url, "/v1/graphql"}
     for route in app.routes:
         if hasattr(route, "path") and hasattr(route, "methods"):
             if route.path in skip_paths:
@@ -78,8 +84,8 @@ ascii_banner = f"""
 app = FastAPI(
     title="Timeseries API API",
     version="0.0.1",
-    description="Econometric time series modeling API with ARIMA and GARCH capabilities",
-    summary="A statistical time series analysis for financial and econometric modeling",
+    description="Econometric time series modeling API with ARIMA and GARCH capabilities. Includes GraphQL interface.",
+    summary="A statistical time series analysis for financial and econometric modeling with REST and GraphQL APIs",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/api/openapi.json",
@@ -96,17 +102,33 @@ async def ignore_favicon():
 # Import routers after app is defined
 from api.routers import data_router, models_router, pipeline_router, spillover_router
 
-# Add routers
+# Add REST API routers
 app.include_router(data_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(pipeline_router, prefix="/api/v1")
 app.include_router(spillover_router, prefix="/api/v1")
 
+# Add GraphQL endpoint with playground
+graphql_app = GraphQLApp(
+    schema=schema, 
+    on_get=make_playground_handler()  # This adds GraphQL Playground on GET requests
+)
+app.mount("/v1/graphql", graphql_app)
+
 # Root endpoint
 @app.get("/", tags=["Health"])
 async def root():
     """Root endpoint for API health check."""
-    return {"status": "healthy", "message": "Timeseries API API is running"}
+    return {
+        "status": "healthy", 
+        "message": "Timeseries API API is running",
+        "endpoints": {
+            "rest_api": "/api/v1",
+            "graphql": "/v1/graphql",
+            "docs": "/docs",
+            "redoc": "/redoc"
+        }
+    }
 
 
 if __name__ == "__main__":
