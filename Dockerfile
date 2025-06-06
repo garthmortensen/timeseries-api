@@ -29,12 +29,13 @@ ENV PATH="/home/timeseriesapiapp/.local/bin:${PATH}"
 # Copy application files (as the user)
 COPY --chown=timeseriesapiapp:timeseriesapiapp ./ /app
 
-# Expose port 8000 for FastAPI
-EXPOSE 8000
+# Expose port 8080 for Cloud Run
+EXPOSE 8080
 
-# Set environment variable for frontend to reach API (example, adjust as needed)
-ENV API_URL="http://timeseries-api:8000"
+# Set environment variable for frontend to reach API
+ENV API_URL="http://timeseries-api:8080"
+ENV PORT=8080
 
 # Run the FastAPI app with uvicorn in production mode
 # Docker recommended: this json format avoids shell string parsing issues
-CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "fastapi_pipeline:app", "--host", "0.0.0.0", "--port", "8080"]
