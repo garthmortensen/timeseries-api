@@ -26,17 +26,22 @@
 
 A production-grade FastAPI pipeline for time series analysis with ARIMA and GARCH modeling.
 
-This project provides both a web API and CLI interface for financial and econometric data analysis. 
+This project provides multiple interfaces for financial and econometric data analysis:
+- **REST API** with FastAPI endpoints
+- **GraphQL API** for flexible queries
+- **CLI interface** for command-line usage
+- **MCP Server** for direct LLM agent integration
 
 ### Features
 
-- FastAPI endpoints for time series analysis
-- OpenAPI response model for illustrating API contract
-- ARIMA and GARCH modeling capabilities
-- Data generation, scaling, and stationarity testing
-- Docker containerization
-- GitHub Actions CI/CD pipeline
-- Comprehensive test suite
+- **REST & GraphQL APIs** for time series analysis with comprehensive OpenAPI documentation
+- **MCP Server Integration** - Expose all endpoints as structured tools for LLM agents
+- **Advanced Statistical Modeling** - ARIMA and GARCH modeling capabilities with spillover analysis
+- **Multi-source Data Support** - Generate synthetic data or fetch real market data (Yahoo Finance, Stooq)
+- **Comprehensive Data Processing** - Scaling, stationarity testing, returns conversion, and missing data handling
+- **Production Ready** - Docker containerization, comprehensive test suite, and CI/CD pipeline
+- **Real-time Analysis** - Rolling spillover analysis and volatility forecasting
+- **Human-readable Interpretations** - Automatic generation of plain English explanations for statistical results
 
 ## Difficult lessons
 
@@ -314,6 +319,7 @@ The application uses YAML configuration file `config/config.yml` to set:
 timeseries-api/.......................
 ├── cli_pipeline.py                  # Runs the full pipeline from the terminal sans API
 ├── fastapi_pipeline.py              # Starts the API server with uvicorn
+├── mcp_server.py                    # MCP server for LLM agent integration
 ├── Makefile                         # Automates dev tasks
 ├── smoketest.sh                     # Quickly verifies endpoints are functional
 ├── pipeline.md                      # Documents pipeline architecture and steps
@@ -434,7 +440,7 @@ Database["SQLite Database<br>[File]<br>Stores pipeline results"]:::container
     
     %% External Systems
     ExternalDataSource[(External Data Source<br>Yahoo Finance/Stooq API)]:::external
-    ExistingAnalysisTool[Existing Analysis Tools]:::external
+ExistingAnalysisTool[Existing Analysis Tools]:::external
     
     %% Relationships
     User -- "Uses [HTTP/JSON]" --> FastAPI
@@ -727,23 +733,101 @@ classDiagram
     BaseResponseModel <|-- PipelineResponse: extends
 ```
 
-## Deploying to Google Cloud Run
+### MCP Server Integration
 
-1. **Build the container image:**
-   ```sh
-   gcloud builds submit --tag gcr.io/PROJECT_ID/timeseries-api
+The **Model Context Protocol (MCP) Server** enables direct integration with LLM agents and AI assistants. This allows agents to interact with your timeseries API using natural language requests that are automatically translated into API calls.
+
+#### Features
+
+- **Structured Tool Definitions** - All API endpoints are exposed as properly typed tools with comprehensive documentation
+- **Type Safety** - Full parameter validation and error handling for reliable agent interactions
+- **Natural Language Interface** - LLM agents can request complex analyses using conversational language
+- **Complete Coverage** - All REST/GraphQL endpoints are available as MCP tools, including the full pipeline
+
+#### Starting the MCP Server
+
+1. **Ensure your FastAPI server is running:**
+   ```bash
+   python fastapi_pipeline.py
    ```
-2. **Deploy to Cloud Run:**
-   ```sh
-   gcloud run deploy timeseries-api \
-     --image gcr.io/PROJECT_ID/timeseries-api \
-     --platform managed \
-     --region YOUR_REGION \
-     --allow-unauthenticated
+
+2. **Start the MCP server in a separate terminal:**
+   ```bash
+   python mcp_server.py
    ```
-3. **Set environment variables** (such as DB_USER, DB_PASSWORD, etc.) in the Cloud Run service settings.
 
-- The service will listen on port 8080 as required by Cloud Run.
-- For database connections, use managed services like Cloud SQL and configure credentials via environment variables.
+3. **Or specify a custom API URL:**
+   ```bash
+   python mcp_server.py --api-url http://your-api-host:8001
+   ```
 
-See Google Cloud Run documentation for more details.
+#### Available MCP Tools
+
+The MCP server exposes all API endpoints as structured tools:
+
+| Tool Category | Tool Name | Description |
+|---------------|-----------|-------------|
+| **GraphQL Tools** | `graphql_health_check` | Check API health using GraphQL |
+| | `graphql_fetch_market_data` | Fetch market data via GraphQL with flexible field selection |
+| | `graphql_test_stationarity` | Test stationarity using GraphQL endpoint |
+| | `graphql_run_complete_pipeline` | Execute complete pipeline with selective data fetching |
+| | `graphql_run_arima_model` | Run ARIMA models via GraphQL |
+| | `graphql_run_garch_model` | Run GARCH models via GraphQL |
+| | `graphql_custom_query` | Execute custom GraphQL queries for advanced use cases |
+| **Data Operations** | `generate_synthetic_data` | Generate synthetic time series data for testing |
+| | `fetch_market_data` | Fetch real market data from Yahoo Finance |
+| | `fetch_stooq_data` | Fetch real market data from Stooq |
+| | `scale_data` | Scale data using standard/minmax/robust methods |
+| | `test_stationarity` | Test for stationarity using ADF test |
+| | `convert_to_returns` | Convert price data to log returns |
+| | `scale_for_garch` | Scale data specifically for GARCH modeling |
+| **Stats Models** | `run_arima_model` | Fit ARIMA models with forecasting |
+| | `run_garch_model` | Fit GARCH models for volatility analysis |
+| **Spillover Analysis** | `analyze_spillover` | Analyze spillover effects between series |
+| | `rolling_spillover` | Compute rolling window spillover analysis |
+| **Complete Pipeline** | `run_complete_pipeline` | Execute end-to-end analysis workflow |
+
+#### Example Agent Interactions
+
+LLM agents can now perform complex analyses with natural language:
+
+```
+Agent: "Generate synthetic data for AAPL and TSLA from 2023-01-01 to 2023-12-31, then run the complete analysis pipeline with spillover analysis enabled."
+
+MCP Server: Calls generate_synthetic_data() then run_complete_pipeline() automatically with the specified parameters.
+```
+
+```
+Agent: "Fetch real market data for GME and analyze its volatility using GARCH modeling."
+
+MCP Server: Calls fetch_market_data() followed by run_garch_model() and provides comprehensive volatility analysis.
+```
+
+```
+Agent: "Perform spillover analysis between SPY, VIX, and GLD to understand market interconnectedness during the last year."
+
+MCP Server: Calls fetch_market_data() for all symbols, converts to returns, and runs analyze_spillover() with interpretation.
+```
+
+#### MCP Client Integration
+
+To integrate with MCP-compatible clients (like Claude Desktop):
+
+1. Add this configuration to your MCP client settings:
+   ```json
+   {
+     "mcpServers": {
+       "spillover": {
+         "command": "python",
+         "args": ["/path/to/your/mcp_server.py"],
+         "env": {
+           "TIMESERIES_API_URL": "http://localhost:8001"
+         }
+       }
+     }
+   }
+   ```
+
+2. The client will automatically discover all available tools and their schemas
+
+3. You can then ask the AI assistant to perform time series analysis using natural language
