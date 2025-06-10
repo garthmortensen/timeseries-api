@@ -124,7 +124,7 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         arima_p = pipeline_input.arima_params.get('p', config.stats_model_ARIMA_fit_p)
         arima_d = pipeline_input.arima_params.get('d', config.stats_model_ARIMA_fit_d)
         arima_q = pipeline_input.arima_params.get('q', config.stats_model_ARIMA_fit_q)
-        arima_forecast_steps = config.stats_model_ARIMA_predict_steps
+        arima_forecast_steps = pipeline_input.arima_params.get('forecast_steps', config.stats_model_ARIMA_predict_steps)
         
         # Extract GARCH parameters
         garch_p = pipeline_input.garch_params.get('p', config.stats_model_GARCH_fit_p)
