@@ -26,6 +26,8 @@
 
 A production-grade FastAPI pipeline for time series analysis with ARIMA and GARCH modeling.
 
+Implementation hosted at www.spilloverlab.com.
+
 This project provides multiple interfaces for financial and econometric data analysis:
 - **CLI interface** for command-line usage
 - **REST API** with FastAPI endpoints
