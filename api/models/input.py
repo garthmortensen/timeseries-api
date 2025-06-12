@@ -92,7 +92,8 @@ class PipelineInput(BaseModel):
         default={
             "p": config.stats_model_ARIMA_fit_p,
             "d": config.stats_model_ARIMA_fit_d,
-            "q": config.stats_model_ARIMA_fit_q
+            "q": config.stats_model_ARIMA_fit_q,
+            "forecast_steps": config.stats_model_ARIMA_predict_steps
         }, 
         description="ARIMA parameters"
     )

@@ -71,7 +71,7 @@ stats_model_ARIMA_enabled: true
 stats_model_ARIMA_fit_p: 2  # Number of autoregressive terms
 stats_model_ARIMA_fit_d: 1  # Order of differencing
 stats_model_ARIMA_fit_q: 4  # Number of moving average terms
-stats_model_ARIMA_predict_steps: 3  # Forecast horizon length
+stats_model_ARIMA_predict_steps: 20  # Forecast horizon length
 
 # =============================================================================
 # GARCH Model - Models volatility clustering in financial returns, which is
@@ -92,7 +92,7 @@ stats_model_GARCH_volatility_format: "standard_deviation"  # Output as std. dev 
 # =============================================================================
 spillover_analysis_enabled: true
 spillover_analysis_method: "diebold_yilmaz"  # method for spillover calculation
-spillover_analysis_forecast_horizon: 3  # forecast horizon for variance decomposition
+spillover_analysis_forecast_horizon: 10  # forecast horizon for variance decomposition
 spillover_analysis_window_size: null  # window size for rolling analysis (null for full sample)
 spillover_significance_threshold: 0.1  # threshold for significant spillovers in interpretations
 

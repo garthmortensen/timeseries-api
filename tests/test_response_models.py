@@ -34,15 +34,19 @@ def test_run_garch_response_model(sample_data):
     }
     
     response = client.post("/api/v1/run_garch", json=input_data)
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Response: {response.content}" # Reverted to expect 200
     
     # Check that the response has the expected structure
     data = response.json()
     assert "fitted_model" in data
+    assert isinstance(data["fitted_model"], str)
     assert "forecast" in data
+    assert isinstance(data["forecast"], list)
+    if data["forecast"]:
+        assert isinstance(data["forecast"][0], float)
     
     # Validate against the Pydantic model
-    validated_data = GARCHModelResponse(**data)
+    validated_data = GARCHModelResponse(**data) # Should pass now
     
     # Use model_dump() instead of dict() which is deprecated in Pydantic v2
     if hasattr(validated_data, "model_dump"):

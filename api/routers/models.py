@@ -229,33 +229,55 @@ async def run_garch_endpoint(input_data: GARCHInput):
         df = pd.DataFrame(input_data.data)
         
         # Set up index and prepare data
+        if 'date' not in df.columns:
+            raise HTTPException(status_code=400, detail="Input data must contain a 'date' column.")
         df['date'] = pd.to_datetime(df['date'])
         df.set_index('date', inplace=True)
-        df['price'] = pd.to_numeric(df['price'], errors='coerce')
         
-        if df['price'].isnull().any():
-            raise HTTPException(status_code=400, detail="Invalid data: 'price' column contains non-numeric values.")
-        
-        # Keep only numeric columns
-        numeric_df = df.select_dtypes(include=['number'])
+        # Ensure there's a 'price' column or a single numeric column to work with
+        # For simplicity, this example assumes 'price' or the first numeric column if 'price' isn't present.
+        # A more robust solution would handle multiple columns or require a target_column parameter.
+        if 'price' in df.columns and pd.api.types.is_numeric_dtype(df['price']):
+            target_column = 'price'
+        else:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            if not numeric_cols.empty:
+                target_column = numeric_cols[0]
+            else:
+                raise HTTPException(status_code=400, detail="No numeric column found for GARCH modeling (e.g., 'price').")
+
+        df[target_column] = pd.to_numeric(df[target_column], errors='coerce')
+        if df[target_column].isnull().any():
+            raise HTTPException(status_code=400, detail=f"Invalid data: '{target_column}' column contains non-numeric values or NaNs after coercion.")
+
+        # Keep only the target numeric column for GARCH processing
+        numeric_df = df[[target_column]]
         
         # Call run_garch_step with explicit parameters
         forecast_steps = 5  # Standard value for short-term volatility forecast
         
-        garch_summary, garch_forecast, _ = run_garch_step(
-            df_residuals=numeric_df,
+        garch_summary_dict, garch_forecast_dict, _ = run_garch_step(
+            df_residuals=numeric_df, # Pass the DataFrame with the single target column
             p=input_data.p,
             q=input_data.q,
             dist=input_data.dist or "normal",  # Default to normal if not specified
             forecast_steps=forecast_steps
         )
         
+        # Extract the results for the target column
+        fitted_model_str = garch_summary_dict.get(target_column)
+        forecast_list = garch_forecast_dict.get(target_column)
+
+        if fitted_model_str is None or forecast_list is None:
+            l.error(f"Could not retrieve GARCH results for column '{target_column}'. Summary: {garch_summary_dict}, Forecast: {garch_forecast_dict}")
+            raise HTTPException(status_code=500, detail=f"Internal error: Could not retrieve GARCH results for column '{target_column}'.")
+
         results = {
-            "fitted_model": garch_summary,
-            "forecast": garch_forecast
+            "fitted_model": fitted_model_str,
+            "forecast": forecast_list
         }
         
-        l.info(f"run_garch_endpoint() returning model and forecast")
+        l.info(f"run_garch_endpoint() returning model and forecast for column '{target_column}'")
         return results
 
     except HTTPException as he:
@@ -264,4 +286,3 @@ async def run_garch_endpoint(input_data: GARCHInput):
     except Exception as e:
         l.error(f"Error running GARCH model: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    
