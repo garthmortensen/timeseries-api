@@ -42,6 +42,18 @@ class GARCHModelResponse(BaseModel):
     forecast: List[float] = Field(..., description="Forecasted volatility values")
 
 
+class VARModelResponse(BaseModel):
+    """Response model for VAR model results."""
+    fitted_model: str = Field(..., description="Summary of the fitted VAR model")
+    selected_lag: int = Field(..., description="Selected lag order for the VAR model")
+    ic_used: str = Field(..., description="Information criterion used for lag selection")
+    coefficients: Dict[str, Dict[str, float]] = Field(..., description="VAR coefficients matrix")
+    granger_causality: Dict[str, Dict[str, Any]] = Field(..., description="Granger causality test results")
+    fevd_matrix: List[List[float]] = Field(..., description="Forecast Error Variance Decomposition matrix")
+    fevd_interpretation: Dict[str, str] = Field(..., description="Human-readable FEVD interpretations")
+    interpretation: str = Field(..., description="Overall VAR model interpretation")
+
+
 class SpilloverResponse(BaseModel):
     """Response model for spillover analysis."""
     total_spillover_index: float = Field(
@@ -103,6 +115,10 @@ class PipelineResponse(BaseModel):
     garch_results: Dict[str, Dict[str, Any]] = Field(
         ..., 
         description="GARCH results for all symbols"
+    )
+    var_results: Optional[VARModelResponse] = Field(
+        None,
+        description="VAR model results (if spillover analysis is enabled)"
     )
     spillover_results: Optional[SpilloverResponse] = Field(
         None,

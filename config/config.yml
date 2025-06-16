@@ -94,7 +94,9 @@ spillover_analysis_enabled: true
 spillover_analysis_method: "diebold_yilmaz"  # method for spillover calculation
 spillover_analysis_forecast_horizon: 10  # forecast horizon for variance decomposition
 spillover_analysis_window_size: null  # window size for rolling analysis (null for full sample)
-spillover_significance_threshold: 0.1  # threshold for significant spillovers in interpretations
+
+# VAR model configuration for Diebold-Yilmaz analysis
+spillover_var_max_lags: 5  # maximum lags for VAR model selection
 
 # =============================================================================
 # Granger Causality Analysis - Tests whether movements in one time series help
@@ -102,4 +104,3 @@ spillover_significance_threshold: 0.1  # threshold for significant spillovers in
 # =============================================================================
 granger_causality_enabled: true  # enable/disable Granger causality tests
 granger_causality_max_lag: 5  # maximum lag for Granger causality tests
-granger_causality_p_value_threshold: 0.05  # p-value threshold for significance

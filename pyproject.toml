@@ -1,0 +1,55 @@
+[project]
+name = "timeseries-api"
+version = "0.1.0"
+description = "FastAPI-based time series analysis API with spillover analysis and MCP server support"
+authors = [
+    { name="Garth Mortensen", email="mortensengarth@hotmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text="MIT" }
+
+dependencies = [
+    "fastapi>=0.115.11",
+    "uvicorn>=0.34.0",
+    "pydantic>=2.10.6",
+    "pandas>=2.2.3",
+    "numpy>=2.2.3",  # Match timeseries-compute requirement
+    "statsmodels>=0.14.4",
+    "arch>=7.2.0",
+    "scipy>=1.15.2",
+    "matplotlib>=3.10.1",
+    "plotly>=6.0.1",
+    "requests>=2.32.3",
+    "httpx>=0.28.1",
+    "sqlalchemy>=2.0.40",
+    "psycopg2-binary>=2.9.10",
+    "peewee>=3.17.9",
+    "graphene>=3.4.3",
+    "starlette-graphene3>=0.6.0",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.2",
+    "gunicorn>=23.0.0",
+    "colorama>=0.4.6",
+    "tabulate>=0.9.0",
+    "yfinance>=0.2.55",
+    "pandas-datareader>=0.10.0",
+    "mcp>=1.0.0",
+    "timeseries-compute>=0.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "black>=25.1.0",
+    "coverage>=7.7.1",
+    "httpx>=0.28.1",  # for testing
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = {} }

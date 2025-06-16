@@ -24,15 +24,15 @@
              ╚═╝  ╚═╝╚═╝     ╚═╝
 ```
 
-A production-grade FastAPI pipeline for time series analysis with ARIMA and GARCH modeling.
+A production-grade FastAPI pipeline for comprehensive time series analysis with ARIMA/GARCH modeling and advanced spillover analysis.
 
 Implementation hosted at www.spilloverlab.com.
 
 This project provides multiple interfaces for financial and econometric data analysis:
-- **CLI interface** for command-line usage
-- **REST API** with FastAPI endpoints
-- **GraphQL API** for flexible queries
-- **MCP Server** for direct LLM agent integration
+- **CLI interface** for command-line usage and batch processing
+- **REST API** with FastAPI endpoints and comprehensive OpenAPI documentation
+- **GraphQL API** for flexible queries and selective data fetching
+- **MCP Server** for direct LLM agent integration and natural language processing
 
 ### Features
 
@@ -826,24 +826,172 @@ Agent: "Perform spillover analysis between SPY, VIX, and GLD to understand marke
 MCP Server: Calls fetch_market_data() for all symbols, converts to returns, and runs analyze_spillover() with interpretation.
 ```
 
-#### MCP Client Integration
+#### Enhanced Spillover Analysis
 
-To integrate with MCP-compatible clients (like Claude Desktop):
+The API now features significantly enhanced spillover analysis capabilities with multi-level significance testing and comprehensive interpretations:
 
-1. Add this configuration to your MCP client settings:
-   ```json
-   {
-     "mcpServers": {
-       "spillover": {
-         "command": "python",
-         "args": ["/path/to/your/mcp_server.py"],
-         "env": {
-           "TIMESERIES_API_URL": "http://localhost:8001"
-         }
-       }
-     }
-   }
-   ```
+#### Enhanced Spillover Analysis Flow
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef input fill:#E8F4FD,color:#000,stroke:#1E88E5,stroke-width:2px
+    classDef process fill:#FFF3E0,color:#000,stroke:#FF9800,stroke-width:2px
+    classDef analysis fill:#F3E5F5,color:#000,stroke:#9C27B0,stroke-width:2px
+    classDef output fill:#E8F5E8,color:#000,stroke:#4CAF50,stroke-width:2px
+    classDef enhanced fill:#FFEBEE,color:#000,stroke:#F44336,stroke-width:3px
+    
+    %% Input Data
+    TimeSeriesData[("Time Series Data<br/>Returns DataFrame")]:::input
+    
+    %% Data Preparation
+    DataValidation["Data Validation<br/>• Check for missing values<br/>• Ensure sufficient observations<br/>• Validate datetime index"]:::process
+    
+    NumericSelection["Select Numeric Columns<br/>• Filter non-numeric data<br/>• Prepare for VAR modeling"]:::process
+    
+    %% VAR Model Setup
+    LagSelection["Optimal Lag Selection<br/>• Calculate safe max lag<br/>• Use AIC criterion<br/>• Ensure stability"]:::process
+    
+    VARFitting["VAR Model Fitting<br/>• Fit VAR(p) model<br/>• Validate model stability<br/>• Extract coefficients"]:::analysis
+    
+    %% Spillover Analysis
+    FEVDCalculation["FEVD Calculation<br/>• Forecast Error Variance Decomposition<br/>• Calculate spillover matrix<br/>• Generate directional spillovers"]:::analysis
+    
+    SpilloverMetrics["Spillover Metrics<br/>• Total Spillover Index<br/>• Directional Spillovers<br/>• Net Spillovers<br/>• Pairwise Spillovers"]:::analysis
+    
+    %% Enhanced Granger Causality
+    GrangerEnhanced["🆕 Enhanced Granger Causality<br/>• Multi-level significance (1%, 5%)<br/>• Optimal lag detection<br/>• Comprehensive p-value analysis<br/>• Robust test statistics"]:::enhanced
+    
+    %% Results and Interpretations
+    SpilloverResults["Spillover Results<br/>• Spillover indices<br/>• FEVD table<br/>• Network effects"]:::output
+    
+    GrangerResults["🆕 Multi-Level Granger Results<br/>• Highly significant (1% level)<br/>• Significant (5% level)<br/>• Optimal lags per relationship<br/>• Minimum p-values"]:::enhanced
+    
+    InterpretationEngine["🆕 Enhanced Interpretation Engine<br/>• Business-relevant explanations<br/>• Market context analysis<br/>• Risk assessment insights<br/>• Trading implications"]:::enhanced
+    
+    %% Final Output
+    ComprehensiveReport["Comprehensive Analysis Report<br/>• Spillover analysis<br/>• Causality relationships<br/>• Human-readable interpretations<br/>• Actionable insights"]:::output
+    
+    %% Flow connections
+    TimeSeriesData --> DataValidation
+    DataValidation --> NumericSelection
+    NumericSelection --> LagSelection
+    LagSelection --> VARFitting
+    VARFitting --> FEVDCalculation
+    VARFitting --> GrangerEnhanced
+    FEVDCalculation --> SpilloverMetrics
+    SpilloverMetrics --> SpilloverResults
+    GrangerEnhanced --> GrangerResults
+    SpilloverResults --> InterpretationEngine
+    GrangerResults --> InterpretationEngine
+    InterpretationEngine --> ComprehensiveReport
+```
+
+#### Multi-Level Granger Causality Testing
+
+The enhanced Granger causality testing provides more robust and actionable results:
+
+```mermaid
+flowchart LR
+    %% Styling
+    classDef input fill:#E3F2FD,color:#000,stroke:#2196F3,stroke-width:2px
+    classDef test fill:#FFF8E1,color:#000,stroke:#FFC107,stroke-width:2px
+    classDef result fill:#E8F5E8,color:#000,stroke:#4CAF50,stroke-width:2px
+    classDef enhanced fill:#FFEBEE,color:#000,stroke:#F44336,stroke-width:3px
+    
+    subgraph "Market Pair Analysis"
+        SeriesPair["Market Pair<br/>X → Y"]:::input
+    end
+    
+    subgraph "🆕 Multi-Level Testing"
+        Test1pct["1% Significance Test<br/>α = 0.01<br/>High Confidence"]:::enhanced
+        Test5pct["5% Significance Test<br/>α = 0.05<br/>Standard Confidence"]:::enhanced
+        OptimalLag["Optimal Lag Detection<br/>Best predictive lag<br/>Minimize p-value"]:::enhanced
+    end
+    
+    subgraph "Enhanced Results"
+        Result1pct["⭐ Highly Significant<br/>Strong predictive power<br/>Robust relationship"]:::result
+        Result5pct["✓ Significant<br/>Meaningful relationship<br/>Standard confidence"]:::result
+        ResultNone["✗ No Significance<br/>No predictive power<br/>Independent series"]:::result
+    end
+    
+    subgraph "🆕 Business Interpretation"
+        LeadingIndicator["Leading Indicator<br/>X predicts Y movements<br/>Trading opportunity"]:::enhanced
+        MarketEfficiency["Market Efficiency<br/>No predictable patterns<br/>Random walk hypothesis"]:::enhanced
+        RiskManagement["Risk Management<br/>Contagion effects<br/>Diversification impact"]:::enhanced
+    end
+    
+    %% Connections
+    SeriesPair --> Test1pct
+    SeriesPair --> Test5pct
+    SeriesPair --> OptimalLag
+    
+    Test1pct --> Result1pct
+    Test5pct --> Result5pct
+    Test1pct -.-> ResultNone
+    Test5pct -.-> ResultNone
+    
+    Result1pct --> LeadingIndicator
+    Result5pct --> LeadingIndicator
+    ResultNone --> MarketEfficiency
+    Result1pct --> RiskManagement
+    Result5pct --> RiskManagement
+```
+
+#### API Response Enhancements
+
+The spillover analysis endpoints now return enhanced results with multi-level significance testing:
+
+**Enhanced Spillover Response Structure:**
+```json
+{
+  "spillover_results": {
+    "total_spillover_index": 45.67,
+    "directional_spillover": {
+      "AAPL_to_others": 15.23,
+      "GOOGL_to_others": 18.45,
+      "MSFT_to_others": 12.99
+    },
+    "net_spillover": {
+      "AAPL": 2.34,
+      "GOOGL": -1.23,
+      "MSFT": -1.11
+    },
+    "granger_causality": {
+      "AAPL->GOOGL": {
+        "causality_1pct": true,
+        "causality_5pct": true,
+        "optimal_lag_1pct": 2,
+        "optimal_lag_5pct": 2,
+        "significance_summary": {
+          "min_p_value": 0.0089
+        }
+      }
+    },
+    "interpretation": "🆕 Enhanced market analysis with business insights..."
+  },
+  "granger_causality_results": {
+    "causality_results": {
+      "AAPL->GOOGL": {
+        "causality_1pct": true,
+        "causality_5pct": true,
+        "optimal_lag_1pct": 2,
+        "optimal_lag_5pct": 2,
+        "significance_summary": {"min_p_value": 0.0089}
+      }
+    },
+    "interpretations": {
+      "AAPL->GOOGL": "⭐ Highly Significant Causality (1% level): AAPL strongly Granger-causes GOOGL, indicating robust predictive power..."
+    },
+    "metadata": {
+      "max_lag": 5,
+      "n_pairs_tested": 6,
+      "significance_levels": ["1%", "5%"],
+      "config_enabled": true
+    }
+  }
+}
+```
 
 2. The client will automatically discover all available tools and their schemas
 

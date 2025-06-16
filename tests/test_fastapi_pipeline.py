@@ -92,7 +92,7 @@ def pipeline_stooq_input():
     return {
         "source_actual_or_synthetic_data": "actual_stooq",
         "data_start_date": "2023-01-01",
-        "data_end_date": "2023-01-10",
+        "data_end_date": "2023-02-28",  # Extended date range to get more data points
         "symbols": ["AAPL.US", "MSFT.US", "GOOG.US"],
         "scaling_method": "standardize",
         "arima_params": {"p": 1, "d": 1, "q": 1},

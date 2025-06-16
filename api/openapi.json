@@ -282,6 +282,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Input Data"
               }
@@ -325,6 +326,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Input Data"
               }
@@ -809,6 +811,7 @@
             "title": "End Date"
           },
           "anchor_prices": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Anchor Prices"
           }
@@ -1016,16 +1019,19 @@
             "default": "standardize"
           },
           "arima_params": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Arima Params",
             "description": "ARIMA parameters",
             "default": {
               "p": 2,
               "d": 1,
-              "q": 4
+              "q": 4,
+              "forecast_steps": 20
             }
           },
           "garch_params": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Garch Params",
             "description": "GARCH parameters",
@@ -1042,6 +1048,7 @@
             "default": false
           },
           "spillover_params": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Spillover Params",
             "description": "Spillover analysis parameters",
@@ -1059,6 +1066,7 @@
         "properties": {
           "original_data": {
             "items": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "array",
@@ -1067,6 +1075,7 @@
           },
           "returns_data": {
             "items": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "array",
@@ -1077,6 +1086,7 @@
             "anyOf": [
               {
                 "items": {
+                  "additionalProperties": true,
                   "type": "object"
                 },
                 "type": "array"
@@ -1090,6 +1100,7 @@
           },
           "pre_garch_data": {
             "items": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "array",
@@ -1100,6 +1111,7 @@
             "anyOf": [
               {
                 "items": {
+                  "additionalProperties": true,
                   "type": "object"
                 },
                 "type": "array"
@@ -1135,6 +1147,7 @@
           },
           "arima_results": {
             "additionalProperties": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "object",
@@ -1143,6 +1156,7 @@
           },
           "garch_results": {
             "additionalProperties": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "object",
@@ -1163,6 +1177,7 @@
           "granger_causality_results": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -1209,6 +1224,7 @@
         "properties": {
           "data": {
             "items": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "array",
@@ -1254,6 +1270,7 @@
             "description": "Overall system-wide spillover"
           },
           "directional_spillover": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Directional Spillover",
             "description": "Spillover from each variable to others and from others to each variable"
@@ -1267,6 +1284,7 @@
             "description": "Net spillover (directional to others minus directional from others)"
           },
           "pairwise_spillover": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Pairwise Spillover",
             "description": "Pairwise spillover between each pair of variables"
@@ -1307,6 +1325,7 @@
         "properties": {
           "all_symbols_stationarity": {
             "additionalProperties": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "object",
@@ -1343,6 +1362,7 @@
         "properties": {
           "data": {
             "items": {
+              "additionalProperties": true,
               "type": "object"
             },
             "type": "array",

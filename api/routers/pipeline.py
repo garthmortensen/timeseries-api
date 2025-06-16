@@ -3,18 +3,15 @@
 """End-to-end pipeline API endpoint.
 """
 
-import logging as l
-import time
-from fastapi import APIRouter, HTTPException
 import datetime
 import json
-
-# database
-from fastapi import Depends
+import logging as l
+import time
+import traceback
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-import json
-from api.database import get_db, PipelineRun, PipelineResult
 
+from api.database import get_db, PipelineRun, PipelineResult
 from api.models.input import PipelineInput, SpilloverInput
 from api.models.response import PipelineResponse
 from api.services.data_service import (
@@ -24,22 +21,17 @@ from api.services.data_service import (
     scale_for_garch_step,
     test_stationarity_step
 )
+from api.services.interpretations import interpret_arima_results, interpret_garch_results
 from api.services.models_service import run_arima_step, run_garch_step
-from api.services.spillover_service import analyze_spillover_step, perform_granger_causality
-# Add import for calculate_stats
+from api.services.spillover_service import analyze_spillover_step, perform_granger_causality, get_var_results_from_spillover
 from timeseries_compute.stats_model import calculate_stats
-# Add import for export_data
+from utilities.configurator import load_configuration
 from utilities.export_util import export_data
 
 # Get the application configuration
-from utilities.configurator import load_configuration
 config = load_configuration("config.yml")
 
 router = APIRouter(tags=["Pipeline"])
-
-# In api/routers/pipeline.py
-# Add this import at the top
-from api.services.interpretations import interpret_arima_results, interpret_garch_results
 
 @router.post("/run_pipeline", 
           summary="Execute the complete time series analysis pipeline",
@@ -297,6 +289,8 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         # the conditional volatility series. Using the wrong input will give meaningless results.
         spillover_results = None
         granger_causality_results = None
+        var_results = None  # Add VAR results
+        
         if pipeline_input.spillover_enabled:
             spillover_params = pipeline_input.spillover_params
             spillover_method = spillover_params.get('method', 'diebold_yilmaz')
@@ -315,6 +309,12 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             )
             spillover_results = analyze_spillover_step(spillover_input)
             export_data(spillover_results, name="api_spillover_results")
+            
+            # Extract VAR results from spillover analysis
+            if spillover_results:
+                var_results = get_var_results_from_spillover(spillover_results, df_returns.columns.tolist())
+                export_data(var_results, name="api_var_results")
+            
             granger_causality_results = perform_granger_causality(
                 df_returns, 
                 max_lag=spillover_params.get('max_lag', 5),
@@ -412,7 +412,8 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
                 }
             },
             "spillover_results": spillover_results,
-            "granger_causality_results": granger_causality_results
+            "granger_causality_results": granger_causality_results,
+            "var_results": var_results
         }
 
         l.info(f"pipeline_results: {pipeline_results}")
@@ -422,7 +423,6 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         return pipeline_results
     except Exception as e:
         # Get more detailed error information
-        import traceback
         error_trace = traceback.format_exc()
         error_location = f"{e.__class__.__name__} in {e.__traceback__.tb_frame.f_code.co_filename} at line {e.__traceback__.tb_lineno}"
         

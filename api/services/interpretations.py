@@ -6,6 +6,7 @@ Contains functions to create human-readable interpretations of statistical test 
 """
 
 import logging as l
+import numpy as np
 from typing import Dict, Any
 
 
@@ -299,41 +300,51 @@ def interpret_granger_causality(causality_results: Dict[str, Dict[str, float]],
     
     Args:
         causality_results (Dict[str, Dict[str, float]]): Dictionary of Granger causality test results
-        p_value_threshold (float, optional): P-value threshold for significance. Defaults to 0.05.
+        p_value_threshold (float, optional): P-value threshold for significance (kept for backward compatibility). Defaults to 0.05.
         
     Returns:
-        Dict[str, str]: Dictionary of causality interpretations
+        Dict[str, str]: Dictionary of causality interpretations with multi-level significance
     """
     interpretations = {}
     
     try:
         for pair, result in causality_results.items():
             source, target = pair.split("->")
-            p_value = result.get("p-value", 1.0)
-            f_stat = result.get("f-statistic", 0.0)
             
-            if p_value < p_value_threshold:
+            # Extract multi-level significance results
+            causality_1pct = result.get("causality_1pct", False)
+            causality_5pct = result.get("causality_5pct", False)
+            min_p_value = result.get("significance_summary", {}).get("min_p_value", 1.0)
+            optimal_lag_1pct = result.get("optimal_lag_1pct")
+            optimal_lag_5pct = result.get("optimal_lag_5pct")
+            
+            # Create interpretation based on multi-level significance
+            if causality_1pct:
                 interpretation = (
-                    f"The test indicates that {source} Granger-causes {target} "
-                    f"(p-value: {p_value:.4f}, F-statistic: {f_stat:.4f}). "
-                    f"This suggests that past values of {source} contain information "
-                    f"that helps predict future values of {target}, beyond what is "
-                    f"contained in past values of {target} alone. "
-                    f"In financial analysis terms, movements in {source} statistically precede movements in {target}, "
-                    f"creating a potential leading indicator relationship. Technical analysts might consider {source} "
-                    f"price action when developing trading strategies for {target}, similar to how futures markets "
-                    f"often provide predictive signals for their underlying assets."
+                    f"⭐ **Highly Significant Causality (1% level)**: {source} strongly Granger-causes {target} "
+                    f"(optimal lag: {optimal_lag_1pct}, min p-value: {min_p_value:.4f}). "
+                    f"This indicates a very robust predictive relationship where past values of {source} "
+                    f"contain significant information for predicting future values of {target}. "
+                    f"In financial analysis, this represents a strong leading indicator relationship that "
+                    f"could be valuable for trading strategies and risk management."
+                )
+            elif causality_5pct:
+                interpretation = (
+                    f"✓ **Significant Causality (5% level)**: {source} Granger-causes {target} "
+                    f"(optimal lag: {optimal_lag_5pct}, min p-value: {min_p_value:.4f}). "
+                    f"This suggests that past values of {source} contain information that helps predict "
+                    f"future values of {target}, beyond what is contained in past values of {target} alone. "
+                    f"In market terms, movements in {source} statistically precede movements in {target}, "
+                    f"creating a potential leading indicator relationship."
                 )
             else:
                 interpretation = (
-                    f"The test indicates that {source} does not Granger-cause {target} "
-                    f"(p-value: {p_value:.4f}, F-statistic: {f_stat:.4f}). "
+                    f"✗ **No Significant Causality**: {source} does not Granger-cause {target} "
+                    f"(min p-value: {min_p_value:.4f}). "
                     f"This suggests that past values of {source} do not contain significant "
                     f"additional information for predicting future values of {target}. "
                     f"In market efficiency terms, this supports the random walk hypothesis for these assets' relationship, "
-                    f"suggesting that {target}'s price movements cannot be predicted using {source}'s historical data. "
-                    f"This independence implies that these markets process information separately and do not exhibit "
-                    f"exploitable lead-lag relationships."
+                    f"suggesting that {target}'s price movements cannot be predicted using {source}'s historical data."
                 )
                 
             interpretations[pair] = interpretation
@@ -449,5 +460,159 @@ def interpret_spillover_results(spillover_data: Dict[str, Any],
     except Exception as e:
         l.error(f"Error interpreting spillover results: {e}")
         return {"error": "Unable to interpret spillover results due to an error."}
+
+
+def interpret_var_results(var_model: Any, selected_lag: int, ic_used: str, 
+                         fevd_matrix: np.ndarray, variable_names: list,
+                         granger_results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Create comprehensive human-readable interpretation of VAR model results.
+    
+    Args:
+        var_model: Fitted VAR model from statsmodels
+        selected_lag: Selected lag order
+        ic_used: Information criterion used for selection
+        fevd_matrix: FEVD matrix from spillover analysis
+        variable_names: Names of variables in the model
+        granger_results: Granger causality test results
+        
+    Returns:
+        Dictionary with VAR interpretations including FEVD and overall model interpretation
+    """
+    try:
+        # 1. Overall VAR Model Interpretation
+        n_vars = len(variable_names)
+        total_params = selected_lag * n_vars * n_vars + n_vars  # coefficients + intercepts
+        
+        overall_interpretation = (
+            f"The Vector Autoregression (VAR) model has been successfully fitted with {selected_lag} lag(s) "
+            f"using {ic_used.upper()} criterion for optimal lag selection. This multivariate model captures "
+            f"the dynamic relationships between {n_vars} financial series ({', '.join(variable_names)}), "
+            f"with a total of {total_params} parameters estimated. "
+        )
+        
+        if selected_lag == 1:
+            overall_interpretation += (
+                "The single lag structure suggests that each variable's current value depends primarily on "
+                "its own and other variables' values from the previous period, indicating relatively "
+                "short-term interdependencies in the financial system."
+            )
+        elif selected_lag <= 3:
+            overall_interpretation += (
+                f"The {selected_lag}-lag structure indicates that past values from up to {selected_lag} periods "
+                "influence current returns, suggesting moderate persistence in cross-market relationships "
+                "and information transmission patterns."
+            )
+        else:
+            overall_interpretation += (
+                f"The {selected_lag}-lag structure reveals longer memory effects where market movements "
+                "from up to {selected_lag} periods ago still influence current behavior, indicating "
+                "persistent interdependencies and potentially complex market dynamics."
+            )
+        
+        # 2. FEVD Interpretations for each variable
+        fevd_interpretations = {}
+        
+        for i, var_name in enumerate(variable_names):
+            # Own shock contribution (diagonal element)
+            own_contribution = fevd_matrix[i, i]
+            # External shock contributions (off-diagonal elements)
+            external_contributions = [(variable_names[j], fevd_matrix[i, j]) 
+                                    for j in range(n_vars) if j != i]
+            external_contributions.sort(key=lambda x: x[1], reverse=True)
+            
+            interpretation = (
+                f"For {var_name}, forecast errors are explained as follows: "
+                f"{own_contribution:.1f}% comes from its own innovations (idiosyncratic shocks), "
+            )
+            
+            if external_contributions:
+                main_external = external_contributions[0]
+                interpretation += (
+                    f"while {100 - own_contribution:.1f}% comes from external sources. "
+                    f"The largest external influence is from {main_external[0]} "
+                    f"({main_external[1]:.1f}%), "
+                )
+                
+                if len(external_contributions) > 1:
+                    secondary_external = external_contributions[1]
+                    interpretation += f"followed by {secondary_external[0]} ({secondary_external[1]:.1f}%). "
+                
+                # Interpretation based on own vs external contributions
+                if own_contribution > 70:
+                    interpretation += (
+                        "This indicates that the asset is relatively autonomous, with most forecast "
+                        "uncertainty stemming from asset-specific factors rather than spillovers from other markets."
+                    )
+                elif own_contribution > 50:
+                    interpretation += (
+                        "This shows a balanced influence where the asset has moderate independence but "
+                        "is also meaningfully affected by external market forces."
+                    )
+                else:
+                    interpretation += (
+                        "This reveals high interconnectedness where external market forces dominate "
+                        "forecast uncertainty, making the asset highly sensitive to spillover effects."
+                    )
+            
+            fevd_interpretations[var_name] = interpretation
+        
+        # 3. Granger Causality Summary
+        granger_summary = ""
+        if granger_results:
+            # Count significant relationships at different levels
+            pairs_1pct = sum(1 for result in granger_results.values() 
+                           if result.get("causality_1pct", False))
+            pairs_5pct = sum(1 for result in granger_results.values() 
+                           if result.get("causality_5pct", False))
+            total_pairs = len(granger_results)
+            
+            granger_summary = (
+                f"Granger causality analysis of {total_pairs} directional relationships reveals: "
+            )
+            
+            if pairs_1pct > 0:
+                granger_summary += f"{pairs_1pct} highly significant causal relationships (1% level), "
+            if pairs_5pct > 0:
+                granger_summary += f"{pairs_5pct} significant causal relationships (5% level). "
+            
+            if pairs_5pct == 0:
+                granger_summary += (
+                    "No significant predictive relationships were found, suggesting that past values "
+                    "of these variables do not help predict each other beyond what each variable's "
+                    "own history provides."
+                )
+            else:
+                granger_summary += (
+                    "These relationships indicate specific lead-lag patterns where some markets "
+                    "systematically influence others' future movements."
+                )
+        
+        return {
+            'overall_interpretation': overall_interpretation + " " + granger_summary,
+            'fevd_interpretations': fevd_interpretations,
+            'granger_summary': granger_summary,
+            'technical_summary': {
+                'lag_order': selected_lag,
+                'selection_criterion': ic_used.upper(),
+                'n_variables': n_vars,
+                'total_parameters': total_params,
+                'variable_names': variable_names
+            }
+        }
+        
+    except Exception as e:
+        l.error(f"Error interpreting VAR results: {e}")
+        return {
+            'overall_interpretation': "VAR model fitted successfully, but detailed interpretation unavailable due to an error.",
+            'fevd_interpretations': {var: "Interpretation unavailable" for var in variable_names},
+            'granger_summary': "Granger causality summary unavailable",
+            'technical_summary': {
+                'lag_order': selected_lag,
+                'selection_criterion': ic_used.upper(),
+                'n_variables': len(variable_names),
+                'error': str(e)
+            }
+        }
 
 
