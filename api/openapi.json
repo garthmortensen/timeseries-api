@@ -1163,6 +1163,17 @@
             "title": "Garch Results",
             "description": "GARCH results for all symbols"
           },
+          "var_results": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VARModelResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "VAR model results (if spillover analysis is enabled)"
+          },
           "spillover_results": {
             "anyOf": [
               {
@@ -1376,6 +1387,82 @@
         ],
         "title": "TimeSeriesDataResponse",
         "description": "Response model for time series data endpoints."
+      },
+      "VARModelResponse": {
+        "properties": {
+          "fitted_model": {
+            "type": "string",
+            "title": "Fitted Model",
+            "description": "Summary of the fitted VAR model"
+          },
+          "selected_lag": {
+            "type": "integer",
+            "title": "Selected Lag",
+            "description": "Selected lag order for the VAR model"
+          },
+          "ic_used": {
+            "type": "string",
+            "title": "Ic Used",
+            "description": "Information criterion used for lag selection"
+          },
+          "coefficients": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Coefficients",
+            "description": "VAR coefficients matrix"
+          },
+          "granger_causality": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Granger Causality",
+            "description": "Granger causality test results"
+          },
+          "fevd_matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Fevd Matrix",
+            "description": "Forecast Error Variance Decomposition matrix"
+          },
+          "fevd_interpretation": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Fevd Interpretation",
+            "description": "Human-readable FEVD interpretations"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation",
+            "description": "Overall VAR model interpretation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fitted_model",
+          "selected_lag",
+          "ic_used",
+          "coefficients",
+          "granger_causality",
+          "fevd_matrix",
+          "fevd_interpretation",
+          "interpretation"
+        ],
+        "title": "VARModelResponse",
+        "description": "Response model for VAR model results."
       },
       "ValidationError": {
         "properties": {
