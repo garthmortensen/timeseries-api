@@ -46,6 +46,10 @@ jobs:
           uv sync -v # Install all dependencies, verbose
         shell: bash
       
+      - name: Install dev dependencies
+        run: uv pip install .[dev]
+        shell: bash
+      
       - name: Lint with flake8
         run: |
           echo "Running flake8 linter..."
