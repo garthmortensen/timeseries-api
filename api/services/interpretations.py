@@ -192,7 +192,7 @@ def interpret_garch_results(model_summary: str, forecast: list) -> str:
                 trend = "a decreasing"
                 implication = "suggesting decreasing market uncertainty"
                 plain_desc = "becoming more stable with narrower price ranges"
-                market_impact = "indicating a calming market environment with reduced risk premiums"
+                market_impact = "indicating a calming market environment with reduced risk"
                 vix_context = "This trend typically aligns with declining VIX levels, suggesting increased investor confidence and market stability."
             else:
                 trend = "a stable"
@@ -213,7 +213,6 @@ def interpret_garch_results(model_summary: str, forecast: list) -> str:
             f"In financial market terms, the asset prices are expected to be {plain_desc}, {market_impact}. "
             f"Volatility clustering—periods of high volatility followed by high volatility and low volatility periods followed by low volatility—is a key feature that GARCH models capture effectively. "
             f"{vix_context} "
-            f"Understanding these volatility patterns is crucial for risk management, option pricing, and portfolio allocation decisions."
         )
         
         return interpretation
@@ -245,9 +244,9 @@ def interpret_spillover_index(spillover_results: Dict[str, float],
                 f"interconnectedness between the time series. This suggests significant "
                 f"transmission of shocks across markets or variables, making diversification "
                 f"less effective during periods of high volatility. "
-                f"In market terminology, this high interconnection indicates potential contagion effects "
+                f"This high interconnection indicates potential contagion effects "
                 f"across assets or sectors. This resembles the 2008 financial crisis scenario where problems "
-                f"in one sector (mortgage-backed securities) quickly spread throughout the financial system."
+                f"in one sector (MBS) spread throughout the financial system."
             )
         else:
             interpretation = (
@@ -255,7 +254,7 @@ def interpret_spillover_index(spillover_results: Dict[str, float],
                 f"interconnectedness between the time series. This suggests relatively "
                 f"independent behavior of markets or variables, potentially allowing for "
                 f"effective diversification strategies. "
-                f"In portfolio management terms, this lower interconnection indicates better diversification potential. "
+                f"This lower interconnection indicates better diversification potential. "
                 f"The markets or assets appear to respond to their own specific factors rather than common drivers, "
                 f"creating opportunities for risk reduction through asset allocation across these markets."
             )
@@ -273,7 +272,7 @@ def interpret_spillover_index(spillover_results: Dict[str, float],
                         f"The series {series_name} is {direction} substantial spillovers "
                         f"({value:.4f}), suggesting it is a {direction == 'transmitting' and 'source' or 'recipient'} "
                         f"of volatility in the system. "
-                        f"In financial markets, this means {series_name} {direction == 'transmitting' and 'acts as a leading indicator that influences broader market movements' or 'functions as a lagging indicator that responds significantly to external market forces'}. "
+                        f"This means {series_name} {direction == 'transmitting' and 'acts as a leading indicator that influences broader market movements' or 'functions as a lagging indicator that responds significantly to external market forces'}. "
                         f"This is characteristic of {direction == 'transmitting' and 'major indices or large-cap stocks that often drive sector movements' or 'highly responsive sectors like small-caps that tend to amplify broader market trends'}."
                     )
                 else:
@@ -321,16 +320,16 @@ def interpret_granger_causality(causality_results: Dict[str, Dict[str, float]],
             # Create interpretation based on multi-level significance
             if causality_1pct:
                 interpretation = (
-                    f"⭐ **Highly Significant Causality (1% level)**: {source} strongly Granger-causes {target} "
+                    f"**Highly Significant Causality (1% level)**: {source} strongly Granger-causes {target} "
                     f"(optimal lag: {optimal_lag_1pct}, min p-value: {min_p_value:.4f}). "
                     f"This indicates a very robust predictive relationship where past values of {source} "
                     f"contain significant information for predicting future values of {target}. "
                     f"In financial analysis, this represents a strong leading indicator relationship that "
-                    f"could be valuable for trading strategies and risk management."
+                    f"could be valuable for risk management."
                 )
             elif causality_5pct:
                 interpretation = (
-                    f"✓ **Significant Causality (5% level)**: {source} Granger-causes {target} "
+                    f"**Significant Causality (5% level)**: {source} Granger-causes {target} "
                     f"(optimal lag: {optimal_lag_5pct}, min p-value: {min_p_value:.4f}). "
                     f"This suggests that past values of {source} contain information that helps predict "
                     f"future values of {target}, beyond what is contained in past values of {target} alone. "
@@ -339,7 +338,7 @@ def interpret_granger_causality(causality_results: Dict[str, Dict[str, float]],
                 )
             else:
                 interpretation = (
-                    f"✗ **No Significant Causality**: {source} does not Granger-cause {target} "
+                    f"**No Significant Causality**: {source} does not Granger-cause {target} "
                     f"(min p-value: {min_p_value:.4f}). "
                     f"This suggests that past values of {source} do not contain significant "
                     f"additional information for predicting future values of {target}. "
@@ -444,14 +443,12 @@ def interpret_spillover_results(spillover_data: Dict[str, Any],
                         f"{entity} is a net transmitter of spillovers (net: {value:.4f}), "
                         f"meaning it influences other variables more than it is influenced by them. "
                         f"In plain English, this market or asset tends to lead market movements rather than follow them. "
-                        f"Traders often watch such assets as potential leading indicators for broader market movements."
                     )
                 else:
                     net_interp = (
                         f"{entity} is a net receiver of spillovers (net: {value:.4f}), "
                         f"meaning it is influenced by other variables more than it influences them. "
                         f"In simple terms, this market or asset tends to follow market movements rather than lead them. "
-                        f"Traders often view such assets as lagging indicators that react to broader market trends."
                     )
                 
                 interpretations[f"Net {entity}"] = net_interp
