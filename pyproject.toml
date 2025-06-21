@@ -36,6 +36,7 @@ dependencies = [
     "pandas-datareader>=0.10.0",
     "mcp>=1.0.0",
     "timeseries-compute>=0.6.0",
+    "setuptools",
 ]
 
 [project.optional-dependencies]
