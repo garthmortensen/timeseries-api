@@ -1,4 +1,4 @@
-tuname: cicd
+name: cicd
 
 # Run workflow on push
 on: 
