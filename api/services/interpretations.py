@@ -30,85 +30,35 @@ def interpret_stationarity_test(adf_results: Dict[str, Dict[str, float]],
             p_value = result["p-value"]
             critical_1 = result.get("Critical Values", {}).get("1%", None)
             critical_5 = result.get("Critical Values", {}).get("5%", None)
-            
-            # Start with detailed p-value explanation
             p_value_percent = p_value * 100
             
-            if p_value < p_value_threshold:
-                # Determine which critical value thresholds are passed
+            # Overwhelming evidence for stationarity
+            if p_value < p_value_threshold and critical_5 is not None and adf_stat < critical_5:
                 passes_1_percent = critical_1 is not None and adf_stat < critical_1
-                passes_5_percent = critical_5 is not None and adf_stat < critical_5
                 
-                # Stationary case - but be precise about confidence levels
-                interpretation = (
-                    f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a p-value of {p_value:.4f}. "
-                    f"That number tells us there's only about a {p_value_percent:.2f}% chance of seeing a test statistic this extreme "
-                    f"if the series really were non-stationary (i.e., wandering randomly or drifting). "
-                )
-                
-                # Be precise about which significance levels we can reject at
                 if passes_1_percent:
-                    interpretation += (
-                        f"Because that probability is so low—well below both 5% and 1% cutoffs—we can confidently reject "
-                        f"the 'unit root' (non-stationary) hypothesis with high confidence (99% level).\n\n"
-                    )
-                elif passes_5_percent:
-                    interpretation += (
-                        f"Because that probability is below the 5% cutoff, we can reject the 'unit root' (non-stationary) hypothesis "
-                        f"with moderate confidence (95% level), though not quite at the 1% level.\n\n"
+                    interpretation = (
+                        f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a test statistic of {adf_stat:.4f}, "
+                        f"which is much lower than the 1% critical value of {critical_1:.4f}. The p-value is {p_value:.4f}, far below the 5% threshold. "
+                        f"This provides overwhelming evidence that the series is stationary: the null hypothesis of a unit root is strongly rejected (99% confidence). "
+                        f"The mean and variance are stable over time, so you do not need to difference or otherwise transform the series for stationarity."
                     )
                 else:
-                    # This shouldn't happen if p-value < 0.05 but critical values don't support it
-                    interpretation += (
-                        f"While the p-value suggests significance, the test statistic doesn't exceed the standard critical value thresholds, "
-                        f"creating some ambiguity in the conclusion.\n\n"
+                    interpretation = (
+                        f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a test statistic of {adf_stat:.4f}, "
+                        f"which is lower than the 5% critical value of {critical_5:.4f}. The p-value is {p_value:.4f}, below the 5% threshold. "
+                        f"This provides strong evidence that the series is stationary: the null hypothesis of a unit root is rejected (95% confidence). "
+                        f"The mean and variance are stable over time, so you do not need to difference or otherwise transform the series for stationarity."
                     )
-                
-                # Add critical value context
-                interpretation += f"The test statistic itself, {adf_stat:.4f}, "
-                
-                if passes_1_percent:
-                    interpretation += f"exceeds both the 5% critical value ({critical_5:.4f}) and the stricter 1% critical value ({critical_1:.4f})"
-                elif passes_5_percent:
-                    interpretation += f"exceeds the 5% critical value ({critical_5:.4f}) but falls short of the 1% critical value ({critical_1:.4f})"
-                elif critical_5 is not None:
-                    interpretation += f"doesn't reach the 5% critical value threshold of {critical_5:.4f}"
-                
-                interpretation += (
-                    f". Put simply, the data's mean and variance aren't shifting around over time; "
-                    f"they stick close to their long-term levels.\n\n"
-                    
-                    f"In practical terms for modeling, this stability means you don't have to first difference or otherwise "
-                    f"transform the series to get rid of trends. It behaves like a mean-reverting process: shocks may sway it "
-                    f"up or down, but it tends to pull back toward its average. That behavior lines up with the efficient market "
-                    f"idea that prices jitter around a fair value without drifting in predictable ways—and makes the {series_name} "
-                    f"a solid candidate for models that assume constant statistical properties over time."
-                )
+            # Non-stationary case
             else:
-                # Non-stationary case
                 interpretation = (
                     f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a p-value of {p_value:.4f}. "
-                    f"That number tells us there's about a {p_value_percent:.2f}% chance of seeing a test statistic this extreme "
-                    f"even if the series really were stationary. Because that probability is above common significance thresholds "
-                    f"(like 5% or 1%), we cannot reject the 'unit root' (non-stationary) hypothesis with confidence.\n\n"
-                    
-                    f"The test statistic of {adf_stat:.4f} doesn't reach the critical threshold needed to declare stationarity"
-                )
-                
-                # Add critical value context if available
-                if critical_5 is not None:
-                    interpretation += f" (it would need to be more negative than {critical_5:.4f} at 5% significance)"
-                
-                interpretation += (
-                    f". This suggests the series exhibits changing statistical properties over time—perhaps a wandering mean, "
-                    f"evolving variance, or persistent trends.\n\n"
-                    
-                    f"In practical modeling terms, this non-stationarity means you'll likely need to transform the data before "
-                    f"applying standard time series models. Common approaches include taking first differences (converting prices "
-                    f"to returns) or applying other transformations to remove trends and achieve stability. The current behavior "
-                    f"suggests that shocks to the series tend to have permanent effects rather than temporary ones, creating "
-                    f"persistent deviations from any long-term average. This is typical of many financial price series where "
-                    f"market movements can establish new price levels that persist over time."
+                    f"That number tells us there's about a {p_value_percent:.2f}% chance of seeing a test statistic this extreme even if the series really were stationary. "
+                    f"Because that probability is above common significance thresholds (like 5% or 1%), we cannot reject the 'unit root' (non-stationary) hypothesis with confidence. "
+                    f"The test statistic of {adf_stat:.4f} does not reach the critical threshold needed to declare stationarity. "
+                    f"This suggests the series exhibits changing statistical properties over time—perhaps a wandering mean, evolving variance, or persistent trends. "
+                    f"In practical modeling terms, this non-stationarity means you'll likely need to transform the data before applying standard time series models."
                 )
                 
             interpretations[series_name] = interpretation
@@ -159,7 +109,8 @@ def interpret_arima_results(model_summary: str, forecast: list) -> str:
             f"and error corrections to predict future market behavior. "
             f"The ARIMA model has been fitted successfully. "
             f"The forecast shows {trend} trend over the forecast horizon. "
-            f"In market analysis terms, the data is projected to follow a {plain_trend} trajectory {implication}."
+            f"In market analysis terms, the data is projected to follow a {plain_trend} trajectory {implication}. "
+            f"\n\nNote: ARIMA models assume volatility (price jumpiness) is constant over time."
         )
         
         return interpretation
@@ -213,6 +164,7 @@ def interpret_garch_results(model_summary: str, forecast: list) -> str:
             f"In financial market terms, the asset prices are expected to be {plain_desc}, {market_impact}. "
             f"Volatility clustering—periods of high volatility followed by high volatility and low volatility periods followed by low volatility—is a key feature that GARCH models capture effectively. "
             f"{vix_context} "
+            f"\n\nNote: GARCH models specifically say volatility changes over time."
         )
         
         return interpretation

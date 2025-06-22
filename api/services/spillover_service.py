@@ -200,7 +200,7 @@ def compute_spillover_index(
 
 def interpret_spillover_results(results):
     """
-    Generate a human-readable interpretation of spillover results.
+    Generate a human-readable interpretation of spillover results, including pairwise spillover matrix and relationship interpretations.
     
     This function analyzes the spillover results and creates a comprehensive
     interpretation that explains the findings in clear, business-relevant terms.
@@ -217,18 +217,17 @@ def interpret_spillover_results(results):
     # Use .get() method with default values to avoid KeyError
     total_spillover = spillover_analysis.get("total_spillover_index", 0.0)
     net_spillover = spillover_analysis.get("net_spillover", {})
-    
+    pairwise_spillover = spillover_analysis.get("pairwise_spillover", {})
+
     # Identify top transmitters and receivers
     top_transmitters = sorted(net_spillover.items(), key=lambda x: x[1], reverse=True)[:2] if net_spillover else []
     top_receivers = sorted(net_spillover.items(), key=lambda x: x[1])[:2] if net_spillover else []
-    
-    # Create interpretation
+
+    # Main interpretation
     interpretation = (
         f"The system shows a total spillover index of {total_spillover:.2f}%, "
         f"indicating the overall level of interconnectedness between the variables. "
     )
-    
-    # Add interpretation of strength
     if total_spillover > 50:
         interpretation += (
             "This high level of spillover suggests strong interconnections where shocks in one market "
@@ -245,7 +244,6 @@ def interpret_spillover_results(results):
             "with shocks tending to remain contained within individual markets. "
             "This environment may offer good diversification opportunities. "
         )
-    
     if top_transmitters:
         interpretation += (
             f"The main transmitters of shocks are {top_transmitters[0][0]} "
@@ -254,7 +252,6 @@ def interpret_spillover_results(results):
         if len(top_transmitters) > 1:
             interpretation += f" and {top_transmitters[1][0]} (net: {top_transmitters[1][1]:.2f}%)"
         interpretation += ". "
-    
     if top_receivers:
         interpretation += (
             f"The main receivers of shocks are {top_receivers[0][0]} "
@@ -263,29 +260,24 @@ def interpret_spillover_results(results):
         if len(top_receivers) > 1:
             interpretation += f" and {top_receivers[1][0]} (net: {top_receivers[1][1]:.2f}%)"
         interpretation += ". "
-    
+
     # Enhanced Granger causality interpretation with multi-level significance
     granger_results = spillover_analysis.get("granger_causality", {})
     if granger_results:
-        # Count significant pairs at each level
         pairs_1pct = [pair for pair, result in granger_results.items() if result.get("causality_1pct", False)]
         pairs_5pct = [pair for pair, result in granger_results.items() if result.get("causality_5pct", False)]
-        
         if pairs_1pct or pairs_5pct:
             interpretation += (
                 f"Granger causality analysis reveals significant directional relationships: "
             )
-            
             if pairs_1pct:
                 interpretation += (
                     f"{len(pairs_1pct)} market pair(s) show highly significant causality at the 1% level, "
                 )
-            
             if pairs_5pct:
                 interpretation += (
                     f"{len(pairs_5pct)} market pair(s) show significant causality at the 5% level. "
                 )
-            
             interpretation += (
                 "This indicates specific lead-lag relationships where returns in one market help predict "
                 "future changes in another market. "
@@ -295,8 +287,37 @@ def interpret_spillover_results(results):
                 "Granger causality tests found no significant predictive relationships between the markets "
                 "at conventional significance levels, suggesting independent price movements. "
             )
-    
-    return interpretation
+
+    # Pairwise spillover matrix interpretation
+    pairwise_matrix_interpretation = {}
+    pairwise_relationship_interpretation = {}
+    for from_sym, to_dict in pairwise_spillover.items():
+        for to_sym, value in to_dict.items():
+            if from_sym == to_sym:
+                continue
+            # Matrix interpretation
+            pairwise_matrix_interpretation[f"{from_sym}->{to_sym}"] = (
+                f"{value:.2f}% of {to_sym}'s forecast error variance is explained by shocks from {from_sym}."
+            )
+            # Relationship interpretation
+            if value < 5:
+                strength = "minimal"
+                desc = f"{from_sym} and {to_sym} are largely independent, with little evidence of spillover."
+            elif value < 20:
+                strength = "moderate"
+                desc = f"{from_sym} has a moderate influence on {to_sym}, suggesting some interconnectedness."
+            else:
+                strength = "strong"
+                desc = f"{from_sym} has a strong influence on {to_sym}; shocks in {from_sym} are quickly transmitted to {to_sym}."
+            pairwise_relationship_interpretation[f"{from_sym}->{to_sym}"] = (
+                f"{from_sym} transmits a {strength} spillover to {to_sym} ({value:.2f}%). {desc}"
+            )
+
+    return {
+        "summary": interpretation,
+        "pairwise_spillover_matrix_interpretation": pairwise_matrix_interpretation,
+        "pairwise_spillover_relationship_interpretation": pairwise_relationship_interpretation
+    }
 def perform_granger_causality(df_returns, max_lag=5, alpha=0.05):
     """
     Perform Granger causality tests between all pairs of variables in the dataset.
