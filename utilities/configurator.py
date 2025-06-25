@@ -73,7 +73,7 @@ class Config(BaseModel):
     stats_model_GARCH_enabled: bool = Field(default=False)
     stats_model_GARCH_fit_p: int = Field(default=1)
     stats_model_GARCH_fit_q: int = Field(default=1)
-    stats_model_GARCH_fit_dist: str = Field(default="normal")
+    stats_model_GARCH_fit_dist: str = Field(default="t")
     stats_model_GARCH_predict_steps: int = Field(default=5)
     stats_model_GARCH_volatility_format: str = Field(default="standard_deviation")
 

@@ -112,7 +112,7 @@ class GARCHInputType(graphene.InputObjectType):
     p = Int(required=True)
     q = Int(required=True)
     data = graphene.JSONString(required=True)
-    dist = String(default_value="normal")
+    dist = String(default_value="t")
 
 class SpilloverInputType(graphene.InputObjectType):
     """Input for spillover analysis."""

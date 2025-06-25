@@ -270,7 +270,7 @@ def graphql_run_garch_model(
     data: Dict[str, Any],
     p: int = 1,
     q: int = 1,
-    dist: str = "normal"
+    dist: str = "t"
 ) -> Dict[str, Any]:
     """Run GARCH model using GraphQL mutation.
     

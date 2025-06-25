@@ -54,7 +54,7 @@ class GARCHInput(BaseModel):
     p: int
     q: int
     data: list
-    dist: Optional[str] = "normal"
+    dist: Optional[str] = "t"
 
 
 

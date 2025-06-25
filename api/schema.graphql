@@ -94,6 +94,6 @@ input ARIMAInputType {
 input GARCHInputType {
   p: Int!
   q: Int!
-  data: JSONString!
-  dist: String = "normal"
+  data: String!
+  dist: String = "t"
 }
