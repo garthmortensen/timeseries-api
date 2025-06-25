@@ -859,7 +859,7 @@
               }
             ],
             "title": "Dist",
-            "default": "normal"
+            "default": "t"
           }
         },
         "type": "object",
@@ -1126,24 +1126,6 @@
           "stationarity_results": {
             "$ref": "#/components/schemas/StationarityTestResponse",
             "description": "Results of stationarity tests"
-          },
-          "series_stats": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "additionalProperties": {
-                    "type": "number"
-                  },
-                  "type": "object"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Series Stats",
-            "description": "Comprehensive statistics for each series (mean, std, skew, kurtosis)"
           },
           "arima_results": {
             "additionalProperties": {

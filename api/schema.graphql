@@ -1,3 +1,267 @@
+# ============================================================================
+# TIMESERIES ANALYSIS GRAPHQL API SCHEMA
+# ============================================================================
+#
+# Sample Queries and Mutations:
+#
+# 1. Health Check Query:
+# query {
+#   health
+# }
+#
+# 2. Fetch Market Data:
+# query {
+#   fetchMarketData(input: {
+#     symbols: ["AAPL", "MSFT", "GOOGL"]
+#     startDate: "2023-01-01"
+#     endDate: "2023-12-31"
+#     interval: "1d"
+#   }) {
+#     date
+#     open
+#     high
+#     low
+#     close
+#     volume
+#   }
+# }
+#
+# 3. Test Stationarity:
+# query {
+#   testStationarity(input: {
+#     data: [
+#       { date: "2023-01-01", returns: 0.01 },
+#       { date: "2023-01-02", returns: -0.005 },
+#       { date: "2023-01-03", returns: 0.02 }
+#     ]
+#   }) {
+#     symbolResults {
+#       symbol
+#       testResult {
+#         isStationary
+#         adfStatistic
+#         pValue
+#         interpretation
+#         criticalValues {
+#           onePercent
+#           fivePercent
+#           tenPercent
+#         }
+#       }
+#     }
+#     seriesStats {
+#       symbol
+#       stats {
+#         mean
+#         std
+#         skew
+#         kurtosis
+#         annualizedVol
+#       }
+#     }
+#   }
+# }
+#
+# 4. Complete Pipeline Analysis (Mutation):
+# mutation {
+#   runPipeline(input: {
+#     sourceActualOrSyntheticData: "synthetic"
+#     dataStartDate: "2023-01-01"
+#     dataEndDate: "2023-12-31"
+#     symbols: ["AAPL", "MSFT", "GOOGL"]
+#     syntheticAnchorPrices: [150.0, 300.0, 100.0]
+#     syntheticRandomSeed: 42
+#     arimaParams: {
+#       p: 2
+#       d: 1
+#       q: 2
+#       includeConst: true
+#     }
+#     garchParams: {
+#       p: 1
+#       q: 1
+#       dist: "t"
+#       mean: "Zero"
+#     }
+#     spilloverEnabled: true
+#     spilloverParams: {
+#       method: "diebold_yilmaz"
+#       forecastHorizon: 10
+#       varLagSelectionMethod: "aic"
+#     }
+#   }) {
+#     originalData {
+#       date
+#       open
+#       close
+#     }
+#     returnsData {
+#       date
+#       returns
+#     }
+#     stationarityResults {
+#       symbolResults {
+#         symbol
+#         testResult {
+#           isStationary
+#           interpretation
+#         }
+#       }
+#     }
+#     arimaResults {
+#       symbol
+#       result {
+#         fittedModel
+#         parameters {
+#           arL1
+#           maL1
+#           const
+#         }
+#         forecast
+#         interpretation
+#         aic
+#         bic
+#       }
+#     }
+#     garchResults {
+#       symbol
+#       result {
+#         fittedModel
+#         parameters {
+#           omega
+#           alpha1
+#           beta1
+#           nu
+#         }
+#         forecast
+#         interpretation
+#       }
+#     }
+#     spilloverResults {
+#       totalSpilloverIndex
+#       directionalSpillovers {
+#         asset
+#         spillover {
+#           toOthers
+#           fromOthers
+#         }
+#       }
+#       netSpillovers {
+#         asset
+#         netValue
+#       }
+#       interpretation
+#     }
+#     grangerCausalityResults {
+#       causalityResults {
+#         relationship
+#         result {
+#           causality
+#           optimalLag
+#           minPValue
+#         }
+#       }
+#       interpretations {
+#         relationship
+#         interpretation
+#       }
+#     }
+#   }
+# }
+#
+# 5. Run Individual ARIMA Model (Mutation):
+# mutation {
+#   runArimaModel(input: {
+#     p: 2
+#     d: 1
+#     q: 2
+#     data: [
+#       { date: "2023-01-01", returns: 0.01 },
+#       { date: "2023-01-02", returns: -0.005 },
+#       { date: "2023-01-03", returns: 0.02 }
+#     ]
+#   }) {
+#     fittedModel
+#     parameters {
+#       arL1
+#       arL2
+#       maL1
+#       maL2
+#       const
+#       sigma2
+#     }
+#     pValues {
+#       arL1
+#       arL2
+#       maL1
+#       maL2
+#       const
+#     }
+#     forecast
+#     interpretation
+#     aic
+#     bic
+#     llf
+#   }
+# }
+#
+# 6. Run Individual GARCH Model (Mutation):
+# mutation {
+#   runGarchModel(input: {
+#     p: 1
+#     q: 1
+#     dist: "t"
+#     data: [
+#       { date: "2023-01-01", returns: 0.01 },
+#       { date: "2023-01-02", returns: -0.005 },
+#       { date: "2023-01-03", returns: 0.02 }
+#     ]
+#   }) {
+#     fittedModel
+#     parameters {
+#       omega
+#       alpha1
+#       beta1
+#       nu
+#     }
+#     forecast
+#     interpretation
+#     aic
+#     bic
+#   }
+# }
+#
+# 7. Run Spillover Analysis (Mutation):
+# mutation {
+#   runSpilloverAnalysis(input: {
+#     method: "diebold_yilmaz"
+#     forecastHorizon: 10
+#     data: [
+#       { date: "2023-01-01", returns: 0.01 },
+#       { date: "2023-01-02", returns: -0.005 },
+#       { date: "2023-01-03", returns: 0.02 }
+#     ]
+#   }) {
+#     totalSpilloverIndex
+#     directionalSpillovers {
+#       asset
+#       spillover {
+#         toOthers
+#         fromOthers
+#       }
+#     }
+#     pairwiseSpillovers {
+#       fromAsset
+#       toAsset
+#       spilloverValue
+#       rSquared
+#     }
+#     interpretation
+#   }
+# }
+#
+# ============================================================================
+
 # GraphQL Query root.
 type Query {
   health: String
@@ -5,69 +269,283 @@ type Query {
   testStationarity(input: StationarityTestInputType!): StationarityResultsType
 }
 
-# A single data point in a time series.
+# A single data point in a time series with proper typing
 type TimeSeriesDataPointType {
   date: String!
-  values: JSONString
+  open: Float
+  high: Float
+  low: Float
+  close: Float
+  volume: Int
+  returns: Float
+  scaled: Float
 }
 
-# Allows use of a JSON String for input / output from the GraphQL schema.
-#
-# Use of this type is *not recommended* as you lose the benefits of having a defined, static
-# schema (one of the key benefits of GraphQL).
-scalar JSONString
-
-# Input for market data fetching.
-input MarketDataInputType {
-  symbols: [String]!
-  startDate: String!
-  endDate: String!
-  interval: String = "1d"
+# Critical values for statistical tests
+type CriticalValuesType {
+  onePercent: Float
+  fivePercent: Float
+  tenPercent: Float
 }
 
-# Complete stationarity test results.
-type StationarityResultsType {
-  allSymbolsStationarity: JSONString!
-  seriesStats: JSONString
-}
-
-# Input for stationarity testing.
-input StationarityTestInputType {
-  data: JSONString!
-}
-
-# GraphQL Mutation root.
-type Mutation {
-  runPipeline(input: PipelineInputType!): PipelineResultsType
-  runArimaModel(input: ARIMAInputType!): JSONString
-  runGarchModel(input: GARCHInputType!): JSONString
-}
-
-# Complete pipeline analysis results.
-type PipelineResultsType {
-  originalData: [TimeSeriesDataPointType]!
-  returnsData: [TimeSeriesDataPointType]!
-  scaledData: [TimeSeriesDataPointType]
-  preGarchData: [TimeSeriesDataPointType]!
-  postGarchData: [TimeSeriesDataPointType]
-  stationarityResults: StationarityResultsType!
-  seriesStats: JSONString
-  arimaResults: JSONString!
-  garchResults: JSONString!
-  spilloverResults: SpilloverAnalysisType
-  grangerCausalityResults: JSONString
-}
-
-# Spillover analysis results.
-type SpilloverAnalysisType {
-  totalSpilloverIndex: Float!
-  directionalSpillover: JSONString!
-  netSpillover: JSONString!
-  pairwiseSpillover: JSONString!
+# Stationarity test results for a single symbol
+type StationarityTestType {
+  isStationary: Boolean!
+  adfStatistic: Float
+  pValue: Float
+  criticalValues: CriticalValuesType
   interpretation: String!
 }
 
-# Input for pipeline analysis.
+# Statistical measures for a time series
+type SeriesStatsType {
+  mean: Float!
+  std: Float!
+  skew: Float!
+  kurtosis: Float!
+  min: Float!
+  max: Float!
+  median: Float!
+  n: Int!
+  annualizedVol: Float
+}
+
+# Symbol-specific stationarity result
+type SymbolStationarityResult {
+  symbol: String!
+  testResult: StationarityTestType!
+}
+
+# Symbol-specific series statistics
+type SymbolSeriesStats {
+  symbol: String!
+  stats: SeriesStatsType!
+}
+
+# Complete stationarity test results with proper typing
+type StationarityResultsType {
+  symbolResults: [SymbolStationarityResult!]!
+  seriesStats: [SymbolSeriesStats]
+}
+
+# ARIMA model parameters
+type ARIMAParametersType {
+  arL1: Float
+  arL2: Float
+  arL3: Float
+  maL1: Float
+  maL2: Float
+  maL3: Float
+  const: Float
+  sigma2: Float
+}
+
+# ARIMA model p-values
+type ARIMAPValuesType {
+  arL1: Float
+  arL2: Float
+  arL3: Float
+  maL1: Float
+  maL2: Float
+  maL3: Float
+  const: Float
+}
+
+# ARIMA model results for a single symbol
+type ARIMAModelType {
+  fittedModel: String!
+  parameters: ARIMAParametersType!
+  pValues: ARIMAPValuesType!
+  forecast: [Float!]!
+  interpretation: String!
+  summary: String!
+  aic: Float
+  bic: Float
+  llf: Float
+}
+
+# Symbol-specific ARIMA result
+type SymbolARIMAResult {
+  symbol: String!
+  result: ARIMAModelType!
+}
+
+# GARCH model parameters
+type GARCHParametersType {
+  omega: Float
+  alpha1: Float
+  beta1: Float
+  nu: Float
+}
+
+# GARCH model results for a single symbol
+type GARCHModelType {
+  fittedModel: String!
+  parameters: GARCHParametersType
+  forecast: [Float!]!
+  interpretation: String!
+  summary: String!
+  aic: Float
+  bic: Float
+  llf: Float
+}
+
+# Symbol-specific GARCH result
+type SymbolGARCHResult {
+  symbol: String!
+  result: GARCHModelType!
+}
+
+# Directional spillover for a single asset
+type DirectionalSpilloverType {
+  toOthers: Float!
+  fromOthers: Float!
+}
+
+# Directional spillover entry
+type DirectionalSpilloverEntry {
+  asset: String!
+  spillover: DirectionalSpilloverType!
+}
+
+# Net spillover entry
+type NetSpilloverEntry {
+  asset: String!
+  netValue: Float!
+}
+
+# Pairwise spillover relationship
+type PairwiseSpilloverType {
+  fromAsset: String!
+  toAsset: String!
+  spilloverValue: Float!
+  rSquared: Float
+  significantLags: [Int]
+}
+
+# Comprehensive spillover indices
+type SpilloverIndicesType {
+  totalConnectednessIndex: Float!
+  interpretation: String
+  calculationMethod: String
+}
+
+# FEVD analysis details
+type FEVDAnalysisType {
+  fevdHorizon: Int!
+  fevdNormalized: Boolean!
+  fevdRowSums: [Float!]!
+}
+
+# VAR model details
+type VARModelDetailsType {
+  varFittedSuccessfully: Boolean!
+  varLagOrder: Int
+  varIcUsed: String
+  varStabilityCheck: Boolean
+}
+
+# Granger causality test result
+type GrangerCausalityResultType {
+  causality: Boolean!
+  causality1pct: Boolean
+  causality5pct: Boolean
+  optimalLag: Int
+  optimalLag1pct: Int
+  optimalLag5pct: Int
+  minPValue: Float
+  pValues: [Float]
+}
+
+# Granger causality relationship
+type GrangerRelationship {
+  relationship: String!
+  result: GrangerCausalityResultType!
+}
+
+# Granger causality interpretation
+type GrangerInterpretation {
+  relationship: String!
+  interpretation: String!
+}
+
+# Granger causality metadata
+type GrangerMetadata {
+  maxLag: Int!
+  nPairsTested: Int!
+  significanceLevels: [String!]!
+}
+
+# Complete Granger causality analysis
+type GrangerCausalityAnalysisType {
+  causalityResults: [GrangerRelationship!]!
+  interpretations: [GrangerInterpretation]
+  metadata: GrangerMetadata
+}
+
+# Methodology parameters
+type MethodologyParamsType {
+  spilloverMethod: String!
+  varLagSelectionCriterion: String
+  maxLagsConsidered: Int
+  selectedLagOrder: Int
+  forecastHorizon: Int
+}
+
+# Complete spillover analysis results
+type SpilloverAnalysisType {
+  totalSpilloverIndex: Float!
+  directionalSpillovers: [DirectionalSpilloverEntry]
+  netSpillovers: [NetSpilloverEntry]
+  pairwiseSpillovers: [PairwiseSpilloverType]
+  spilloverIndices: SpilloverIndicesType
+  fevdAnalysis: FEVDAnalysisType
+  varModelDetails: VARModelDetailsType
+  methodology: MethodologyParamsType
+  interpretation: String!
+}
+
+# Complete pipeline analysis results
+type PipelineResultsType {
+  originalData: [TimeSeriesDataPointType!]!
+  returnsData: [TimeSeriesDataPointType!]!
+  scaledData: [TimeSeriesDataPointType]
+  preGarchData: [TimeSeriesDataPointType!]!
+  postGarchData: [TimeSeriesDataPointType]
+  stationarityResults: StationarityResultsType!
+  arimaResults: [SymbolARIMAResult!]!
+  garchResults: [SymbolGARCHResult!]!
+  spilloverResults: SpilloverAnalysisType
+  grangerCausalityResults: GrangerCausalityAnalysisType
+}
+
+# Input types with proper parameter typing
+
+# ARIMA model parameters input
+input ARIMAParamsInputType {
+  p: Int!
+  d: Int!
+  q: Int!
+  includeConst: Boolean = true
+}
+
+# GARCH model parameters input
+input GARCHParamsInputType {
+  p: Int!
+  q: Int!
+  dist: String = "t"
+  mean: String = "Zero"
+}
+
+# Spillover analysis parameters input
+input SpilloverParamsInputType {
+  method: String = "diebold_yilmaz"
+  forecastHorizon: Int = 10
+  windowSize: Int
+  varLagSelectionMethod: String = "aic"
+}
+
+# Input for pipeline analysis
 input PipelineInputType {
   sourceActualOrSyntheticData: String = "synthetic"
   dataStartDate: String!
@@ -76,24 +554,53 @@ input PipelineInputType {
   syntheticAnchorPrices: [Float]
   syntheticRandomSeed: Int
   scalingMethod: String = "standard"
-  arimaParams: JSONString!
-  garchParams: JSONString!
+  arimaParams: ARIMAParamsInputType!
+  garchParams: GARCHParamsInputType!
   spilloverEnabled: Boolean = false
-  spilloverParams: JSONString!
+  spilloverParams: SpilloverParamsInputType!
 }
 
-# Input for ARIMA modeling.
+# Input for market data fetching
+input MarketDataInputType {
+  symbols: [String]!
+  startDate: String!
+  endDate: String!
+  interval: String = "1d"
+}
+
+# Input for stationarity testing
+input StationarityTestInputType {
+  data: [TimeSeriesDataPointType!]!
+}
+
+# Input for ARIMA modeling
 input ARIMAInputType {
   p: Int!
   d: Int!
   q: Int!
-  data: JSONString!
+  data: [TimeSeriesDataPointType!]!
 }
 
-# Input for GARCH modeling.
+# Input for GARCH modeling
 input GARCHInputType {
   p: Int!
   q: Int!
-  data: String!
+  data: [TimeSeriesDataPointType!]!
   dist: String = "t"
+}
+
+# Input for spillover analysis
+input SpilloverInputType {
+  data: [TimeSeriesDataPointType!]!
+  method: String = "diebold_yilmaz"
+  forecastHorizon: Int = 10
+  windowSize: Int
+}
+
+# GraphQL Mutation root
+type Mutation {
+  runPipeline(input: PipelineInputType!): PipelineResultsType
+  runArimaModel(input: ARIMAInputType!): ARIMAModelType
+  runGarchModel(input: GARCHInputType!): GARCHModelType
+  runSpilloverAnalysis(input: SpilloverInputType!): SpilloverAnalysisType
 }
