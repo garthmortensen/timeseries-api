@@ -11,6 +11,7 @@ import json
 import math
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from fastapi.responses import JSONResponse
 
 # Round values and handle special cases for json serialization
@@ -47,6 +48,9 @@ def round_for_json(obj, decimals=6):
     elif isinstance(obj, pd.Timestamp):
         # convert pandas Timestamp to ISO format string
         return obj.isoformat()
+    elif isinstance(obj, datetime):
+        # convert Python datetime to ISO format string
+        return obj.isoformat()
     else:
         return obj
 
@@ -59,6 +63,8 @@ class RoundingJSONEncoder(json.JSONEncoder):
         if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
             return None
         elif isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+        elif isinstance(obj, datetime):
             return obj.isoformat()
         elif isinstance(obj, (np.int32, np.int64, np.float32, np.float64)):
             return float(obj)

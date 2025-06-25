@@ -94,8 +94,23 @@ async def run_arima_endpoint(input_data: ARIMAInput):
                 model_fit = model.fit()
                 
             # Extract model parameters and their p-values
-            params = {str(k): float(v) for k, v in model_fit.params.to_dict().items()}
-            pvalues = {str(k): float(v) for k, v in model_fit.pvalues.to_dict().items()}
+            params = {}
+            pvalues = {}
+            
+            # Safe parameter extraction with type checking
+            if hasattr(model_fit, 'params'):
+                for k, v in model_fit.params.to_dict().items():
+                    try:
+                        params[str(k)] = float(v)
+                    except (TypeError, ValueError):
+                        params[str(k)] = 0.0
+                        
+            if hasattr(model_fit, 'pvalues'):
+                for k, v in model_fit.pvalues.to_dict().items():
+                    try:
+                        pvalues[str(k)] = float(v)
+                    except (TypeError, ValueError):
+                        pvalues[str(k)] = 1.0
             
             # Create forecast with proper handling of different result types
             forecast_steps = 5
@@ -256,7 +271,7 @@ async def run_garch_endpoint(input_data: GARCHInput):
         # Call run_garch_step with explicit parameters
         forecast_steps = 5  # Standard value for short-term volatility forecast
         
-        garch_summary_dict, garch_forecast_dict, _ = run_garch_step(
+        garch_summary_dict, garch_forecast_dict, _, _ = run_garch_step(
             df_residuals=numeric_df, # Pass the DataFrame with the single target column
             p=input_data.p,
             q=input_data.q,

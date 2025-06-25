@@ -104,10 +104,6 @@ class PipelineResponse(BaseModel):
         description="Results of stationarity tests"
     )
     
-    series_stats: Optional[Dict[str, Dict[str, float]]] = Field(
-        None,
-        description="Comprehensive statistics for each series (mean, std, skew, kurtosis)"
-    )
     arima_results: Dict[str, Dict[str, Any]] = Field(
         ..., 
         description="ARIMA results for all symbols"

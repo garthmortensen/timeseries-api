@@ -58,10 +58,15 @@ def export_data(data: Any, folder: str = None, name: Optional[str] = None) -> An
     timestamped_folder = os.path.join(folder, _STATIC_TIMESTAMP)
     os.makedirs(timestamped_folder, exist_ok=True)
     
-    # Get caller information
-    frame = inspect.currentframe().f_back
-    script_name = os.path.basename(frame.f_code.co_filename).replace('.py', '')
-    line_number = frame.f_lineno
+    # Get caller information with safe frame access
+    frame = inspect.currentframe()  # this gets the current frame, whic
+    script_name = "unknown"
+    line_number = 0
+    
+    if frame is not None and frame.f_back is not None:
+        caller_frame = frame.f_back
+        script_name = os.path.basename(caller_frame.f_code.co_filename).replace('.py', '')
+        line_number = caller_frame.f_lineno
     
     # Try to determine variable name from context if not provided
     variable_name = name if name is not None else "unnamed_data"

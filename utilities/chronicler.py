@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+       #!/usr/bin/env python3
 # timeseries-api/utilities/chronicler.py
 
 import logging
@@ -7,7 +7,7 @@ import time
 import os
 import sys
 import subprocess
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 # colorful logging must be imported and initialized before any other logging scripts
 from colorama import init
@@ -50,9 +50,9 @@ class GitInfo:
             repo_path (str, optional): Path to the Git repository. Defaults to "./".
         """
         self.repo_path = repo_path
-        self.branch = None
-        self.commit_hash = None
-        self.is_clean = None
+        self.branch: Optional[str] = None
+        self.commit_hash: Optional[str] = None
+        self.is_clean: Optional[Union[str, bool]] = None
         self.update_git_info()
 
     def run_git_command(self, command: List[str]) -> str:

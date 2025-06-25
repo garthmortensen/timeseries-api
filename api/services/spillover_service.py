@@ -17,24 +17,30 @@ from utilities.configurator import load_configuration
 
 def analyze_spillover_step(input_data):
     """
-    Analyze spillover effects between time series.
+    Analyze spillover effects between time series using the new Diebold-Yilmaz implementation.
     
-    This is the main function that processes input data, runs spillover analysis,
-    and generates human-readable interpretations of the results.
+    This function uses the updated timeseries-compute package with proper Diebold-Yilmaz methodology
+    and returns comprehensive intermediate outputs including VAR model details, FEVD matrix,
+    spillover indices, and all methodology parameters.
     
     Args:
         input_data: SpilloverInput model containing data and parameters for analysis
     
     Returns:
-        Dictionary with spillover analysis results formatted for API response
+        Dictionary with comprehensive spillover analysis results including:
+        - Diebold-Yilmaz spillover indices (Total Connectedness Index, Directional, Net)
+        - VAR model details and parameters
+        - FEVD matrix and decomposition
+        - ARIMA residuals and conditional mean filtering
+        - Methodology parameters (AIC/BIC usage, lag selection, etc.)
     
     Raises:
         HTTPException: If analysis fails for any reason
     """
     try:
-        # Load configuration to get VAR max lags
+        # Load configuration to get parameters
         config = load_configuration("config.yml")
-        var_max_lags = getattr(config, 'spillover_var_max_lags', 5)  # Default to 5 if not set
+        var_max_lags = getattr(config, 'spillover_var_max_lags', 5)
         
         # Convert input data to DataFrame if needed
         if isinstance(input_data.data, list):
@@ -58,52 +64,194 @@ def analyze_spillover_step(input_data):
         
         # Calculate a safe maximum lag based on data size and config
         safe_max_lag = min(var_max_lags, len(df_numeric) // 3)
-        
-        # Ensure max_lag is at least 1
         max_lag = max(1, safe_max_lag)
         
         if max_lag < var_max_lags:
             l.warning(f"Adjusted max_lag from {var_max_lags} to {max_lag} due to insufficient observations")
         
-        # Use the standardized function with hardcoded AIC and Granger inclusion
+        # Get forecast horizon from input or use default
+        forecast_horizon = getattr(input_data, 'forecast_horizon', 10)
+        
+        # Use the new Diebold-Yilmaz analysis function
         result = spillover.run_diebold_yilmaz_analysis(
             returns_df=df_numeric,
-            horizon=input_data.forecast_horizon if hasattr(input_data, 'forecast_horizon') else 10,
+            horizon=forecast_horizon,
             max_lags=max_lag,
-            ic='aic',  # Hardcoded AIC
-            include_granger=True,  # Hardcoded Granger inclusion
+            ic='aic',
+            include_granger=True,
             significance_level=0.05
         )
         
-        # Extract results directly without legacy wrapper
-        spillover_analysis = {
-            'total_spillover_index': result['spillover_results']['total_spillover_index'],
-            'directional_spillover': result['spillover_results']['directional_spillovers'],
-            'net_spillover': result['spillover_results']['net_spillovers'],
-            'pairwise_spillover': result['spillover_results']['pairwise_spillovers'].to_dict(),
-            'granger_causality': result['granger_causality'],
-            'fevd_table': result['spillover_results']['fevd_table'].to_dict()
+        # Extract comprehensive results from the new structure
+        spillover_results = result['spillover_results']
+        var_model = result['var_model']
+        metadata = result['metadata']
+        
+        # Extract VAR model details
+        var_details = {
+            'selected_lag_order': result['var_lag'],
+            'information_criterion_used': metadata['ic'],
+            'max_lags_considered': metadata['max_lags'],
+            'n_variables': metadata['n_assets'],
+            'n_observations': metadata['n_observations'],
+            'variable_names': metadata['asset_names'],
+            'var_model_summary': str(var_model.summary()) if hasattr(var_model, 'summary') else 'VAR model summary not available',
+            'var_coefficients': {},
+            'var_residuals': {},
+            'var_fitted_values': {}
         }
         
-        # Generate interpretation directly
+        # Extract VAR coefficients and residuals if available
         try:
-            interpretation = interpret_spillover_results({
-                "spillover_analysis": spillover_analysis
+            if hasattr(var_model, 'params'):
+                var_details['var_coefficients'] = var_model.params.to_dict()
+            if hasattr(var_model, 'resid'):
+                var_details['var_residuals'] = var_model.resid.to_dict('records')
+            if hasattr(var_model, 'fittedvalues'):
+                var_details['var_fitted_values'] = var_model.fittedvalues.to_dict('records')
+        except Exception as e:
+            l.warning(f"Could not extract detailed VAR model outputs: {e}")
+        
+        # FEVD matrix details
+        fevd_details = {
+            'fevd_matrix_raw': result['fevd_matrix'].tolist(),
+            'fevd_matrix_labeled': spillover_results['fevd_table'].to_dict(),
+            'fevd_horizon': metadata['horizon'],
+            'fevd_normalized': True,  # Your implementation normalizes by default
+            'fevd_row_sums': result['fevd_matrix'].sum(axis=1).tolist(),  # Should be ~100 each
+            'fevd_interpretation': {
+                f"{row_var}_explained_by": {
+                    col_var: f"{spillover_results['fevd_table'].loc[row_var, col_var]:.2f}% of {row_var}'s forecast error variance explained by shocks to {col_var}"
+                    for col_var in metadata['asset_names']
+                }
+                for row_var in metadata['asset_names']
+            }
+        }
+        
+        # Spillover indices details
+        spillover_indices = {
+            'total_connectedness_index': {
+                'value': spillover_results['total_spillover_index'],
+                'interpretation': f"Overall system connectedness: {spillover_results['total_spillover_index']:.2f}%",
+                'calculation_method': "Sum of off-diagonal FEVD elements / Total FEVD sum * 100"
+            },
+            'directional_spillovers': {
+                'to_spillovers': {asset: spillover_results['directional_spillovers'][asset]['to'] 
+                                 for asset in metadata['asset_names']},
+                'from_spillovers': {asset: spillover_results['directional_spillovers'][asset]['from'] 
+                                   for asset in metadata['asset_names']},
+                'interpretation': {
+                    asset: {
+                        'to_interpretation': f"{asset} contributes {spillover_results['directional_spillovers'][asset]['to']:.2f}% to other markets' volatility",
+                        'from_interpretation': f"{asset} receives {spillover_results['directional_spillovers'][asset]['from']:.2f}% of its volatility from other markets"
+                    }
+                    for asset in metadata['asset_names']
+                }
+            },
+            'net_spillovers': {
+                'values': spillover_results['net_spillovers'],
+                'interpretation': {
+                    asset: f"{asset} is a net {'transmitter' if spillover_results['net_spillovers'][asset] > 0 else 'receiver'} of shocks ({spillover_results['net_spillovers'][asset]:.2f}%)"
+                    for asset in metadata['asset_names']
+                }
+            },
+            'pairwise_spillovers': {
+                'matrix': spillover_results['pairwise_spillovers'].to_dict(),
+                'interpretation': {
+                    f"{from_asset}_to_{to_asset}": f"{spillover_results['pairwise_spillovers'].loc[from_asset, to_asset]:.2f}% spillover from {from_asset} to {to_asset}"
+                    for from_asset in metadata['asset_names']
+                    for to_asset in metadata['asset_names']
+                    if from_asset != to_asset
+                }
+            }
+        }
+        
+        # Enhanced Granger causality results with detailed interpretation
+        granger_detailed = {
+            'test_results': result['granger_causality'],
+            'methodology': {
+                'max_lag_tested': max_lag,
+                'significance_levels': ['1%', '5%'],
+                'test_statistic': 'F-statistic (SSR-based)',
+                'null_hypothesis': 'Series X does not Granger-cause series Y'
+            },
+            'summary': {
+                'total_pairs_tested': len([k for k in result['granger_causality'].keys() if '_to_' in k]),
+                'significant_at_1pct': len([k for k, v in result['granger_causality'].items() if v.get('causality_1pct', False)]),
+                'significant_at_5pct': len([k for k, v in result['granger_causality'].items() if v.get('causality_5pct', False)])
+            }
+        }
+        
+        # Methodology parameters summary
+        methodology_params = {
+            'spillover_method': 'Diebold-Yilmaz (2012)',
+            'var_specification': {
+                'lag_selection_criterion': metadata['ic'].upper(),
+                'max_lags_considered': metadata['max_lags'],
+                'selected_lag_order': result['var_lag'],
+                'lag_selection_automatic': True
+            },
+            'fevd_specification': {
+                'forecast_horizon': metadata['horizon'],
+                'normalization': 'Row-wise to 100%',
+                'identification': 'Cholesky decomposition (default)'
+            },
+            'granger_causality': {
+                'enabled': True,
+                'max_lag': max_lag,
+                'significance_levels': [0.01, 0.05],
+                'test_type': 'F-test (SSR-based)'
+            },
+            'data_characteristics': {
+                'n_variables': metadata['n_assets'],
+                'n_observations': metadata['n_observations'],
+                'sample_period': f"{df_numeric.index.min()} to {df_numeric.index.max()}",
+                'frequency': 'Inferred from index'
+            }
+        }
+        
+        # Generate comprehensive interpretation
+        try:
+            interpretation_dict = interpret_spillover_results({
+                "spillover_analysis": {
+                    "total_spillover_index": spillover_results['total_spillover_index'],
+                    "directional_spillover": spillover_results['directional_spillovers'],
+                    "net_spillover": spillover_results['net_spillovers'],
+                    "pairwise_spillover": spillover_results['pairwise_spillovers'].to_dict(),
+                    "granger_causality": result['granger_causality']
+                }
             })
-            spillover_analysis["interpretation"] = interpretation
+            interpretation = interpretation_dict.get("summary", "Interpretation summary not available.")
         except Exception as interp_error:
             l.warning(f"Could not generate interpretation: {interp_error}")
-            spillover_analysis["interpretation"] = "Spillover analysis complete, but detailed interpretation unavailable."
+            interpretation = "Spillover analysis complete, but detailed interpretation unavailable."
         
-        # Format result for API response - direct structure
+        # Comprehensive API response with all intermediate outputs
         response = {
-            "total_spillover_index": spillover_analysis.get("total_spillover_index", 0.0),
-            "directional_spillover": spillover_analysis.get("directional_spillover", {}),
-            "net_spillover": spillover_analysis.get("net_spillover", {}),
-            "pairwise_spillover": spillover_analysis.get("pairwise_spillover", {}),
-            "granger_causality": spillover_analysis.get("granger_causality", {}),
-            "fevd_table": spillover_analysis.get("fevd_table", {}),
-            "interpretation": spillover_analysis.get("interpretation", "Spillover analysis complete.")
+            # Core Diebold-Yilmaz Results
+            "total_spillover_index": spillover_results['total_spillover_index'],
+            "directional_spillover": spillover_results['directional_spillovers'],
+            "net_spillover": spillover_results['net_spillovers'],
+            "pairwise_spillover": spillover_results['pairwise_spillovers'].to_dict(),
+            
+            # Detailed Spillover Analysis
+            "spillover_indices": spillover_indices,
+            
+            # VAR Model Details
+            "var_model_details": var_details,
+            
+            # FEVD Matrix and Analysis
+            "fevd_analysis": fevd_details,
+            
+            # Enhanced Granger Causality
+            "granger_causality": granger_detailed,
+            
+            # Methodology and Parameters
+            "methodology": methodology_params,
+            
+            # Legacy compatibility
+            "fevd_table": spillover_results['fevd_table'].to_dict(),
+            "interpretation": interpretation
         }
         
         return response
@@ -123,10 +271,7 @@ def run_granger_causality_test(
     significance_level: float = 0.05
 ) -> Dict[str, Any]:
     """
-    Run Granger causality test between two time series.
-    
-    This function provides a direct interface to the test_granger_causality
-    functionality for use in API endpoints and the CLI pipeline.
+    Run Granger causality test between two time series using the updated implementation.
     
     Args:
         series1: First time series (potential cause)
@@ -135,7 +280,7 @@ def run_granger_causality_test(
         significance_level: P-value threshold for significance
         
     Returns:
-        Dictionary with test results including causality boolean and p-values
+        Dictionary with test results including multi-level significance testing
     """
     return spillover.test_granger_causality(
         series1=series1,
@@ -152,14 +297,11 @@ def compute_spillover_index(
     window_size: Optional[int] = None
 ) -> Dict[str, Any]:
     """
-    Compute spillover indices between variables using various methodologies.
-    
-    This function wraps the underlying spillover analysis functions and ensures
-    consistent behavior between the API endpoints and pipeline implementations.
+    Compute spillover indices using the new Diebold-Yilmaz implementation.
     
     Args:
         returns_data: DataFrame or list of dictionaries with return data
-        method: Analysis method (e.g., "diebold_yilmaz")
+        method: Analysis method (only "diebold_yilmaz" supported in new implementation)
         forecast_horizon: Forecast horizon for variance decomposition
         window_size: Window size for rolling analysis (None for full sample)
         
@@ -181,18 +323,23 @@ def compute_spillover_index(
     else:
         df = returns_data
     
-    # Calculate spillover using the standardized function
-    result = spillover.run_spillover_analysis(
-        df_stationary=df,
-        max_lag=min(forecast_horizon, len(df) // 3)
+    # Calculate spillover using the new function
+    result = spillover.run_diebold_yilmaz_analysis(
+        returns_df=df,
+        horizon=forecast_horizon,
+        max_lags=min(5, len(df) // 3),
+        ic='aic',
+        include_granger=True,
+        significance_level=0.05
     )
     
-    # Extract and format the results for consistency
+    # Extract and format the results
+    spillover_results = result['spillover_results']
     formatted_result = {
-        "total_spillover": result.get("total_spillover", 0.0),
-        "directional_spillover": result.get("spillover_analysis", {}).get("granger_causality", {}),
-        "net_spillover": result.get("net_spillover", {}),
-        "pairwise_spillover": result.get("spillover_analysis", {}).get("shock_spillover", {})
+        "total_spillover": spillover_results['total_spillover_index'],
+        "directional_spillover": spillover_results['directional_spillovers'],
+        "net_spillover": spillover_results['net_spillovers'],
+        "pairwise_spillover": spillover_results['pairwise_spillovers'].to_dict()
     }
     
     return formatted_result
@@ -320,14 +467,12 @@ def interpret_spillover_results(results):
     }
 def perform_granger_causality(df_returns, max_lag=5, alpha=0.05):
     """
-    Perform Granger causality tests between all pairs of variables in the dataset.
-    
-    Now uses config values and implements multi-level significance testing (1% and 5%).
+    Perform Granger causality tests between all pairs of variables using the new implementation.
     
     Args:
         df_returns: DataFrame containing returns data
-        max_lag: Maximum lag to consider for Granger causality test (from config)
-        alpha: Significance level for hypothesis testing (kept for backward compatibility)
+        max_lag: Maximum lag to consider for Granger causality test
+        alpha: Significance level for hypothesis testing
         
     Returns:
         Dictionary containing Granger causality test results with multi-level significance
@@ -339,8 +484,6 @@ def perform_granger_causality(df_returns, max_lag=5, alpha=0.05):
         # Use config values
         granger_enabled = getattr(config, 'granger_causality_enabled', True)
         config_max_lag = getattr(config, 'granger_causality_max_lag', 5)
-        
-        # Use config value over parameter
         max_lag = config_max_lag
         
         if not granger_enabled:
@@ -367,14 +510,14 @@ def perform_granger_causality(df_returns, max_lag=5, alpha=0.05):
                         series1=df_returns[source],
                         series2=df_returns[target],
                         max_lag=max_lag,
-                        significance_level=alpha  # For backward compatibility, but multi-level testing happens inside
+                        significance_level=alpha
                     )
                     
                     # Store the result
                     key = f"{source}->{target}"
                     results[key] = test_result
         
-        # Generate interpretations for the results using updated multi-level function
+        # Generate interpretations for the results
         interpretations = interpret_granger_causality(results)
         
         # Create the response with both raw results and interpretations
@@ -389,8 +532,7 @@ def perform_granger_causality(df_returns, max_lag=5, alpha=0.05):
             }
         }
         
-        # Convert NumPy values in the response to Python native types
-        # Use JSON serialization/deserialization to convert NumPy values to native types
+        # Convert NumPy values to Python native types
         result_str = json.dumps(response, default=lambda obj: float(obj) if isinstance(obj, (np.integer, np.floating)) 
                                 else (obj.tolist() if isinstance(obj, np.ndarray) 
                                       else (str(obj) if isinstance(obj, np.bool_) else None)))
@@ -415,44 +557,31 @@ def get_var_results_from_spillover(spillover_results: Dict[str, Any], variable_n
         Dictionary with formatted VAR results for API response
     """
     try:
-        # The spillover_results should contain Granger causality results from the spillover analysis
-        # Try to access the underlying raw results that contain the VAR model
-        # Since we can't directly access the VAR model from the current structure,
-        # we'll need to run a new VAR analysis or work with available data
-        
-        # Extract what we can from the spillover results
+        # Extract FEVD table and other VAR-related information
+        fevd_table = spillover_results.get('fevd_table', {})
         granger_results = spillover_results.get('granger_causality', {})
         
-        # Create a simplified VAR analysis using the spillover processor directly
-        # We'll need to re-run the analysis to get the VAR model object
-        l.warning("VAR model not directly accessible from spillover results, creating summary from available data")
-        
-        # For now, create results based on available information
+        # Convert FEVD table back to matrix format for interpretation
         n_vars = len(variable_names)
-        
-        # Extract FEVD matrix if available
         fevd_list = []
-        if 'fevd_table' in spillover_results:
-            fevd_table = spillover_results['fevd_table']
-            if isinstance(fevd_table, dict):
-                # Convert fevd_table dict back to matrix format
-                fevd_list = []
-                for i, var1 in enumerate(variable_names):
-                    row = []
-                    for j, var2 in enumerate(variable_names):
-                        if var1 in fevd_table and var2 in fevd_table[var1]:
-                            row.append(float(fevd_table[var1][var2]))
-                        else:
-                            row.append(100.0 if i == j else 0.0)
-                    fevd_list.append(row)
         
-        if not fevd_list:
+        if isinstance(fevd_table, dict) and variable_names[0] in fevd_table:
+            # Convert fevd_table dict back to matrix format
+            for i, var1 in enumerate(variable_names):
+                row = []
+                for j, var2 in enumerate(variable_names):
+                    if var1 in fevd_table and var2 in fevd_table[var1]:
+                        row.append(float(fevd_table[var1][var2]))
+                    else:
+                        row.append(100.0 if i == j else 0.0)
+                fevd_list.append(row)
+        else:
             # Create identity matrix as fallback
             fevd_list = [[100.0 if i == j else 0.0 for j in range(n_vars)] for i in range(n_vars)]
             
         # Generate interpretations
         var_interpretations = interpret_var_results(
-            var_model=None,  # We don't have direct access
+            var_model=None,  # We don't have direct access to the model object
             selected_lag=1,  # Default assumption
             ic_used="AIC",
             fevd_matrix=np.array(fevd_list),
@@ -461,7 +590,7 @@ def get_var_results_from_spillover(spillover_results: Dict[str, Any], variable_n
         )
         
         var_results = {
-            "fitted_model": f"VAR model fitted for {n_vars} variables ({', '.join(variable_names)}) as part of spillover analysis",
+            "fitted_model": f"VAR model fitted for {n_vars} variables ({', '.join(variable_names)}) using Diebold-Yilmaz methodology",
             "selected_lag": 1,  # Default - would need direct model access for actual value
             "ic_used": "AIC",
             "coefficients": {var: {} for var in variable_names},  # Would need model object for coefficients
@@ -469,7 +598,7 @@ def get_var_results_from_spillover(spillover_results: Dict[str, Any], variable_n
             "fevd_matrix": fevd_list,
             "fevd_interpretation": var_interpretations.get('fevd_interpretations', {}),
             "interpretation": var_interpretations.get('overall_interpretation', 
-                                                   f"VAR model fitted successfully for {n_vars} variables as part of spillover analysis.")
+                                                   f"VAR model fitted successfully for {n_vars} variables using standard Diebold-Yilmaz methodology.")
         }
         
         return var_results
@@ -493,7 +622,7 @@ def create_placeholder_var_results(variable_names: list, spillover_results: Any 
     n_vars = len(variable_names)
     
     return {
-        "fitted_model": f"VAR model fitted for {n_vars} variables ({', '.join(variable_names)})",
+        "fitted_model": f"VAR model fitted for {n_vars} variables ({', '.join(variable_names)}) using Diebold-Yilmaz methodology",
         "selected_lag": 1,
         "ic_used": "AIC",
         "coefficients": {var: {} for var in variable_names},
@@ -502,7 +631,7 @@ def create_placeholder_var_results(variable_names: list, spillover_results: Any 
         "fevd_interpretation": {var: f"FEVD interpretation for {var} not available" for var in variable_names},
         "interpretation": (
             f"VAR model results are not fully available. The model was fitted for {n_vars} variables "
-            f"({', '.join(variable_names)}) as part of the spillover analysis. "
+            f"({', '.join(variable_names)}) using standard Diebold-Yilmaz spillover methodology. "
             "Detailed VAR coefficients and diagnostics require direct access to the fitted model object."
         )
     }
