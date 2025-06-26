@@ -272,7 +272,7 @@ async def run_garch_endpoint(input_data: GARCHInput):
         forecast_steps = 5  # Standard value for short-term volatility forecast
         
         # Use GARCH parameters with fallback defaults
-        result = run_garch_step(
+        all_summaries, all_forecasts, cond_vol, garch_fits = run_garch_step(
             df_residuals=numeric_df, # Pass the DataFrame with the single target column
             p=input_data.p,
             q=input_data.q,
@@ -281,11 +281,11 @@ async def run_garch_endpoint(input_data: GARCHInput):
         )
         
         # Extract the results for the target column
-        fitted_model_str = result.get(target_column)
-        forecast_list = result.get(target_column)
+        fitted_model_str = all_summaries.get(target_column)
+        forecast_list = all_forecasts.get(target_column)
 
         if fitted_model_str is None or forecast_list is None:
-            l.error(f"Could not retrieve GARCH results for column '{target_column}'. Summary: {result}, Forecast: {result}")
+            l.error(f"Could not retrieve GARCH results for column '{target_column}'. Summaries: {list(all_summaries.keys())}, Forecasts: {list(all_forecasts.keys())}")
             raise HTTPException(status_code=500, detail=f"Internal error: Could not retrieve GARCH results for column '{target_column}'.")
 
         results = {
