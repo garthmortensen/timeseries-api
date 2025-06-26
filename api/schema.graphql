@@ -9,7 +9,7 @@
 #   health
 # }
 #
-# 2. Fetch Market Data:
+# 2. Fetch Market Data (Close prices only):
 # query {
 #   fetchMarketData(input: {
 #     symbols: ["AAPL", "MSFT", "GOOGL"]
@@ -18,11 +18,8 @@
 #     interval: "1d"
 #   }) {
 #     date
-#     open
-#     high
-#     low
-#     close
-#     volume
+#     close    # Only close price is actually available
+#     returns  # Calculated from close prices
 #   }
 # }
 #
@@ -30,10 +27,35 @@
 # query {
 #   testStationarity(input: {
 #     data: [
-#       { date: "2023-01-01", returns: 0.01 },
-#       { date: "2023-01-02", returns: -0.005 },
-#       { date: "2023-01-03", returns: 0.02 }
+#       { date: "2023-01-01", close: 150.0 },
+#       { date: "2023-01-02", close: 152.3 },
+#       { date: "2023-01-03", close: 148.7 }
 #     ]
+#   }) {
+#     symbolResults {
+#       symbol
+#       testResult {
+#         isStationary
+#         adfStatistic
+#         pValue
+#         interpretation
+#         criticalValues {
+#           onePercent
+#           fivePercent
+#           tenPercent
+#         }
+#       }
+#     }
+#     seriesStats {
+#       symbol
+#       stats {
+#         mean
+#         std
+#         skew
+#         kurtosis
+#         annualizedVol
+#       }
+#     }
 #   }) {
 #     symbolResults {
 #       symbol
@@ -92,8 +114,7 @@
 #   }) {
 #     originalData {
 #       date
-#       open
-#       close
+#       close    # Primary price data
 #     }
 #     returnsData {
 #       date
@@ -176,9 +197,9 @@
 #     d: 1
 #     q: 2
 #     data: [
-#       { date: "2023-01-01", returns: 0.01 },
-#       { date: "2023-01-02", returns: -0.005 },
-#       { date: "2023-01-03", returns: 0.02 }
+#       { date: "2023-01-01", close: 150.0 },
+#       { date: "2023-01-02", close: 152.3 },
+#       { date: "2023-01-03", close: 148.7 }
 #     ]
 #   }) {
 #     fittedModel
@@ -270,15 +291,17 @@ type Query {
 }
 
 # A single data point in a time series with proper typing
+# NOTE: Currently only 'close' prices are fetched from market data APIs
+# open, high, low, volume fields may be null for real market data
 type TimeSeriesDataPointType {
   date: String!
-  open: Float
-  high: Float
-  low: Float
-  close: Float
-  volume: Int
-  returns: Float
-  scaled: Float
+  open: Float      # May be null - not currently fetched from APIs
+  high: Float      # May be null - not currently fetched from APIs  
+  low: Float       # May be null - not currently fetched from APIs
+  close: Float     # Primary price field - always available
+  volume: Int      # May be null - not currently fetched from APIs
+  returns: Float   # Calculated from close prices
+  scaled: Float    # Calculated from returns
 }
 
 # Critical values for statistical tests
