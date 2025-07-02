@@ -31,44 +31,163 @@ def interpret_stationarity_test(adf_results: Dict[str, Dict[str, float]],
             critical_values: Dict[str, Any] = result.get("Critical Values", {})
             critical_1 = None
             critical_5 = None
+            critical_10 = None
             
             # Safe extraction of critical values
             if isinstance(critical_values, dict):
                 critical_1 = critical_values.get("1%", None)
                 critical_5 = critical_values.get("5%", None)
+                critical_10 = critical_values.get("10%", None)
             
             p_value_percent = p_value * 100
             
-            # Overwhelming evidence for stationarity
-            if p_value < p_value_threshold and critical_5 is not None and adf_stat < critical_5:
-                passes_1_percent = critical_1 is not None and adf_stat < critical_1
+            # Determine actual confidence level based on critical values
+            # For ADF test, stationarity is indicated when ADF stat is MORE NEGATIVE than critical values
+            confidence_level = "No significant evidence"
+            evidence_strength = "No evidence"
+            
+            if critical_1 is not None and adf_stat < critical_1:
+                confidence_level = "Very high confidence (99%+)"
+                evidence_strength = "Overwhelming evidence"
+            elif critical_5 is not None and adf_stat < critical_5:
+                confidence_level = "High confidence (95%+)"
+                evidence_strength = "Strong evidence"
+            elif critical_10 is not None and adf_stat < critical_10:
+                confidence_level = "Moderate confidence (90%+)"
+                evidence_strength = "Moderate evidence"
+            elif p_value < 0.05:
+                # P-value suggests significance but critical values don't support it strongly
+                confidence_level = "Borderline confidence (based on p-value)"
+                evidence_strength = "Weak evidence"
+            
+            # Build interpretation with clean formatting
+            interpretation = f"STATIONARITY TEST RESULTS FOR {series_name.upper()}\n"
+            interpretation += "=" * 50 + "\n\n"
+            
+            # Explain what we're testing in simple terms
+            interpretation += (
+                "WHAT WE'RE TESTING:\n"
+                "We're checking if the data behaves predictably over time (stationary) "
+                "or if it wanders around unpredictably (non-stationary).\n\n"
+                "The test assumes: 'This data is non-stationary (unpredictable).'\n"
+                "We're trying to prove this assumption wrong.\n\n"
+            )
+            
+            # Determine practical meaning and recommendation based on actual confidence level
+            if "Very high confidence" in confidence_level:
+                practical_meaning = (
+                    "The data has stable, predictable patterns. The average level and "
+                    "variability stay consistent over time. Perfect for most statistical models."
+                )
+                recommendation = "RECOMMENDATION: This data is ready to use - no transformation needed."
+                p_interpretation = (
+                    f"P-VALUE ({p_value:.4f}): If the data were truly unpredictable, there's "
+                    f"less than a {p_value_percent:.1f}% chance you'd see results this clear "
+                    f"just by random luck. Combined with critical value analysis, this provides "
+                    f"overwhelming evidence of stationarity."
+                )
                 
-                if passes_1_percent:
-                    interpretation = (
-                        f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a test statistic of {adf_stat:.4f}, "
-                        f"which is much lower than the 1% critical value of {critical_1:.4f}. The p-value is {p_value:.4f}, far below the 5% threshold. "
-                        f"This provides overwhelming evidence that the series is stationary: the null hypothesis of a unit root is strongly rejected (99% confidence). "
-                        f"The mean and variance are stable over time, so you do not need to difference or otherwise transform the series for stationarity."
-                    )
-                else:
-                    interpretation = (
-                        f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a test statistic of {adf_stat:.4f}, "
-                        f"which is lower than the 5% critical value of {critical_5:.4f}. The p-value is {p_value:.4f}, below the 5% threshold. "
-                        f"This provides strong evidence that the series is stationary: the null hypothesis of a unit root is rejected (95% confidence). "
-                        f"The mean and variance are stable over time, so you do not need to difference or otherwise transform the series for stationarity."
-                    )
-            # Non-stationary case
+            elif "High confidence" in confidence_level:
+                practical_meaning = (
+                    "The data shows stable, predictable patterns. The average and "
+                    "variability are reasonably consistent. Good for most statistical models."
+                )
+                recommendation = "RECOMMENDATION: This data is likely ready to use without transformation."
+                p_interpretation = (
+                    f"P-VALUE ({p_value:.4f}): If the data were truly unpredictable, there's "
+                    f"only a {p_value_percent:.1f}% chance you'd see results this clear by "
+                    f"random chance. The critical value analysis confirms this at the 95% level."
+                )
+                
+            elif "Moderate confidence" in confidence_level:
+                practical_meaning = (
+                    "The data shows some predictable patterns, but with uncertainty. "
+                    "The behavior might not be perfectly consistent over time."
+                )
+                recommendation = "RECOMMENDATION: Check the data visually. It might need light transformation."
+                p_interpretation = (
+                    f"P-VALUE ({p_value:.4f}): The test shows some evidence of predictability "
+                    f"(significant at 90% level based on critical values), but not at the "
+                    f"standard 95% confidence level."
+                )
+                
+            elif "Borderline confidence" in confidence_level:
+                practical_meaning = (
+                    "The data shows weak evidence of predictable patterns. The p-value suggests "
+                    "significance, but the critical value analysis shows this is borderline."
+                )
+                recommendation = "RECOMMENDATION: Examine the data carefully - transformation may be needed."
+                p_interpretation = (
+                    f"P-VALUE ({p_value:.4f}): While the p-value suggests significance, "
+                    f"the critical value analysis shows this is at the edge of statistical "
+                    f"significance. This represents borderline evidence."
+                )
+                
+            else:  # No significant evidence
+                practical_meaning = (
+                    "The data appears unpredictable - it wanders or drifts without "
+                    "returning to a stable average. This makes standard statistical models struggle."
+                )
+                recommendation = "RECOMMENDATION: Transform this data (try 'differencing') before modeling."
+                p_interpretation = (
+                    f"P-VALUE ({p_value:.4f}): The test provides no significant evidence "
+                    f"of predictability. Both p-value and critical value analysis suggest "
+                    f"the data is non-stationary."
+                )
+            
+            # Add the results summary with clear formatting
+            interpretation += (
+                f"THE BOTTOM LINE:\n"
+                f"• Evidence strength: {evidence_strength} that the data is predictable\n"
+                f"• Confidence level: {confidence_level}\n\n"
+                f"WHAT THIS MEANS:\n"
+                f"{practical_meaning}\n\n"
+                f"{recommendation}\n\n"
+                f"UNDERSTANDING THE STATISTICS:\n\n"
+                f"{p_interpretation}\n\n"
+            )
+            
+            # Add test statistic explanation
+            if adf_stat < -3:
+                stat_strength = "very strong"
+            elif adf_stat < -2.5:
+                stat_strength = "strong"
+            elif adf_stat < -2:
+                stat_strength = "moderate"
             else:
-                interpretation = (
-                    f"The Augmented Dickey-Fuller (ADF) test on the {series_name} series gives a p-value of {p_value:.4f}. "
-                    f"That number tells us there's about a {p_value_percent:.2f}% chance of seeing a test statistic this extreme even if the series really were stationary. "
-                    f"Because that probability is above common significance thresholds (like 5% or 1%), we cannot reject the 'unit root' (non-stationary) hypothesis with confidence. "
-                    f"The test statistic of {adf_stat:.4f} does not reach the critical threshold needed to declare stationarity. "
-                    f"This suggests the series exhibits changing statistical properties over time—perhaps a wandering mean, evolving variance, or persistent trends. "
-                    f"In practical modeling terms, this non-stationarity means you'll likely need to transform the data before applying standard time series models."
+                stat_strength = "weak"
+                
+            interpretation += (
+                f"TEST STATISTIC ({adf_stat:.4f}): Think of this as a 'predictability score.' "
+                f"More negative = more predictable. This score shows {stat_strength} evidence "
+                f"of predictability. The test compares this score against benchmarks to make "
+                f"the final call.\n\n"
+            )
+            
+            # Add critical value comparison if available
+            if critical_5 is not None:
+                interpretation += "BENCHMARK COMPARISONS:\n"
+                if adf_stat < critical_5:
+                    interpretation += f"• 5% Benchmark: PASS - This score ({adf_stat:.4f}) beats the benchmark ({critical_5:.4f})\n"
+                else:
+                    interpretation += f"• 5% Benchmark: BORDERLINE - This score ({adf_stat:.4f}) is close to the benchmark ({critical_5:.4f})\n"
+                    
+            if critical_1 is not None:
+                if adf_stat < critical_1:
+                    interpretation += f"• 1% Benchmark: PASS - Also beats the strict benchmark ({critical_1:.4f}) - excellent!\n"
+                interpretation += "\n"
+                    
+            # Handle edge cases where p-value and critical values might disagree
+            if p_value < p_value_threshold and critical_5 is not None and adf_stat >= critical_5:
+                interpretation += (
+                    f"TECHNICAL NOTE: The p-value suggests predictability but the test "
+                    f"statistic is borderline with benchmarks. This happens in edge cases. "
+                    f"The p-value is generally more reliable, so we lean toward predictable, "
+                    f"but visual inspection of the data is recommended.\n"
                 )
                 
             interpretations[series_name] = interpretation
+            
         except KeyError as e:
             l.warning(f"Missing key in ADF results for {series_name}: {e}")
             interpretations[series_name] = f"Unable to interpret results for {series_name} due to missing data."
@@ -79,13 +198,14 @@ def interpret_stationarity_test(adf_results: Dict[str, Dict[str, float]],
     return interpretations
 
 
-def interpret_arima_results(model_summary: str, forecast: list) -> str:
+def interpret_arima_results(model_summary: str, forecast: list, residuals: list = None) -> str:
     """
     Create a human-readable interpretation of ARIMA model results.
     
     Args:
         model_summary (str): Summary of the fitted ARIMA model
         forecast (list): List of forecasted values
+        residuals (list, optional): List of model residuals. Defaults to None.
         
     Returns:
         str: Human-readable interpretation of the ARIMA model results
@@ -117,6 +237,18 @@ def interpret_arima_results(model_summary: str, forecast: list) -> str:
             f"The ARIMA model has been fitted successfully. "
             f"The forecast shows {trend} trend over the forecast horizon, "
             f"with the data projected to follow a {plain_trend} trajectory {implication}. "
+        )
+
+        if residuals:
+            interpretation += (
+                f"\n\nResiduals Analysis: The model's residuals (the differences between the predicted and actual values) "
+                f"are essential for diagnosing model fit. Ideally, they should resemble white noise, meaning they are "
+                f"uncorrelated and have a constant variance. Visual inspection of the residuals plot can help identify "
+                f"any remaining patterns (like autocorrelation or heteroscedasticity) that the model failed to capture. "
+                f"If patterns are present, the model may need to be refined."
+            )
+        
+        interpretation += (
             f"\n\nNote: ARIMA models assume volatility (price jumpiness) is constant over time, "
             f"which may not reflect real market conditions where volatility itself changes."
         )
@@ -747,38 +879,37 @@ def interpret_multivariate_garch_results(mgarch_results: Dict[str, Any],
             interpretations["Covariance_Analysis"] = cov_interpretation
         
         # 4. Statistical Analysis Summary
-        if len(variable_names) >= 2:
-            statistical_interpretation = (
-                f"**Statistical Analysis Summary**: Based on the multivariate GARCH analysis of {len(variable_names)} variables, "
-            )
-            
-            # Check if we have both CCC and DCC results
-            has_ccc = "cc_correlation" in mgarch_results and mgarch_results["cc_correlation"] is not None
-            has_dcc = "dcc_correlation" in mgarch_results and mgarch_results["dcc_correlation"] is not None
-            
-            if has_ccc and has_dcc:
-                statistical_interpretation += (
-                    "both constant and dynamic correlation models provide insights into variable relationships. "
-                    "The constant correlation model shows long-term average relationships, "
-                    "while the dynamic model reveals how these relationships change over time. "
-                )
-            elif has_ccc:
-                statistical_interpretation += (
-                    "the constant correlation model provides baseline understanding of variable relationships. "
-                    "These stable correlation estimates represent average historical relationships between variables. "
-                )
-            elif has_dcc:
-                statistical_interpretation += (
-                    "the dynamic correlation model reveals time-varying relationships between variables. "
-                    "This shows how the strength of variable relationships changes across different time periods. "
-                )
-            
+        has_ccc = "cc_correlation" in mgarch_results and mgarch_results["cc_correlation"] is not None
+        has_dcc = "dcc_correlation" in mgarch_results and mgarch_results["dcc_correlation"] is not None
+        
+        statistical_interpretation = (
+            f"**Statistical Analysis Summary**: The multivariate GARCH analysis provides insights into "
+            f"the joint behavior of {len(variable_names)} time series. "
+        )
+        
+        if has_ccc and has_dcc:
             statistical_interpretation += (
-                "These correlation and covariance estimates provide a foundation for understanding "
-                "how variables move together and can be used for further statistical modeling and analysis."
+                "both constant and dynamic correlation models provide insights into variable relationships. "
+                "The constant correlation model shows long-term average relationships, "
+                "while the dynamic model reveals how these relationships change over time. "
             )
-            
-            interpretations["Statistical_Analysis_Summary"] = statistical_interpretation
+        elif has_ccc:
+            statistical_interpretation += (
+                "the constant correlation model provides baseline understanding of variable relationships. "
+                "These stable correlation estimates represent average historical relationships between variables. "
+            )
+        elif has_dcc:
+            statistical_interpretation += (
+                "the dynamic correlation model reveals time-varying relationships between variables. "
+                "This shows how the strength of variable relationships changes across different time periods. "
+            )
+        
+        statistical_interpretation += (
+            "These correlation and covariance estimates provide a foundation for understanding "
+            "how variables move together and can be used for further statistical modeling and analysis."
+        )
+        
+        interpretations["Statistical_Analysis_Summary"] = statistical_interpretation
         
         # 5. Overall Multivariate GARCH Summary
         overall_interpretation = (
