@@ -169,13 +169,7 @@ def test_stationarity_step(df: pd.DataFrame, test_method: str,
             method=test_method
         )
         
-        # Add interpretation
-        interpretation_dict = interpret_stationarity_test(
-            adf_results, 
-            p_value_threshold=p_value_threshold
-        )
-        
-        # Prepare all symbols stationarity results
+        # Prepare all symbols stationarity results with normalized keys
         all_symbols_stationarity = {}
         for symbol, symbol_result in adf_results.items():
             symbol_critical_values = symbol_result.get("Critical Values", {
@@ -189,8 +183,17 @@ def test_stationarity_step(df: pd.DataFrame, test_method: str,
                 "p_value": float(symbol_result["p-value"]),
                 "critical_values": symbol_critical_values,
                 "is_stationary": float(symbol_result["p-value"]) < p_value_threshold,
-                "interpretation": interpretation_dict.get(symbol, "No interpretation available")
             }
+        
+        # Add interpretation using the normalized data structure
+        interpretation_dict = interpret_stationarity_test(
+            all_symbols_stationarity, 
+            p_value_threshold=p_value_threshold
+        )
+        
+        # Add interpretations to the results
+        for symbol in all_symbols_stationarity:
+            all_symbols_stationarity[symbol]["interpretation"] = interpretation_dict.get(symbol, "No interpretation available")
         
         # Build response with all symbols
         return {

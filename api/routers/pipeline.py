@@ -335,9 +335,26 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         # Generate human-readable interpretations of ARIMA results for all symbols
         all_arima_interpretations = {}
         for symbol in all_arima_summaries.keys():
+            # Extract the string summary and forecast list from the structured data
+            symbol_summary = all_arima_summaries[symbol]
+            symbol_forecast = all_arima_forecasts[symbol]
+            
+            # Get the full summary string for interpretation
+            model_summary_str = symbol_summary.get('full_summary', str(symbol_summary))
+            
+            # Get the point forecasts list
+            forecast_list = symbol_forecast.get('point_forecasts', [])
+            if not isinstance(forecast_list, list):
+                forecast_list = [forecast_list] if forecast_list is not None else []
+            
+            # Get residuals if available for better model quality assessment
+            residuals_dict = symbol_summary.get('residuals', {})
+            residuals_list = list(residuals_dict.values()) if residuals_dict else None
+            
             all_arima_interpretations[symbol] = interpret_arima_results(
-                all_arima_summaries[symbol], 
-                all_arima_forecasts[symbol]
+                model_summary=model_summary_str,
+                forecast=forecast_list,
+                residuals=residuals_list
             )
         # Export ARIMA interpretations
         export_data(all_arima_interpretations, name="api_arima_interpretations")
@@ -359,9 +376,19 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
         # Generate human-readable interpretations of GARCH results for all symbols
         all_garch_interpretations = {}
         for symbol in all_garch_summaries.keys():
+            # Extract the string summary and forecast list from the GARCH data
+            symbol_summary = all_garch_summaries[symbol]
+            symbol_forecast = all_garch_forecasts[symbol]
+            
+            # GARCH summaries are already strings (from statsmodels), but forecasts are lists
+            model_summary_str = symbol_summary if isinstance(symbol_summary, str) else str(symbol_summary)
+            
+            # GARCH forecasts should already be lists of volatility values
+            forecast_list = symbol_forecast if isinstance(symbol_forecast, list) else [symbol_forecast] if symbol_forecast is not None else []
+            
             all_garch_interpretations[symbol] = interpret_garch_results(
-                all_garch_summaries[symbol], 
-                all_garch_forecasts[symbol]
+                model_summary=model_summary_str,
+                forecast=forecast_list
             )
         # Export GARCH interpretations
         export_data(all_garch_interpretations, name="api_garch_interpretations")
