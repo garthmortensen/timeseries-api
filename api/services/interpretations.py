@@ -37,132 +37,130 @@ def interpret_stationarity_test(adf_results: Dict[str, Dict[str, float]],
                 }
                 continue
             
-            # Safely calculate evidence strength and stationarity
-            evidence_strength = "strong" if p_value < 0.01 else "moderate" if p_value < 0.05 else "weak"
+            # Determine significance levels
             is_stationary = p_value < p_value_threshold
+            confidence_level = (1 - p_value) * 100
             
-            # Get critical values for detailed analysis
+            # Get critical values
             critical_1pct = critical_values.get("1%", -3.75)
             critical_5pct = critical_values.get("5%", -3.0)
             critical_10pct = critical_values.get("10%", -2.63)
             
-            # Determine statistical significance level based on critical values
+            # Determine significance level based on critical values
             if adf_stat < critical_1pct:
                 significance_level = "1% (highly significant)"
-                critical_comparison = f"exceeds the 1% critical value ({critical_1pct:.2f})"
+                evidence_strength = "Strong"
             elif adf_stat < critical_5pct:
                 significance_level = "5% (significant)"
-                critical_comparison = f"exceeds the 5% critical value ({critical_5pct:.2f}) but not the 1% level"
+                evidence_strength = "Moderate"
             elif adf_stat < critical_10pct:
                 significance_level = "10% (marginally significant)"
-                critical_comparison = f"exceeds the 10% critical value ({critical_10pct:.2f}) but not higher significance levels"
+                evidence_strength = "Weak"
             else:
                 significance_level = "Not significant"
-                critical_comparison = f"does not exceed any conventional critical values"
+                evidence_strength = "None"
             
-            # Create detailed bottom line explanation
-            if p_value < 0.01:
-                if adf_stat < critical_1pct:
-                    bottom_line_detail = f"Strong evidence for stationarity. The p-value of {p_value:.6f} shows highly significant results, and the test statistic ({adf_stat:.4f}) {critical_comparison}."
-                else:
-                    bottom_line_detail = f"The p-value of {p_value:.6f} suggests high significance, but the test statistic ({adf_stat:.4f}) shows this is at the edge of statistical significance at the 1% level. This represents strong but borderline evidence."
-            elif p_value < 0.05:
-                if adf_stat < critical_5pct:
-                    bottom_line_detail = f"Moderate evidence for stationarity. The p-value of {p_value:.6f} shows significant results, and the test statistic ({adf_stat:.4f}) {critical_comparison}."
-                else:
-                    bottom_line_detail = f"The p-value of {p_value:.6f} suggests significance, but the test statistic ({adf_stat:.4f}) shows this is at the edge of statistical significance. This represents borderline evidence."
-            else:
-                bottom_line_detail = f"Insufficient evidence for stationarity. The p-value of {p_value:.6f} exceeds the significance threshold, and the test statistic ({adf_stat:.4f}) {critical_comparison}."
-            
-            # Create test statistic interpretation
-            if adf_stat < -4.0:
-                predictability_desc = "very strong evidence of predictability"
-            elif adf_stat < -3.0:
-                predictability_desc = "strong evidence of predictability"
-            elif adf_stat < -2.5:
-                predictability_desc = "moderate evidence of predictability"
-            else:
-                predictability_desc = "weak evidence of predictability"
-            
-            test_statistic_explanation = (
-                f"Think of the adf test statistic ({adf_stat:.4f}) as a 'predictability score.' "
-                f"More negative = more predictable patterns in the data. This score shows {predictability_desc}. "
-                f"The test compares this score against critical value benchmarks to make the final statistical call."
-            )
-
-            # Create detailed hypothesis testing explanation
+            # Business impact assessment
             if is_stationary:
-                hypothesis_decision = f"We REJECT the null hypothesis (H₀: unit root is present) at the {p_value_threshold*100}% significance level"
-                hypothesis_explanation = (
-                    f"Since p-value ({p_value:.6f}) < alpha ({p_value_threshold}), we have sufficient evidence to "
-                    f"reject H₀ and accept the alternative hypothesis (H₁: no unit root, series is stationary)."
-                )
+                business_impact = "Ready for ARIMA modeling"
+                recommendation = "Proceed without differencing"
             else:
-                hypothesis_decision = f"We FAIL TO REJECT the null hypothesis (H₀: unit root is present) at the {p_value_threshold*100}% significance level"
-                hypothesis_explanation = (
-                    f"Since p-value ({p_value:.6f}) ≥ alpha ({p_value_threshold}), we do not have sufficient evidence to "
-                    f"reject H₀. We cannot conclude that the series is stationary."
-                )
-
+                business_impact = "Requires preprocessing before modeling"
+                recommendation = "Apply differencing or other transformations"
+            
+            # Create justified conclusions
+            stationarity_justification = (
+                f"Given that the p-value ({p_value:.4f}) is {'less than' if is_stationary else 'greater than or equal to'} "
+                f"the significance threshold ({p_value_threshold}), we {'reject' if is_stationary else 'fail to reject'} "
+                f"the null hypothesis that the series has a unit root. Therefore, the series is "
+                f"{'stationary' if is_stationary else 'non-stationary'}."
+            )
+            
+            evidence_justification = (
+                f"Given that the ADF test statistic ({adf_stat:.4f}) is {'more negative than' if adf_stat < critical_5pct else 'less negative than'} "
+                f"the 5% critical value ({critical_5pct:.4f}), we have {evidence_strength.lower()} evidence against the presence of a unit root."
+            )
+            
+            critical_value_justification = (
+                f"Given that the test statistic ({adf_stat:.4f}) {'passes' if adf_stat < critical_5pct else 'fails'} "
+                f"the 5% critical value threshold ({critical_5pct:.4f}), the test result is {significance_level}."
+            )
+            
             interpretations[series_name] = {
-                "what_were_testing": "Testing whether the time series is stationary (constant mean, variance, and autocorrelation).",
-                "purpose": "To determine if the series requires differencing for ARIMA modeling or other transformations.",
-                "key_ideas": [
-                    "Stationarity is crucial for many time series models.",
-                    "ADF test checks for unit roots to assess stationarity.", 
-                    "H₀: Unit root is present (series is non-stationary)",
-                    "H₁: No unit root (series is stationary)",
-                    "More negative test statistics indicate stronger evidence against unit roots.",
-                    "UNIT ROOT EXPLAINED: A unit root means the series has a 'memory' - shocks have permanent effects and the series doesn't return to a long-term mean."
-                ],
-                "metrics": {
-                    "adf_statistic": adf_stat,
-                    "p_value": p_value,
-                    "critical_values": critical_values,
-                    "significance_level": significance_level,
-                    "test_statistic_explanation": test_statistic_explanation,
-                    "unit_root_explanation": (
-                        f"WHAT IS A UNIT ROOT? Think of it as 'permanent memory' in your data. "
-                        f"If a time series has a unit root, it means: (1) Shocks have LASTING effects - if the value jumps up, "
-                        f"it tends to stay at that higher level rather than returning to the original trend. "
-                        f"(2) The series 'wanders' without a fixed long-term average - like a random walk where each step "
-                        f"depends entirely on the previous step plus some random change. "
-                        f"(3) Variance grows over time - the uncertainty about future values increases the further you forecast. "
-                        f"REAL-WORLD EXAMPLE: Stock prices often have unit roots - if Apple stock jumps from $150 to $160 on good news, "
-                        f"it doesn't automatically drift back to $150. The new level becomes the new 'baseline' for future movements."
-                    )
-                },
-                "results": {
+                "executive_summary": {
                     "bottom_line": "Stationary" if is_stationary else "Non-stationary",
-                    "bottom_line_detailed": bottom_line_detail,
-                    "confidence_level": f"{(1 - p_value) * 100:.1f}%",
-                    "evidence_strength": evidence_strength,
-                    "hypothesis_decision": hypothesis_decision,
-                    "hypothesis_explanation": hypothesis_explanation,
-                    "statistical_interpretation": (
-                        f"The ADF statistic of {adf_stat:.4f} compared against critical values shows "
-                        f"{significance_level.lower()} evidence. {hypothesis_explanation}"
-                    )
+                    "confidence": f"{confidence_level:.1f}%",
+                    "business_impact": business_impact,
+                    "recommendation": recommendation,
+                    "justification": stationarity_justification
                 },
-                "implications": {
-                    "practical_meaning": f"The series is {'stationary' if is_stationary else 'non-stationary'}. {'This means the statistical properties remain relatively constant over time, making it suitable for modeling without differencing.' if is_stationary else 'This indicates the statistical properties change over time and the series likely requires differencing to achieve stationarity.'}",
-                    "recommendations": "Proceed with modeling as is." if is_stationary else "Apply differencing or transformations to stabilize the series before modeling.",
-                    "limitations": "ADF test may not detect all forms of non-stationarity, particularly structural breaks or non-linear trends.",
-                    "methodology_notes": (
-                        "HYPOTHESIS TESTING FRAMEWORK: "
-                        f"• H₀ (Null): Unit root is present → series is non-stationary. "
-                        f"• H₁ (Alternative): No unit root → series is stationary. "
-                        f"• Decision rule: If p-value < alpha ({p_value_threshold}), reject H₀ in favor of H₁. "
-                        f"• Test statistic measures deviation from random walk behavior - more negative values provide stronger evidence against H₀."
+                "key_findings": {
+                    "adf_statistic": {
+                        "value": adf_stat,
+                        "interpretation": f"{evidence_strength} evidence against unit root",
+                        "justification": evidence_justification
+                    },
+                    "p_value": {
+                        "value": p_value,
+                        "interpretation": f"{'Significant' if p_value < p_value_threshold else 'Not significant'} at {p_value_threshold*100}% level",
+                        "justification": (
+                            f"Given that the p-value ({p_value:.4f}) is {'less than' if p_value < p_value_threshold else 'greater than or equal to'} "
+                            f"{p_value_threshold}, the result is {'statistically significant' if p_value < p_value_threshold else 'not statistically significant'} "
+                            f"at the {p_value_threshold*100}% significance level."
+                        )
+                    },
+                    "critical_values": {
+                        "test_performance": significance_level,
+                        "statistical_significance": f"Passes {significance_level} threshold",
+                        "justification": critical_value_justification
+                    }
+                },
+                "technical_details": {
+                    "statistical_framework": {
+                        "null_hypothesis": "Unit root is present (series is non-stationary)",
+                        "alternative_hypothesis": "No unit root (series is stationary)",
+                        "test_statistic": adf_stat,
+                        "decision_rule": f"Reject H0 if p-value < {p_value_threshold}",
+                        "decision_justification": (
+                            f"Given that our decision rule is to reject H0 when p-value < {p_value_threshold}, "
+                            f"and our observed p-value is {p_value:.4f}, we {'reject' if is_stationary else 'fail to reject'} "
+                            f"the null hypothesis of a unit root."
+                        )
+                    },
+                    "methodology_notes": {
+                        "test_type": "Augmented Dickey-Fuller test",
+                        "assumption": "Linear trend, constant variance",
+                        "interpretation": "More negative test statistics indicate stronger evidence against unit roots"
+                    },
+                    "raw_statistics": {
+                        "adf_statistic": adf_stat,
+                        "p_value": p_value,
+                        "critical_values": critical_values,
+                        "test_result": "Reject H0" if is_stationary else "Fail to reject H0"
+                    }
+                },
+                "background_context": {
+                    "what_is_stationarity": (
+                        "A stationary time series has constant mean, variance, and autocorrelation structure over time. "
+                        "This means the statistical properties don't change as time progresses."
                     ),
-                    "unit_root_deep_dive": (
-                        "UNIT ROOT TECHNICAL DETAILS: "
-                        "A unit root exists when the autoregressive coefficient equals 1 in the equation: y(t) = rho*y(t-1) + ε(t). "
-                        "When rho = 1 (unit root), the series is a random walk and non-stationary. "
-                        "When |rho| < 1 (no unit root), the series is mean-reverting and stationary. "
-                        "The ADF test essentially tests whether rho = 1 (unit root) vs rho < 1 (stationary). "
-                        "FINANCIAL INTUITION: Unit roots are common in financial data because markets incorporate new information permanently. "
-                        "When Tesla announces a breakthrough, the stock price adjusts to a new level and doesn't 'forget' this information."
+                    "what_is_unit_root": (
+                        "A unit root means the series has permanent memory - shocks have lasting effects and the series "
+                        "doesn't return to a long-term mean. Like a random walk where each step depends entirely on "
+                        "the previous step plus some random change."
+                    ),
+                    "why_it_matters": (
+                        "Stationarity is crucial for time series modeling. Most statistical models assume constant "
+                        "relationships over time. Non-stationary data can lead to spurious regression results and "
+                        "unreliable forecasts."
+                    ),
+                    "test_limitations": (
+                        "ADF test may not detect all forms of non-stationarity, particularly structural breaks, "
+                        "non-linear trends, or seasonal patterns. Test power can be low against certain alternatives."
+                    ),
+                    "real_world_example": (
+                        "Stock prices often have unit roots - if Apple stock jumps from $150 to $160 on good news, "
+                        "it doesn't automatically drift back to $150. The new level becomes the new baseline for future movements."
                     )
                 }
             }
@@ -176,7 +174,7 @@ def interpret_stationarity_test(adf_results: Dict[str, Dict[str, float]],
 
 def interpret_arima_results(model_summary: str, forecast: list, residuals: list = None) -> Dict[str, Any]:
     """
-    Create a structured interpretation of ARIMA model results.
+    Interpret ARIMA model results using Pyramid Principle structure.
     
     Args:
         model_summary (str): Summary of the fitted ARIMA model
@@ -184,13 +182,10 @@ def interpret_arima_results(model_summary: str, forecast: list, residuals: list 
         residuals (list, optional): List of model residuals. Defaults to None.
         
     Returns:
-        Dict[str, Any]: Structured interpretation of the ARIMA model results
+        Dict[str, Any]: Structured interpretation following Pyramid Principle
     """
     try:
-        # Basic trend analysis
-        trend = "increasing" if forecast[-1] > forecast[0] else "decreasing" if forecast[-1] < forecast[0] else "stable"
-        
-        # Extract model order if available in summary
+        # Extract model parameters
         p, d, q = 0, 0, 0
         if "ARIMA(" in model_summary and ")" in model_summary:
             try:
@@ -199,232 +194,216 @@ def interpret_arima_results(model_summary: str, forecast: list, residuals: list 
             except:
                 pass
         
-        # Calculate forecast statistics
+        # Calculate forecast metrics
         forecast_array = np.array(forecast)
         forecast_mean = float(np.mean(forecast_array))
         forecast_std = float(np.std(forecast_array))
-        forecast_range = float(np.max(forecast_array) - np.min(forecast_array))
         
-        # Determine forecast confidence based on volatility
-        if abs(forecast_mean) < 1e-6:  # Avoid division by zero
-            forecast_confidence = "Moderate"
-            confidence_desc = "stable near-zero forecasts"
+        # Determine trend direction
+        if len(forecast) > 1:
+            trend_direction = "increasing" if forecast[-1] > forecast[0] else "decreasing" if forecast[-1] < forecast[0] else "stable"
+            magnitude_change = abs((forecast[-1] - forecast[0]) / forecast[0]) if forecast[0] != 0 else 0
         else:
-            coefficient_of_variation = forecast_std / abs(forecast_mean)
-            if coefficient_of_variation < 0.02:
-                forecast_confidence = "High"
-                confidence_desc = "very stable"
-            elif coefficient_of_variation < 0.05:
-                forecast_confidence = "Moderate"
-                confidence_desc = "moderately stable"
-            else:
-                forecast_confidence = "Low"
-                confidence_desc = "highly variable"
+            trend_direction = "stable"
+            magnitude_change = 0
         
-        # Calculate accuracy metrics if residuals are available
-        accuracy_metrics = {}
+        # Model quality assessment
         model_quality = "Unknown"
+        accuracy_metrics = {}
         if residuals is not None:
-            residuals = np.array(residuals)
-            residuals = residuals[~np.isnan(residuals)]  # Remove NaN values
+            residuals_array = np.array(residuals)
+            residuals_array = residuals_array[~np.isnan(residuals_array)]
             
-            if len(residuals) > 0:
+            if len(residuals_array) > 0:
+                mae = float(np.mean(np.abs(residuals_array)))
+                rmse = float(np.sqrt(np.mean(residuals_array**2)))
                 accuracy_metrics = {
-                    "mean_error": float(np.mean(residuals)),
-                    "mae": float(np.mean(np.abs(residuals))),
-                    "rmse": float(np.sqrt(np.mean(residuals**2))),
-                    "residual_std": float(np.std(residuals))
+                    "mae": mae,
+                    "rmse": rmse,
+                    "mean_error": float(np.mean(residuals_array))
                 }
                 
-                # Assess model quality based on residual statistics
-                mean_abs_error = accuracy_metrics["mae"]
-                if mean_abs_error < 0.01:
+                if mae < 0.01:
                     model_quality = "Excellent"
-                elif mean_abs_error < 0.05:
+                elif mae < 0.05:
                     model_quality = "Good"
-                elif mean_abs_error < 0.10:
+                elif mae < 0.10:
                     model_quality = "Fair"
                 else:
                     model_quality = "Poor"
         
-        # Create detailed model interpretation based on ARIMA components
-        ar_interpretation = ""
-        if p > 0:
-            ar_interpretation = f"AR({p}) component captures {p} period(s) of autoregressive memory - the model uses the past {p} value(s) to predict future values."
-        
-        i_interpretation = ""
-        if d > 0:
-            i_interpretation = f"I({d}) component applies {d} level(s) of differencing to make the series stationary - removing trends and ensuring stable statistical properties."
-        
-        ma_interpretation = ""
-        if q > 0:
-            ma_interpretation = f"MA({q}) component models {q} period(s) of moving average effects - capturing short-term dependencies in forecast errors."
-        
-        # Create forecast interpretation based on trend and magnitude
-        forecast_magnitude = abs((forecast[-1] - forecast[0]) / forecast[0]) if forecast[0] != 0 else 0
-        if forecast_magnitude > 0.1:
-            magnitude_desc = "substantial"
-        elif forecast_magnitude > 0.05:
-            magnitude_desc = "moderate"
+        # Business impact assessment
+        if magnitude_change > 0.1:
+            business_impact = f"Substantial {trend_direction} movement expected"
+            recommendation = f"Plan for {magnitude_change*100:.1f}% change in forecast period"
+        elif magnitude_change > 0.05:
+            business_impact = f"Moderate {trend_direction} movement expected"
+            recommendation = "Monitor closely for trend continuation"
         else:
-            magnitude_desc = "minimal"
+            business_impact = "Stable behavior expected"
+            recommendation = "Maintain current operational assumptions"
         
-        # Bottom line detailed explanation
-        bottom_line_detail = (
-            f"The ARIMA({p},{d},{q}) model forecasts a {trend} trend with {magnitude_desc} change "
-            f"({forecast_magnitude*100:.1f}% from start to end). Forecast confidence is {forecast_confidence.lower()} "
-            f"due to {confidence_desc} predictions. "
+        # Forecast confidence
+        cv = forecast_std / abs(forecast_mean) if abs(forecast_mean) > 1e-6 else 0
+        if cv < 0.02:
+            forecast_confidence = "High"
+        elif cv < 0.05:
+            forecast_confidence = "Moderate"
+        else:
+            forecast_confidence = "Low"
+
+        # Create justified conclusions
+        trend_justification = (
+            f"Given that the forecast values change from {forecast[0]:.4f} to {forecast[-1]:.4f} "
+            f"({'an increase' if forecast[-1] > forecast[0] else 'a decrease' if forecast[-1] < forecast[0] else 'no change'} "
+            f"of {magnitude_change*100:.1f}%), the ARIMA model forecasts a {trend_direction} trend."
         )
         
-        if model_quality != "Unknown":
-            bottom_line_detail += f"Model quality is assessed as {model_quality.lower()} based on residual analysis."
+        quality_justification = (
+            f"Given that the Mean Absolute Error is {accuracy_metrics.get('mae', 'N/A')}, "
+            f"the model quality is assessed as {model_quality}. "
+            f"{'This indicates excellent predictive accuracy with very small forecast errors.' if model_quality == 'Excellent' else 'This indicates good predictive accuracy with acceptable forecast errors.' if model_quality == 'Good' else 'This indicates moderate predictive accuracy with noticeable forecast errors.' if model_quality == 'Fair' else 'This indicates poor predictive accuracy with large forecast errors.' if model_quality == 'Poor' else 'Model quality cannot be determined without residual data.'}"
+        ) if accuracy_metrics else (
+            "Given that no residual data is available, model quality cannot be quantitatively assessed. "
+            "Quality evaluation requires comparing predicted values against actual values."
+        )
         
-        # Model components explanation
-        components_explanation = []
-        if p > 0:
-            components_explanation.append(f"AR({p}): Uses past {p} values as predictors")
-        if d > 0:
-            components_explanation.append(f"I({d}): {d} level(s) of differencing applied")
-        if q > 0:
-            components_explanation.append(f"MA({q}): Models {q} forecast error terms")
+        confidence_justification = (
+            f"Given that the coefficient of variation (forecast standard deviation / forecast mean) is {cv:.4f}, "
+            f"the forecast confidence is {forecast_confidence}. "
+            f"{'This indicates low uncertainty in the forecast values.' if forecast_confidence == 'High' else 'This indicates moderate uncertainty in the forecast values.' if forecast_confidence == 'Moderate' else 'This indicates high uncertainty in the forecast values.'}"
+        )
         
-        model_explanation = (
-            f"ARIMA({p},{d},{q}) MODEL BREAKDOWN: Think of this as a 'prediction recipe' with three ingredients. "
-            f"{' + '.join(components_explanation)}. "
-            f"The model essentially says: 'To predict tomorrow, look at the past {max(p,q,1)} values, "
-            f"account for any trending behavior{' (via differencing)' if d > 0 else ''}, "
-            f"and adjust for recent forecast errors{' using moving averages' if q > 0 else ''}.'"
+        business_impact_justification = (
+            f"Given that the magnitude of change is {magnitude_change*100:.1f}% "
+            f"({'substantial' if magnitude_change > 0.1 else 'moderate' if magnitude_change > 0.05 else 'minimal'}), "
+            f"the business impact is {business_impact.lower()}. "
+            f"{'Significant planning and resource allocation adjustments may be required.' if magnitude_change > 0.1 else 'Some operational adjustments may be needed.' if magnitude_change > 0.05 else 'Current operations can likely continue with minimal adjustments.'}"
         )
 
         return {
-            "what_were_testing": "Fitting an ARIMA time series model to capture patterns and forecast future values.",
-            "purpose": "To identify underlying patterns in time series data and make accurate forecasts based on historical behavior.",
-            "key_ideas": [
-                f"ARIMA({p},{d},{q}) combines autoregression (AR), differencing (I), and moving averages (MA).",
-                "AR component: Uses past values to predict future values (memory effect).",
-                "I component: Removes trends through differencing to achieve stationarity.",
-                "MA component: Models dependencies in forecast errors (shock persistence).",
-                "Model assumes that historical patterns will continue into the future."
-            ],
-            "metrics": {
-                "model_order": f"ARIMA({p},{d},{q})",
-                "forecast_trend": trend,
-                "forecast_values": forecast,
-                "forecast_statistics": {
-                    "mean": forecast_mean,
-                    "std": forecast_std,
-                    "range": forecast_range,
-                    "magnitude_change": forecast_magnitude
+            "executive_summary": {
+                "bottom_line": f"ARIMA({p},{d},{q}) forecasts {trend_direction} trend",
+                "business_impact": business_impact,
+                "recommendation": recommendation,
+                "justification": trend_justification
+            },
+            "key_findings": {
+                "forecast_trend": {
+                    "direction": trend_direction,
+                    "magnitude": f"{magnitude_change*100:.1f}% change",
+                    "confidence": forecast_confidence,
+                    "justification": trend_justification
                 },
-                "accuracy_metrics": accuracy_metrics,
-                "model_explanation": model_explanation,
-                "components_breakdown": {
-                    "ar_interpretation": ar_interpretation,
-                    "i_interpretation": i_interpretation,
-                    "ma_interpretation": ma_interpretation
+                "model_performance": {
+                    "quality": model_quality,
+                    "accuracy": f"MAE: {accuracy_metrics.get('mae', 'N/A')}" if accuracy_metrics else "No residuals provided",
+                    "justification": quality_justification
+                },
+                "forecast_statistics": {
+                    "mean_forecast": forecast_mean,
+                    "forecast_range": f"{min(forecast):.4f} to {max(forecast):.4f}",
+                    "volatility": forecast_std,
+                    "justification": confidence_justification
+                },
+                "business_impact": {
+                    "assessment": business_impact,
+                    "justification": business_impact_justification
                 }
             },
-            "results": {
-                "bottom_line": f"Forecasts {trend} trend",
-                "bottom_line_detailed": bottom_line_detail,
-                "confidence_level": forecast_confidence,
-                "evidence_strength": model_quality if model_quality != "Unknown" else "Moderate",
-                "forecast_assessment": (
-                    f"The model predicts {trend} movement with {confidence_desc} forecasts. "
-                    f"The {magnitude_desc} change magnitude suggests "
-                    f"{'significant directional movement' if forecast_magnitude > 0.05 else 'relatively stable behavior'} "
-                    f"in the forecast period."
-                ),
-                "model_performance": (
-                    f"Model fit quality: {model_quality}. " +
-                    (f"Mean absolute error of {accuracy_metrics['mae']:.4f} indicates "
-                     f"{'excellent' if model_quality == 'Excellent' else 'good' if model_quality == 'Good' else 'acceptable' if model_quality == 'Fair' else 'poor'} "
-                     f"predictive accuracy." if accuracy_metrics else "Performance metrics unavailable without residuals.")
-                )
+            "technical_details": {
+                "model_specification": {
+                    "order": f"ARIMA({p},{d},{q})",
+                    "ar_component": f"Uses {p} lagged values" if p > 0 else "No autoregressive component",
+                    "differencing": f"{d} level(s) of differencing applied" if d > 0 else "No differencing needed",
+                    "ma_component": f"Models {q} forecast error terms" if q > 0 else "No moving average component",
+                    "justification": (
+                        f"Given the model specification ARIMA({p},{d},{q}): "
+                        f"{'The AR(' + str(p) + ') component uses ' + str(p) + ' lagged values to capture autocorrelation patterns. ' if p > 0 else 'No autoregressive component suggests the series does not significantly depend on its own past values. '}"
+                        f"{'The I(' + str(d) + ') component applies ' + str(d) + ' level(s) of differencing to achieve stationarity. ' if d > 0 else 'No differencing needed indicates the series is already stationary. '}"
+                        f"{'The MA(' + str(q) + ') component models ' + str(q) + ' forecast error terms to capture short-term dependencies.' if q > 0 else 'No moving average component suggests forecast errors are independent.'}"
+                    )
+                },
+                "forecast_mechanics": {
+                    "prediction_method": "Linear combination of past values and errors",
+                    "memory_length": f"{max(p,q)} periods" if max(p,q) > 0 else "1 period",
+                    "stationarity": "Achieved through differencing" if d > 0 else "Series already stationary"
+                },
+                "accuracy_metrics": accuracy_metrics if accuracy_metrics else {"note": "Residuals not provided for accuracy assessment"}
             },
-            "implications": {
-                "practical_meaning": (
-                    f"The time series is expected to follow a {trend} trajectory in the forecast period. "
-                    f"{'This suggests continued upward momentum.' if trend == 'increasing' else 'This indicates declining values ahead.' if trend == 'decreasing' else 'This points to stable, mean-reverting behavior.'} "
-                    f"Forecast reliability is {forecast_confidence.lower()} based on model diagnostics."
+            "background_context": {
+                "what_is_arima": (
+                    "ARIMA combines three components: AutoRegressive (AR) - uses past values to predict future, "
+                    "Integrated (I) - differences the data to remove trends, and Moving Average (MA) - uses past forecast errors. "
+                    "It's like a sophisticated pattern recognition system that learns from historical behavior."
                 ),
-                "recommendations": (
-                    f"{'Use forecasts for planning with {forecast_confidence.lower()} confidence.' if forecast_confidence in ['High', 'Moderate'] else 'Exercise caution with forecasts due to high uncertainty.'} "
-                    f"Monitor actual values against predictions to validate model performance. "
-                    f"{'Consider model retraining if significant deviations occur.' if model_quality in ['Fair', 'Poor'] else 'Model appears well-calibrated for current conditions.'}"
+                "why_it_matters": (
+                    "ARIMA is fundamental for time series forecasting because it captures the underlying patterns "
+                    "in data - trends, seasonality, and dependencies. It's widely used in economics, finance, "
+                    "and operations for planning and decision-making."
+                ),
+                "model_assumptions": (
+                    "ARIMA assumes that historical patterns will continue into the future, that the relationship "
+                    "between variables is linear, and that the residuals are normally distributed with constant variance. "
+                    "It works best when the underlying process is relatively stable."
                 ),
                 "limitations": (
-                    "ARIMA assumes that historical patterns will continue and may not account for: "
-                    "(1) Structural breaks or regime changes, (2) External shocks or unprecedented events, "
-                    "(3) Non-linear relationships, (4) Seasonal patterns (unless explicitly modeled). "
-                    f"{'The {d}-level differencing may have removed important trend information.' if d > 1 else ''}"
+                    "ARIMA may struggle with structural breaks, non-linear relationships, or unprecedented events. "
+                    "It assumes past patterns continue and may not adapt quickly to regime changes. "
+                    "External factors not captured in the time series can affect forecast accuracy."
                 ),
-                "methodology_notes": (
-                    "ARIMA MODEL FRAMEWORK: "
-                    f"• AR({p}): Autoregressive component using {p} lagged values as predictors. "
-                    f"• I({d}): Integrated component with {d} level(s) of differencing for stationarity. "
-                    f"• MA({q}): Moving average component modeling {q} lagged forecast errors. "
-                    f"• Model selection typically uses information criteria (AIC/BIC) to balance fit and complexity. "
-                    f"• Residual analysis validates model assumptions and identifies potential improvements."
-                ),
-                "forecasting_insights": (
-                    f"PRACTICAL FORECASTING GUIDANCE: "
-                    f"The {trend} forecast trend suggests {magnitude_desc} directional bias. "
-                    f"Forecast horizon: {len(forecast)} periods ahead. "
-                    f"Key assumption: Recent patterns ({max(p,q)} period memory) will persist. "
-                    f"Confidence decreases with longer forecast horizons due to error accumulation. "
-                    f"{'Consider ensemble methods for improved robustness.' if model_quality in ['Fair', 'Poor'] else 'Single model appears sufficient for current needs.'}"
+                "interpretation_guide": (
+                    f"AR({p}): The model uses the last {p} values to make predictions - like saying 'tomorrow will be similar to recent days'. "
+                    f"I({d}): The data was differenced {d} time(s) to remove trends - like focusing on changes rather than levels. "
+                    f"MA({q}): The model corrects for the last {q} forecast errors - like learning from recent mistakes."
                 )
             }
         }
     except Exception as e:
         return {
-            "what_were_testing": "Fitting an ARIMA time series model",
-            "purpose": "To forecast future values based on historical patterns",
-            "key_ideas": ["ARIMA modeling", "Time series forecasting", "Pattern recognition"],
-            "metrics": {"error": str(e)},
-            "results": {
-                "bottom_line": "Error in model interpretation",
-                "confidence_level": "N/A",
-                "evidence_strength": "N/A"
+            "executive_summary": {
+                "bottom_line": "Error in ARIMA interpretation",
+                "business_impact": "Unable to assess forecast implications",
+                "recommendation": "Review model inputs and specification",
+                "justification": f"Given that an error occurred during interpretation ({str(e)}), conclusions cannot be drawn from the ARIMA results."
             },
-            "implications": {
-                "practical_meaning": "Unable to interpret model results due to an error.",
-                "recommendations": "Check the model specification and data for issues.",
-                "limitations": "Error encountered during interpretation."
+            "key_findings": {
+                "error": str(e),
+                "justification": f"Given the error: {str(e)}, key findings cannot be determined."
+            },
+            "technical_details": {
+                "error": f"Interpretation failed: {str(e)}"
+            },
+            "background_context": {
+                "error": "Context unavailable due to processing error"
             }
         }
 
 
 def interpret_garch_results(model_summary: str, forecast: list) -> Dict[str, Any]:
     """
-    Create a structured interpretation of GARCH model results.
+    Interpret GARCH model results using Pyramid Principle structure.
     
     Args:
         model_summary (str): Summary of the fitted GARCH model
         forecast (list): List of forecasted volatility values
         
     Returns:
-        Dict[str, Any]: Structured interpretation of the GARCH model results
+        Dict[str, Any]: Structured interpretation following Pyramid Principle
     """
     try:
-        # Basic volatility trend analysis
-        trend = "increasing" if forecast[-1] > forecast[0] else "decreasing" if forecast[-1] < forecast[0] else "stable"
-        
         # Extract GARCH parameters with enhanced parsing
         alpha, beta, omega = 0, 0, 0
         garch_order = (1, 1)  # Default GARCH(1,1)
         
         try:
             # Parse model summary for parameters
-            summary_lower = model_summary.lower()
             lines = model_summary.split('\n')
-            
             for line in lines:
                 line_lower = line.lower()
                 if 'omega' in line_lower or 'const' in line_lower:
                     parts = line.split()
-                    for i, part in enumerate(parts):
+                    for part in parts:
                         try:
                             if part.replace('.', '').replace('-', '').isdigit():
                                 omega = float(part)
@@ -471,9 +450,17 @@ def interpret_garch_results(model_summary: str, forecast: list) -> Dict[str, Any
         else:
             volatility_level = "low"
         
+        # Determine trend direction
+        if forecast[-1] > forecast[0]:
+            trend_direction = "increasing"
+        elif forecast[-1] < forecast[0]:
+            trend_direction = "decreasing"
+        else:
+            trend_direction = "stable"
+        
         # Assess volatility persistence
         if persistence > 0.99:
-            persistence_desc = "very high (near integrated)"
+            persistence_desc = "very high"
             persistence_interpretation = "Volatility shocks have extremely long-lasting effects"
         elif persistence > 0.95:
             persistence_desc = "high" 
@@ -488,150 +475,182 @@ def interpret_garch_results(model_summary: str, forecast: list) -> Dict[str, Any
             persistence_desc = "very low"
             persistence_interpretation = "Volatility shocks have minimal persistence"
         
-        # Assess forecast confidence based on model characteristics
+        # Assess forecast confidence
         if persistence > 0.98:
             forecast_confidence = "Low"
-            confidence_reason = "very high persistence makes long-term forecasts unreliable"
         elif persistence > 0.9:
             forecast_confidence = "Moderate"
-            confidence_reason = "high persistence provides reasonable short-term forecast accuracy"
         else:
             forecast_confidence = "High"
-            confidence_reason = "moderate persistence allows for reliable volatility forecasting"
         
-        # Create detailed bottom line explanation
+        # Business impact assessment
         magnitude_desc = "substantial" if abs(forecast_change) > 0.2 else "moderate" if abs(forecast_change) > 0.1 else "minimal"
         
-        bottom_line_detail = (
-            f"The GARCH({garch_order[0]},{garch_order[1]}) model forecasts {trend} volatility with {magnitude_desc} change "
-            f"({forecast_change*100:.1f}% from start to end). Current volatility level is {volatility_level} "
-            f"({forecast[-1]:.4f}). Persistence is {persistence_desc} (α+β = {persistence:.3f}), indicating "
-            f"{persistence_interpretation.lower()}. Forecast confidence is {forecast_confidence.lower()} due to {confidence_reason}."
+        if volatility_level == "high":
+            business_impact = "Elevated risk environment requiring enhanced monitoring"
+            recommendation = "Implement risk controls and position sizing adjustments"
+        elif volatility_level == "moderate":
+            business_impact = "Balanced risk environment with standard volatility"
+            recommendation = "Maintain current risk management frameworks"
+        else:
+            business_impact = "Low risk environment with calm market conditions"
+            recommendation = "Consider opportunities during stable periods"
+
+        # Create justified conclusions
+        trend_justification = (
+            f"Given that the forecast volatility changes from {forecast[0]:.4f} to {forecast[-1]:.4f} "
+            f"({'an increase' if forecast[-1] > forecast[0] else 'a decrease' if forecast[-1] < forecast[0] else 'no change'} "
+            f"of {abs(forecast_change)*100:.1f}%), the GARCH model forecasts {trend_direction} volatility."
         )
         
-        # GARCH components explanation
-        garch_explanation = (
-            f"GARCH({garch_order[0]},{garch_order[1]}) MODEL BREAKDOWN: Think of this as a 'volatility recipe' with three key ingredients. "
-            f"• ω (omega = {omega:.6f}): The baseline volatility level - like a 'volatility floor'. "
-            f"• α (alpha = {alpha:.3f}): How much recent shocks affect current volatility - the 'shock sensitivity'. "
-            f"• β (beta = {beta:.3f}): How much past volatility affects current volatility - the 'volatility memory'. "
-            f"The model says: 'Today's volatility = baseline + recent shock impact + yesterday's volatility influence.'"
+        persistence_justification = (
+            f"Given that the persistence parameter (α + β = {persistence:.3f}) is "
+            f"{'greater than 0.99' if persistence > 0.99 else 'greater than 0.95' if persistence > 0.95 else 'greater than 0.85' if persistence > 0.85 else 'greater than 0.5' if persistence > 0.5 else 'less than or equal to 0.5'}, "
+            f"the volatility persistence is {persistence_desc}. {persistence_interpretation}."
         )
         
-        # Volatility clustering explanation
-        clustering_explanation = (
-            f"VOLATILITY CLUSTERING CONCEPT: GARCH captures the famous 'volatility clustering' phenomenon where "
-            f"'large changes tend to be followed by large changes, of either sign, and small changes tend to be followed by small changes.' "
-            f"This means periods of high volatility cluster together, and periods of calm cluster together. "
-            f"REAL-WORLD EXAMPLE: During market stress (like COVID-19), daily stock movements of 5-10% become common, "
-            f"but during calm periods, daily movements of 0.5-1% are typical."
+        volatility_level_justification = (
+            f"Given that the final forecast volatility ({forecast[-1]:.4f}) is "
+            f"{'greater than 0.03' if forecast[-1] > 0.03 else 'greater than 0.015' if forecast[-1] > 0.015 else 'less than or equal to 0.015'}, "
+            f"the volatility level is classified as {volatility_level}. This indicates "
+            f"{'elevated risk conditions requiring enhanced monitoring' if volatility_level == 'high' else 'balanced risk conditions with standard volatility patterns' if volatility_level == 'moderate' else 'calm market conditions with low risk levels'}."
+        )
+        
+        confidence_justification = (
+            f"Given that the persistence parameter ({persistence:.3f}) is "
+            f"{'greater than 0.98' if persistence > 0.98 else 'greater than 0.9' if persistence > 0.9 else 'less than or equal to 0.9'}, "
+            f"the forecast confidence is {forecast_confidence}. "
+            f"{'High persistence reduces forecast confidence as volatility shocks have very long-lasting effects' if persistence > 0.98 else 'Moderate persistence provides reasonable forecast confidence with some uncertainty' if persistence > 0.9 else 'Low persistence provides high forecast confidence as volatility returns to normal levels quickly'}."
+        )
+        
+        business_impact_justification = (
+            f"Given that the volatility level is {volatility_level} and the magnitude of change is {magnitude_desc} "
+            f"({abs(forecast_change)*100:.1f}%), the business impact is {business_impact.lower()}. "
+            f"{'This requires immediate risk management attention and position sizing adjustments' if volatility_level == 'high' else 'This suggests maintaining current risk management frameworks while monitoring for changes' if volatility_level == 'moderate' else 'This presents opportunities to consider increased positions during stable periods'}."
         )
 
         return {
-            "what_were_testing": "Modeling time-varying volatility using GARCH to capture volatility clustering and forecast future volatility.",
-            "purpose": "To understand how volatility evolves over time, quantify volatility persistence, and forecast future risk levels.",
-            "key_ideas": [
-                f"GARCH({garch_order[0]},{garch_order[1]}) models conditional volatility that changes over time.",
-                "Volatility clustering: High volatility periods cluster together, low volatility periods cluster together.",
-                "α parameter: Measures how sensitive volatility is to recent shocks (ARCH effect).",
-                "β parameter: Measures how much past volatility influences current volatility (GARCH effect).",
-                f"Persistence (α+β = {persistence:.3f}): Measures how long volatility shocks last.",
-                "VOLATILITY CLUSTERING EXPLAINED: Financial markets show periods where large price movements cluster together, followed by periods of relative calm."
-            ],
-            "metrics": {
-                "garch_order": f"GARCH({garch_order[0]},{garch_order[1]})",
-                "parameters": {
-                    "omega": omega,
-                    "alpha": alpha,
-                    "beta": beta,
-                    "persistence": persistence
+            "executive_summary": {
+                "bottom_line": f"GARCH({garch_order[0]},{garch_order[1]}) forecasts {trend_direction} volatility at {volatility_level} levels",
+                "business_impact": business_impact,
+                "recommendation": recommendation,
+                "justification": trend_justification
+            },
+            "key_findings": {
+                "volatility_trend": {
+                    "direction": trend_direction,
+                    "magnitude": f"{abs(forecast_change)*100:.1f}% change",
+                    "current_level": f"{forecast[-1]:.4f} ({volatility_level})",
+                    "justification": trend_justification
                 },
-                "volatility_trend": trend,
-                "forecast_values": forecast,
-                "forecast_statistics": {
-                    "mean": forecast_mean,
-                    "std": forecast_std,
-                    "change": forecast_change,
-                    "current_level": forecast[-1],
-                    "volatility_level": volatility_level
-                },
-                "garch_explanation": garch_explanation,
-                "clustering_explanation": clustering_explanation,
                 "persistence_metrics": {
-                    "unconditional_variance": unconditional_var,
-                    "half_life": half_life,
-                    "description": persistence_desc
+                    "persistence": persistence,
+                    "description": f"{persistence_desc} persistence",
+                    "interpretation": persistence_interpretation,
+                    "justification": persistence_justification
+                },
+                "forecast_confidence": {
+                    "level": forecast_confidence,
+                    "reliability": f"Based on {persistence_desc} persistence pattern",
+                    "justification": confidence_justification
+                },
+                "volatility_level": {
+                    "classification": volatility_level,
+                    "justification": volatility_level_justification
+                },
+                "business_impact": {
+                    "assessment": business_impact,
+                    "justification": business_impact_justification
                 }
             },
-            "results": {
-                "bottom_line": f"Forecasts {trend} volatility",
-                "bottom_line_detailed": bottom_line_detail,
-                "confidence_level": forecast_confidence,
-                "evidence_strength": f"Persistence is {persistence_desc}",
-                "volatility_assessment": (
-                    f"The model predicts {trend} volatility with {volatility_level} current levels. "
-                    f"The {persistence_desc} persistence ({persistence:.3f}) suggests "
-                    f"{'volatility shocks will have long-lasting effects' if persistence > 0.9 else 'volatility will mean-revert at a moderate pace' if persistence > 0.7 else 'volatility shocks will decay relatively quickly'}."
-                ),
-                "shock_impact_analysis": (
-                    f"Shock sensitivity (α = {alpha:.3f}): {'High' if alpha > 0.15 else 'Moderate' if alpha > 0.05 else 'Low'} - "
-                    f"recent market shocks have {'strong' if alpha > 0.15 else 'moderate' if alpha > 0.05 else 'limited'} impact on current volatility. "
-                    f"Volatility memory (β = {beta:.3f}): {'High' if beta > 0.85 else 'Moderate' if beta > 0.7 else 'Low'} - "
-                    f"past volatility has {'strong' if beta > 0.85 else 'moderate' if beta > 0.7 else 'limited'} influence on current volatility."
-                )
+            "technical_details": {
+                "model_specification": {
+                    "order": f"GARCH({garch_order[0]},{garch_order[1]})",
+                    "omega": f"{omega:.6f} (baseline volatility)",
+                    "alpha": f"{alpha:.3f} (shock sensitivity)",
+                    "beta": f"{beta:.3f} (volatility memory)",
+                    "justification": (
+                        f"Given the model parameters: omega (ω = {omega:.6f}) represents the baseline volatility floor, "
+                        f"alpha (α = {alpha:.3f}) measures sensitivity to recent shocks, and beta (β = {beta:.3f}) "
+                        f"captures volatility memory. The model equation σ²(t) = ω + α·ε²(t-1) + β·σ²(t-1) shows that "
+                        f"{'recent shocks dominate' if alpha > beta else 'past volatility dominates' if beta > alpha else 'shocks and memory are balanced'} "
+                        f"in determining future volatility."
+                    )
+                },
+                "volatility_mechanics": {
+                    "equation": "σ²(t) = ω + α·ε²(t-1) + β·σ²(t-1)",
+                    "persistence": f"α + β = {persistence:.3f}",
+                    "half_life": f"{half_life:.1f} periods" if half_life else "N/A",
+                    "unconditional_variance": f"{unconditional_var:.6f}" if unconditional_var else "N/A",
+                    "justification": (
+                        f"Given the volatility equation components: "
+                        f"{'The high persistence (α + β = ' + f'{persistence:.3f}' + ') indicates volatility clustering effects persist for extended periods' if persistence > 0.9 else 'The moderate persistence indicates balanced volatility dynamics' if persistence > 0.5 else 'The low persistence indicates rapid return to baseline volatility'}. "
+                        f"{'The half-life of ' + f'{half_life:.1f}' + ' periods shows how long it takes for volatility shocks to decay by half' if half_life else 'Half-life cannot be calculated due to parameter constraints'}."
+                    )
+                },
+                "forecast_statistics": {
+                    "mean_forecast": forecast_mean,
+                    "forecast_volatility": forecast_std,
+                    "forecast_range": f"{min(forecast):.4f} to {max(forecast):.4f}",
+                    "total_change": f"{forecast_change*100:.1f}%"
+                }
             },
-            "implications": {
-                "practical_meaning": (
-                    f"Expect {volatility_level} volatility levels in the near term, with a {trend} trend. "
-                    f"The {persistence_desc} persistence means volatility changes will "
-                    f"{'persist for extended periods' if persistence > 0.9 else 'have moderate lasting effects' if persistence > 0.7 else 'decay relatively quickly'}. "
-                    f"This {'increases' if trend == 'increasing' else 'decreases' if trend == 'decreasing' else 'maintains'} the risk environment."
+            "background_context": {
+                "what_is_garch": (
+                    "GARCH (Generalized Autoregressive Conditional Heteroskedasticity) models time-varying volatility. "
+                    "Unlike traditional models that assume constant volatility, GARCH recognizes that volatility clusters - "
+                    "periods of high volatility are followed by high volatility, and calm periods by calm periods. "
+                    "It's like a volatility thermostat that adjusts based on recent market stress."
                 ),
-                "recommendations": (
-                    f"Risk Management: {'Implement enhanced risk controls due to high/persistent volatility' if persistence > 0.9 and volatility_level == 'high' else 'Monitor volatility levels with standard risk frameworks' if persistence < 0.9 else 'Maintain current risk strategies with periodic reviews'}. "
-                    f"Trading Strategy: {'Consider volatility-based position sizing' if persistence > 0.8 else 'Standard position sizing appropriate'}. "
-                    f"Portfolio Impact: {'High volatility persistence suggests increased correlation during stress periods' if persistence > 0.9 else 'Moderate volatility dynamics support standard diversification approaches'}."
+                "why_it_matters": (
+                    "Volatility forecasting is crucial for risk management, option pricing, and portfolio optimization. "
+                    "GARCH helps quantify how risk evolves over time, enabling better decision-making about position sizing, "
+                    "hedging strategies, and capital allocation. It's widely used in finance because it captures the "
+                    "reality that market risk is not constant."
+                ),
+                "volatility_clustering": (
+                    "The famous quote 'large changes tend to be followed by large changes, of either sign, and small changes "
+                    "tend to be followed by small changes' captures the essence of volatility clustering. "
+                    "During market stress (like COVID-19), daily stock movements of 5-10% become common, "
+                    "but during calm periods, daily movements of 0.5-1% are typical."
+                ),
+                "model_components": (
+                    f"Omega (ω = {omega:.6f}): The baseline volatility level - think of it as the 'volatility floor'. "
+                    f"Alpha (α = {alpha:.3f}): How sensitive volatility is to recent shocks - the 'shock amplifier'. "
+                    f"Beta (β = {beta:.3f}): How much past volatility influences current volatility - the 'memory factor'. "
+                    f"The model says: Today's volatility = baseline + recent shock impact + yesterday's volatility influence."
+                ),
+                "persistence_implications": (
+                    f"Persistence (α + β = {persistence:.3f}) measures how long volatility shocks last. "
+                    f"High persistence means volatility shocks have long-lasting effects - like ripples in a pond that take "
+                    f"time to settle. Low persistence means volatility quickly returns to normal levels after shocks. "
+                    f"Values near 1.0 indicate very persistent volatility, while values near 0.5 indicate quick mean reversion."
                 ),
                 "limitations": (
-                    "GARCH model limitations: (1) Assumes volatility clustering follows specific mathematical patterns, "
-                    "(2) May not capture structural breaks or regime changes, (3) Assumes constant parameters over time, "
-                    "(4) Does not account for leverage effects (asymmetric volatility), (5) May struggle with extreme market events. "
-                    f"{'High persistence near 1.0 may indicate model instability or near-unit root behavior.' if persistence > 0.98 else ''}"
-                ),
-                "methodology_notes": (
-                    "GARCH MODEL FRAMEWORK: "
-                    f"• σ²(t) = ω + α·ε²(t-1) + β·σ²(t-1) - the core GARCH equation. "
-                    f"• ω: Long-run variance component (baseline volatility). "
-                    f"• α: ARCH coefficient measuring shock sensitivity (0 ≤ α ≤ 1). "
-                    f"• β: GARCH coefficient measuring volatility persistence (0 ≤ β ≤ 1). "
-                    f"• Persistence = α + β: Must be < 1 for stationarity. "
-                    f"• Model captures volatility clustering without assuming constant variance."
-                ),
-                "volatility_insights": (
-                    f"PRACTICAL VOLATILITY GUIDANCE: "
-                    f"Current volatility regime: {volatility_level} ({forecast[-1]:.4f}). "
-                    f"Shock decay rate: {'Very slow' if persistence > 0.95 else 'Slow' if persistence > 0.85 else 'Moderate' if persistence > 0.7 else 'Fast'}. "
-                    f"Mean reversion: {'Weak' if persistence > 0.95 else 'Moderate' if persistence > 0.85 else 'Strong'}. "
-                    f"Forecast horizon reliability: {forecast_confidence} for {len(forecast)} periods ahead. "
-                    f"Risk management implication: {'Volatility shocks will persist - prepare for extended periods of elevated risk' if persistence > 0.9 else 'Volatility shows normal mean-reverting behavior - standard risk frameworks apply'}."
+                    "GARCH assumes volatility clustering follows specific patterns and may not capture: "
+                    "(1) Structural breaks or regime changes, (2) Asymmetric volatility (leverage effects), "
+                    "(3) Extreme market events outside historical patterns, (4) Non-linear volatility dynamics. "
+                    "It works best in relatively stable market regimes with consistent volatility patterns."
                 )
             }
         }
     except Exception as e:
         return {
-            "what_were_testing": "Modeling time-varying volatility using GARCH",
-            "purpose": "To capture and forecast volatility clustering in time series",
-            "key_ideas": ["Volatility clustering", "Time-varying risk", "GARCH modeling"],
-            "metrics": {"error": str(e)},
-            "results": {
-                "bottom_line": "Error in model interpretation",
-                "confidence_level": "N/A",
-                "evidence_strength": "N/A"
+            "executive_summary": {
+                "bottom_line": "Error in GARCH interpretation",
+                "business_impact": "Unable to assess volatility implications",
+                "recommendation": "Review model inputs and specification",
+                "justification": f"Given that an error occurred during interpretation ({str(e)}), conclusions cannot be drawn from the GARCH results."
             },
-            "implications": {
-                "practical_meaning": "Unable to interpret volatility patterns due to an error.",
-                "recommendations": "Check the model specification and data for issues.",
-                "limitations": "Error encountered during interpretation."
+            "key_findings": {
+                "error": str(e),
+                "justification": f"Given the error: {str(e)}, key findings cannot be determined."
+            },
+            "technical_details": {
+                "error": f"Interpretation failed: {str(e)}"
+            },
+            "background_context": {
+                "error": "Context unavailable due to processing error"
             }
         }
 
