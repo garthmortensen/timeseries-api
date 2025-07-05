@@ -79,6 +79,14 @@ class SpilloverResponse(BaseModel):
 
 class PipelineResponse(BaseModel):
     """Response model for the complete pipeline."""
+    
+    # ===== USER INPUT CONFIGURATION =====
+    execution_configuration: Dict[str, Any] = Field(
+        ...,
+        description="Complete configuration used for this pipeline execution, including all user inputs and defaults applied"
+    )
+    
+    # ===== DATA AT EACH PIPELINE STAGE =====
     original_data: List[Dict[str, Any]] = Field(
         ..., 
         description="The original time series data (synthetic or fetched)"

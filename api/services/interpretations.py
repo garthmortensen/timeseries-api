@@ -670,7 +670,7 @@ def interpret_spillover_index(spillover_results: Dict[str, float],
     interpretations = {}
     
     try:
-        total_spillover = spillover_results.get("total", 0.0)
+        total_spillover = spillover_results.get("total_spillover_index", spillover_results.get("total", 0.0))
         
         if total_spillover > threshold:
             interpretation = (

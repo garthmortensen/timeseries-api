@@ -82,8 +82,9 @@ class Config(BaseModel):
     spillover_analysis_method: str = Field(default="diebold_yilmaz")
     spillover_analysis_forecast_horizon: int = Field(default=10)
     spillover_analysis_window_size: Optional[int] = Field(default=None)
+    spillover_var_max_lags: int = Field(default=5)
 
-    # Grandger Causality
+    # Granger Causality
     granger_causality_enabled: bool = Field(default=True)
     granger_causality_max_lag: int = Field(default=5)
     granger_causality_p_value_threshold: float = Field(default=0.05)
