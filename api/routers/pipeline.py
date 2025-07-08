@@ -11,6 +11,7 @@ import traceback
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from fastapi.encoders import jsonable_encoder
 
 from api.database import get_db, PipelineRun, PipelineResult
 from api.models.input import PipelineInput, SpilloverInput
@@ -579,60 +580,6 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             scaled_data_dict = df_scaled.reset_index().to_dict('records')
         # Return expanded results with comprehensive ETL metadata and raw API data
         pipeline_results = {
-            # ===== USER INPUT CONFIGURATION =====
-            "execution_configuration": {
-                "data_source": {
-                    "source_type": source_type,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "symbols": symbols,
-                    "synthetic_anchor_prices": anchor_prices if source_type == "synthetic" else None,
-                    "synthetic_random_seed": random_seed if source_type == "synthetic" else None
-                },
-                "data_processing": {
-                    "scaling_method": scaling_method,
-                    "missing_values_enabled": config.data_processor_missing_values_enabled,
-                    "missing_values_strategy": config.data_processor_missing_values_strategy if config.data_processor_missing_values_enabled else None,
-                    "stationarity_test_enabled": config.data_processor_stationary_enabled,
-                    "stationarity_test_p_value_threshold": config.data_processor_stationarity_test_p_value_threshold if config.data_processor_stationary_enabled else None
-                },
-                "model_configurations": {
-                    "arima_params": {
-                        "p": arima_p,
-                        "d": arima_d,
-                        "q": arima_q,
-                        "forecast_steps": arima_forecast_steps,
-                        "enabled": config.stats_model_ARIMA_enabled
-                    },
-                    "garch_params": {
-                        "p": garch_p,
-                        "q": garch_q,
-                        "dist": garch_dist,
-                        "forecast_steps": garch_forecast_steps,
-                        "enabled": config.stats_model_GARCH_enabled,
-                        "volatility_format": config.stats_model_GARCH_volatility_format,
-                        "residuals_as_input": config.stats_model_ARIMA_residuals_as_garch_input
-                    }
-                },
-                "spillover_configuration": {
-                    "spillover_enabled": pipeline_input.spillover_enabled,
-                    "spillover_params": pipeline_input.spillover_params if pipeline_input.spillover_enabled else None,
-                    "granger_causality_enabled": config.granger_causality_enabled,
-                    "granger_causality_max_lag": config.granger_causality_max_lag if config.granger_causality_enabled else None,
-                    "spillover_analysis_method": config.spillover_analysis_method,
-                    "spillover_forecast_horizon": config.spillover_analysis_forecast_horizon,
-                    "spillover_window_size": config.spillover_analysis_window_size,
-                    "var_max_lags": config.spillover_var_max_lags
-                },
-                "execution_metadata": {
-                    "execution_timestamp": datetime.datetime.utcnow().isoformat(),
-                    "execution_time_seconds": time.perf_counter() - t1,
-                    "configuration_source": "config.yml with user overrides",
-                    "api_version": "v1",
-                    "pipeline_version": "enhanced_multivariate_garch"
-                }
-            },
-            
             # ===== RAW DATA SOURCE (ETL Best Practice) =====
             "raw_data_source": {
                 "raw_api_records": raw_api_records,
@@ -727,6 +674,9 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
 
         # Convert numpy types to native Python types for JSON serialization
         pipeline_results = round_for_json(pipeline_results)
+        
+        # Use Pydantic's jsonable_encoder to ensure all keys/values are JSON serializable
+        pipeline_results = jsonable_encoder(pipeline_results)
         
         l.info(f"pipeline_results: {pipeline_results}")
         
