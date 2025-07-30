@@ -79,6 +79,19 @@ class SpilloverResponse(BaseModel):
 
 class PipelineResponse(BaseModel):
     """Response model for the complete pipeline."""
+    # === EXECUTION CONFIGURATION ===
+    execution_configuration: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Complete execution configuration including data source, processing, and model parameters"
+    )
+    
+    # === RAW DATA SOURCE ===
+    raw_data_source: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Raw data source information including API records and metadata"
+    )
+    
+    # === PROCESSED DATA ===
     original_data: List[Dict[str, Any]] = Field(
         ..., 
         description="The original time series data (synthetic or fetched)"
@@ -99,11 +112,14 @@ class PipelineResponse(BaseModel):
         None, 
         description="Data after GARCH processing (conditional volatilities)"
     )
+    
+    # === STATISTICAL ANALYSIS ===
     stationarity_results: StationarityTestResponse = Field(
         ..., 
         description="Results of stationarity tests"
     )
     
+    # === MODEL RESULTS ===
     arima_results: Dict[str, Dict[str, Any]] = Field(
         ..., 
         description="ARIMA results for all symbols"
@@ -112,6 +128,8 @@ class PipelineResponse(BaseModel):
         ..., 
         description="GARCH results for all symbols"
     )
+    
+    # === ADVANCED ANALYSIS ===
     var_results: Optional[VARModelResponse] = Field(
         None,
         description="VAR model results (if spillover analysis is enabled)"
@@ -120,8 +138,19 @@ class PipelineResponse(BaseModel):
         None,
         description="Results of spillover analysis (if enabled)"
     )
-    
     granger_causality_results: Optional[Dict[str, Any]] = Field(
         None,
         description="Results of Granger causality analysis (if enabled)"
+    )
+    
+    # === MULTIVARIATE GARCH ===
+    multivariate_garch_results: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Results of multivariate GARCH analysis including CCC-GARCH and DCC-GARCH (if enabled)"
+    )
+    
+    # === PIPELINE METADATA ===
+    pipeline_metadata: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Pipeline execution metadata including timing and configuration summary"
     )

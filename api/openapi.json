@@ -974,9 +974,9 @@
             "title": "Symbols",
             "description": "Symbols to generate or fetch data for",
             "default": [
-              "GME",
-              "BYND",
-              "BYD"
+              "AAPL",
+              "MSFT",
+              "GOOGL"
             ]
           },
           "synthetic_anchor_prices": {
@@ -995,8 +995,8 @@
             "description": "Anchor prices for synthetic data generation",
             "default": [
               150.0,
-              200.0,
-              15.0
+              300.0,
+              100.0
             ]
           },
           "synthetic_random_seed": {
@@ -1064,6 +1064,32 @@
       },
       "PipelineResponse": {
         "properties": {
+          "execution_configuration": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Configuration",
+            "description": "Complete execution configuration including data source, processing, and model parameters"
+          },
+          "raw_data_source": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Data Source",
+            "description": "Raw data source information including API records and metadata"
+          },
           "original_data": {
             "items": {
               "additionalProperties": true,
@@ -1179,6 +1205,32 @@
             ],
             "title": "Granger Causality Results",
             "description": "Results of Granger causality analysis (if enabled)"
+          },
+          "multivariate_garch_results": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multivariate Garch Results",
+            "description": "Results of multivariate GARCH analysis including CCC-GARCH and DCC-GARCH (if enabled)"
+          },
+          "pipeline_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pipeline Metadata",
+            "description": "Pipeline execution metadata including timing and configuration summary"
           }
         },
         "type": "object",

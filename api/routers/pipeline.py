@@ -580,6 +580,60 @@ async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Dep
             scaled_data_dict = df_scaled.reset_index().to_dict('records')
         # Return expanded results with comprehensive ETL metadata and raw API data
         pipeline_results = {
+            # === Build execution_configuration for API response ===
+            "execution_configuration": {
+                "data_source": {
+                    "source_type": source_type,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "symbols": symbols,
+                    "synthetic_anchor_prices": anchor_prices if source_type == "synthetic" else None,
+                    "synthetic_random_seed": random_seed if source_type == "synthetic" else None
+                },
+                "data_processing": {
+                    "scaling_method": scaling_method,
+                    "missing_values_enabled": config.data_processor_missing_values_enabled,
+                    "missing_values_strategy": config.data_processor_missing_values_strategy if config.data_processor_missing_values_enabled else None,
+                    "stationarity_test_enabled": config.data_processor_stationary_enabled,
+                    "stationarity_test_p_value_threshold": getattr(config, "data_processor_stationarity_test_p_value_threshold", 0.05)
+                },
+                "model_configurations": {
+                    "arima_params": {
+                        "p": arima_p,
+                        "d": arima_d,
+                        "q": arima_q,
+                        "forecast_steps": arima_forecast_steps,
+                        "enabled": True
+                    },
+                    "garch_params": {
+                        "p": garch_p,
+                        "q": garch_q,
+                        "dist": garch_dist,
+                        "forecast_steps": garch_forecast_steps,
+                        "enabled": True,
+                        "volatility_format": "standard_deviation",
+                        "residuals_as_input": True
+                    }
+                },
+                "spillover_configuration": {
+                    "spillover_enabled": pipeline_input.spillover_enabled,
+                    "spillover_params": pipeline_input.spillover_params if pipeline_input.spillover_enabled else None,
+                    "granger_causality_enabled": pipeline_input.spillover_enabled,
+                    "granger_causality_max_lag": pipeline_input.spillover_params.get("max_lag", 5) if pipeline_input.spillover_enabled else None,
+                    "spillover_analysis_method": pipeline_input.spillover_params.get("method", "diebold_yilmaz") if pipeline_input.spillover_enabled else None,
+                    "spillover_forecast_horizon": pipeline_input.spillover_params.get("forecast_horizon", 10) if pipeline_input.spillover_enabled else None,
+                    "spillover_window_size": pipeline_input.spillover_params.get("window_size") if pipeline_input.spillover_enabled else None,
+                    "var_max_lags": pipeline_input.spillover_params.get("max_lags", 5) if pipeline_input.spillover_enabled else None
+                },
+                "execution_metadata": {
+                    "execution_timestamp": datetime.datetime.utcnow().isoformat(),
+                    "execution_time_seconds": time.perf_counter() - t1,
+                    "configuration_source": "config.yml with user overrides",
+                    "api_version": "v1",
+                    "pipeline_version": "enhanced_multivariate_garch"
+                }
+            },
+
             # ===== RAW DATA SOURCE (ETL Best Practice) =====
             "raw_data_source": {
                 "raw_api_records": raw_api_records,

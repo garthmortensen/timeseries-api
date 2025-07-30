@@ -18,13 +18,13 @@ source_actual_or_synthetic_data: "actual_stooq"  # options: synthetic, actual_yf
 # =============================================================================
 data_start_date: "2023-01-01"
 data_end_date: "2023-02-01"
-symbols: ["GME", "BYND", "BYD"]
+symbols: ["AAPL", "MSFT", "GOOGL"]  # Changed from TEST1, TEST2 to meaningful symbols
 
 # =============================================================================
 # Synthetic-specific options - Controls random walk parameters when generating
 # artificial price series for testing or simulation purposes
 # =============================================================================
-synthetic_anchor_prices: [150.0, 200.0, 15.0]
+synthetic_anchor_prices: [150.0, 300.0, 100.0]  # Adjusted for AAPL, MSFT, GOOGL
 synthetic_random_seed: 1
 
 # =============================================================================
