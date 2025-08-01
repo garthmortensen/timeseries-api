@@ -7,8 +7,11 @@ This module contains the API endpoints for running statistical models on time se
 import logging as l
 import pandas as pd
 import numpy as np
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from statsmodels.tsa.arima.model import ARIMA
+
+# Import rate limiting
+from api.middleware import limiter, HEAVY_COMPUTATION_PER_MINUTE, HEAVY_COMPUTATION_PER_HOUR
 
 from timeseries_compute import stats_model
 from api.models.input import ARIMAInput, GARCHInput
@@ -38,11 +41,28 @@ router = APIRouter(tags=["Statistical Models"])
               400: {
                   "description": "Bad Request - Invalid model parameters or insufficient data"
               },
+              429: {
+                  "description": "Rate limit exceeded - too many requests",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "error": "Rate limit exceeded",
+                              "message": "You have exceeded the rate limit for this API. This is a free service, please use it responsibly.",
+                              "retry_after": 3600,
+                              "limits": {
+                                  "heavy_computation": "5/minute, 20/hour"
+                              }
+                          }
+                      }
+                  }
+              },
               500: {
                   "description": "Internal Server Error - Model fitting failed"
               }
           })
-async def run_arima_endpoint(input_data: ARIMAInput):
+@limiter.limit(HEAVY_COMPUTATION_PER_MINUTE)
+@limiter.limit(HEAVY_COMPUTATION_PER_HOUR)
+async def run_arima_endpoint(request: Request, input_data: ARIMAInput):
     """
     Run an ARIMA (AutoRegressive Integrated Moving Average) model on time series data.
     
@@ -215,11 +235,28 @@ async def run_arima_endpoint(input_data: ARIMAInput):
               400: {
                   "description": "Bad Request - Invalid model parameters or insufficient data"
               },
+              429: {
+                  "description": "Rate limit exceeded - too many requests",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "error": "Rate limit exceeded",
+                              "message": "You have exceeded the rate limit for this API. This is a free service, please use it responsibly.",
+                              "retry_after": 3600,
+                              "limits": {
+                                  "heavy_computation": "5/minute, 20/hour"
+                              }
+                          }
+                      }
+                  }
+              },
               500: {
                   "description": "Internal Server Error - Model fitting failed"
               }
           })
-async def run_garch_endpoint(input_data: GARCHInput):
+@limiter.limit(HEAVY_COMPUTATION_PER_MINUTE)
+@limiter.limit(HEAVY_COMPUTATION_PER_HOUR)
+async def run_garch_endpoint(request: Request, input_data: GARCHInput):
     """
     Run a GARCH (Generalized AutoRegressive Conditional Heteroskedasticity) model on time series data.
     

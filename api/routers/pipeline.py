@@ -9,9 +9,12 @@ import logging as l
 import time
 import traceback
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
+
+# Import rate limiting
+from api.middleware import limiter, HEAVY_COMPUTATION_PER_MINUTE, HEAVY_COMPUTATION_PER_HOUR
 
 from api.database import get_db, PipelineRun, PipelineResult
 from api.models.input import PipelineInput, SpilloverInput
@@ -55,6 +58,8 @@ router = APIRouter(tags=["Pipeline"])
           11. Store results in the database for future reference
           
           All parameters have sensible defaults defined in the configuration.
+          
+          **Rate Limit**: This is a computationally expensive endpoint with strict rate limits to protect server resources.
           """,
           response_model=PipelineResponse,
           responses={
@@ -87,9 +92,26 @@ router = APIRouter(tags=["Pipeline"])
                           }
                       }
                   }
+              },
+              429: {
+                  "description": "Rate limit exceeded - too many requests",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "error": "Rate limit exceeded",
+                              "message": "You have exceeded the rate limit for this API. This is a free service, please use it responsibly.",
+                              "retry_after": 3600,
+                              "limits": {
+                                  "heavy_computation": "5/minute, 20/hour"
+                              }
+                          }
+                      }
+                  }
               }
           })
-async def run_pipeline_endpoint(pipeline_input: PipelineInput, db: Session = Depends(get_db)):
+@limiter.limit(HEAVY_COMPUTATION_PER_MINUTE)
+@limiter.limit(HEAVY_COMPUTATION_PER_HOUR)
+async def run_pipeline_endpoint(request: Request, pipeline_input: PipelineInput, db: Session = Depends(get_db)):
     """Execute the complete time series analysis pipeline with explicit parameters."""
     t1 = time.perf_counter()
 

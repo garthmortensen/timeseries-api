@@ -5,7 +5,10 @@ This module contains API endpoints for spillover analysis between multiple time 
 """
 
 import logging as l
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
+
+# Import rate limiting
+from api.middleware import limiter, HEAVY_COMPUTATION_PER_MINUTE, HEAVY_COMPUTATION_PER_HOUR
 
 from api.models.input import SpilloverInput
 from api.models.response import SpilloverResponse
@@ -25,9 +28,31 @@ def get_config():
 @router.post(
     "/analyze_spillover",
     summary="Analyze spillover effects between time series",
-    response_model=SpilloverResponse
+    response_model=SpilloverResponse,
+    responses={
+        200: {
+            "description": "Successfully completed spillover analysis",
+        },
+        429: {
+            "description": "Rate limit exceeded - too many requests",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Rate limit exceeded",
+                        "message": "You have exceeded the rate limit for this API. This is a free service, please use it responsibly.",
+                        "retry_after": 3600,
+                        "limits": {
+                            "heavy_computation": "5/minute, 20/hour"
+                        }
+                    }
+                }
+            }
+        }
+    }
 )
-async def analyze_spillover_endpoint(input_data: SpilloverInput):
+@limiter.limit(HEAVY_COMPUTATION_PER_MINUTE)
+@limiter.limit(HEAVY_COMPUTATION_PER_HOUR)
+async def analyze_spillover_endpoint(request: Request, input_data: SpilloverInput):
     """
     Analyze spillover effects between multiple time series.
     

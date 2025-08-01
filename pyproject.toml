@@ -14,7 +14,7 @@ dependencies = [
     "uvicorn>=0.34.0",
     "pydantic>=2.10.6",
     "pandas>=2.2.3",
-    "numpy>=2.2.3",  # Match timeseries-compute requirement
+    "numpy>=2.2.3", # Match timeseries-compute requirement
     "statsmodels>=0.14.4",
     "arch>=7.2.0",
     "scipy>=1.15.2",
@@ -37,6 +37,7 @@ dependencies = [
     "mcp>=1.0.0",
     "timeseries-compute>=0.6.0",
     "setuptools",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

@@ -27,6 +27,10 @@ from fastapi import FastAPI, Response
 import uvicorn
 from contextlib import asynccontextmanager
 
+# Import rate limiting middleware
+from api.middleware import limiter, custom_rate_limit_handler
+from slowapi.errors import RateLimitExceeded
+
 # Import GraphQL with Graphene
 from starlette_graphene3 import GraphQLApp, make_playground_handler
 from api.gql import schema
@@ -93,6 +97,10 @@ app = FastAPI(
     default_response_class=RoundingJSONResponse,  # custom response class for rounding
     lifespan=lifespan  # adds custom startup/shutdown logging
 )
+
+# Add rate limiting to the app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 
 # ignore favicon requests
 @app.get("/favicon.ico")

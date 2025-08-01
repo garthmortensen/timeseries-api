@@ -6,7 +6,10 @@ This module contains the API endpoints for generating synthetic time series data
 
 import logging as l
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
+
+# Import rate limiting
+from api.middleware import limiter, DATA_ENDPOINTS_PER_MINUTE, DATA_ENDPOINTS_PER_HOUR, LIGHT_ENDPOINTS_PER_MINUTE
 
 from timeseries_compute import data_generator, data_processor
 from api.models.input import DataGenerationInput, MarketDataInput, ScalingInput, StationarityTestInput
@@ -53,11 +56,28 @@ def get_config():
                  400: {
                      "description": "Bad Request - Invalid date format or other input parameters"
                  },
+                 429: {
+                     "description": "Rate limit exceeded",
+                     "content": {
+                         "application/json": {
+                             "example": {
+                                 "error": "Rate limit exceeded",
+                                 "message": "You have exceeded the rate limit for this API. This is a free service, please use it responsibly.",
+                                 "retry_after": 360,
+                                 "limits": {
+                                     "data_endpoints": "10/minute, 50/hour"
+                                 }
+                             }
+                         }
+                     }
+                 },
                  500: {
                      "description": "Internal Server Error - Failed to generate time series data"
                  }
              })
-async def generate_data_endpoint(input_data: DataGenerationInput):
+@limiter.limit(DATA_ENDPOINTS_PER_MINUTE)
+@limiter.limit(DATA_ENDPOINTS_PER_HOUR)
+async def generate_data_endpoint(request: Request, input_data: DataGenerationInput):
     """
     Generate synthetic time series data based on input parameters.
     
