@@ -334,56 +334,82 @@ The application uses YAML configuration file `config/config.yml` to set:
 ### Project Structure
 
 ```text
-timeseries-api/.......................
-├── cli_pipeline.py                  # Runs the full pipeline from the terminal sans API
-├── fastapi_pipeline.py              # Starts the API server with uvicorn
-├── mcp_server.py                    # MCP server for LLM agent integration
-├── Makefile                         # Automates dev tasks
-├── smoketest.sh                     # Quickly verifies endpoints are functional
-├── pipeline.md                      # Documents pipeline architecture and steps
-├── config/........................... 
-│   └── config.yml                   # Centralizes all pipeline params
-├── api/..............................
-│   ├── __init__.py                  # Makes API module importable and adds parent dir to path
-│   ├── app.py                       # Initializes FastAPI and registers routes
-│   ├── database.py                  # Database models and initialization for SQLite
-│   ├── gql/.........................
-│   │   ├── __init__.py              # GraphQL package initializer
-│   │   ├── resolvers.py             # GraphQL resolver functions
-│   │   └── types.py                 # GraphQL type definitions
-│   ├── models/.......................
-│   │   ├── __init__.py              # Exports all models and makes module importable
-│   │   ├── input.py                 # Defines and validates request payload schemas (including spillover)
-│   │   └── response.py              # Defines and validates response formats (including spillover)
-│   ├── routers/......................
-│   │   ├── __init__.py              # Exports router instances and makes module importable
-│   │   ├── data.py                  # Handles data generation and transformation endpoints
-│   │   ├── models.py                # Implements statistical modeling endpoints
-│   │   ├── pipeline.py              # Provides end-to-end analysis pipeline endpoint
-│   │   └── spillover.py             # Handles spillover analysis endpoints
-│   ├── services/.....................
-│   │   ├── __init__.py              # Exports service functions and makes module importable
-│   │   ├── data_service.py          # Implements data processing business logic
-│   │   ├── models_service.py        # Implements statistical modeling business logic
-│   │   ├── interpretations.py       # Generates human-readable explanations of statistical results
-│   │   ├── spillover_service.py     # Implements spillover analysis business logic
-│   │   └── market_data_service.py   # Handles external data fetching (Yahoo Finance, Stooq)
-│   ├── utils/........................
-│   │   ├── __init__.py              # Exports utility functions and makes module importable
-│   │   └── json_handling.py         # Handles JSON serialization NaN values (MacOS compatibility issue)
-├── utilities/.......................
-│   ├── chronicler.py               # Configures standardized logging across the application
-│   ├── configurator.py             # Loads and validates YAML configuration
-│   └── export_util.py              # Utility for exporting data at pipeline steps
-├── tests/...........................
-│   ├── __init__.py                 # Makes tests discoverable
-│   ├── test_chronicler.py          # Tests logging functionality
-│   ├── test_configurator.py        # Tests configuration loading and validation
-│   ├── test_fastapi_pipeline.py    # Tests API endpoints and response formats
-│   ├── test_response_models.py     # Validates response model schemas
-│   └── test_yfinance_fetch.py      # Tests external market data fetching
-└── .github/workflows/...............
-    └── cicd.yml            # Automates testing, Docker image deployment, etc
+timeseries-api/.........................
+├── cli_pipeline.py                   # Runs the full pipeline from the terminal sans API
+├── fastapi_pipeline.py               # Starts the API server with uvicorn
+├── mcp_server.py                     # MCP server for LLM agent integration
+├── Makefile                          # Automates dev tasks
+├── smoketest.sh                      # Quickly verifies endpoints are functional
+├── smoketest_results.txt             # Output from latest smoke test run
+├── pipeline.md                       # Documents pipeline architecture and steps
+├── pyproject.toml                    # Modern Python project configuration
+├── requirements.txt                  # Python dependencies
+├── uv.lock                           # Lock file for uv package manager
+├── save_openapi_json.py              # Utility to export OpenAPI specification
+├── docker-compose.yml                # Docker Compose configuration
+├── Dockerfile                        # Main Docker container definition
+├── Dockerfile.mcp                    # Docker container for MCP server
+├── ADR.md                            # Architectural Decision Records
+├── config/............................
+│   └── config.yml                    # Centralizes all pipeline params
+├── api/...............................
+│   ├── __init__.py                   # Makes API module importable and adds parent dir to path
+│   ├── app.py                        # Initializes FastAPI and registers routes
+│   ├── database.py                   # Database models and initialization for PostgreSQL
+│   ├── openapi.json                  # Generated OpenAPI specification
+│   ├── schema.graphql                # GraphQL schema definition
+│   ├── gql/...........................
+│   │   ├── __init__.py               # GraphQL package initializer
+│   │   ├── resolvers.py              # GraphQL resolver functions
+│   │   └── types.py                  # GraphQL type definitions
+│   ├── middleware/....................
+│   │   ├── __init__.py               # Middleware package initializer
+│   │   └── rate_limiting.py          # Rate limiting middleware implementation
+│   ├── models/........................
+│   │   ├── __init__.py               # Exports all models and makes module importable
+│   │   ├── input.py                  # Defines and validates request payload schemas (including spillover)
+│   │   └── response.py               # Defines and validates response formats (including spillover)
+│   ├── routers/.......................
+│   │   ├── __init__.py               # Exports router instances and makes module importable
+│   │   ├── data.py                   # Handles data generation and transformation endpoints
+│   │   ├── models.py                 # Implements statistical modeling endpoints
+│   │   ├── pipeline.py               # Provides end-to-end analysis pipeline endpoint
+│   │   └── spillover.py              # Handles spillover analysis endpoints
+│   ├── services/......................
+│   │   ├── __init__.py               # Exports service functions and makes module importable
+│   │   ├── data_service.py           # Implements data processing business logic
+│   │   ├── models_service.py         # Implements statistical modeling business logic
+│   │   ├── interpretations.py        # Generates human-readable explanations of statistical results
+│   │   ├── spillover_service.py      # Implements spillover analysis business logic
+│   │   └── market_data_service.py    # Handles external data fetching (Yahoo Finance, Stooq)
+│   └── utils/.........................
+│       ├── __init__.py               # Exports utility functions and makes module importable
+│       └── json_handling.py          # Handles JSON serialization NaN values (MacOS compatibility issue)
+├── utilities/.........................
+│   ├── chronicler.py                 # Configures standardized logging across the application
+│   ├── configurator.py               # Loads and validates YAML configuration
+│   ├── export_util.py                # Utility for exporting data at pipeline steps
+│   ├── stooq_test.py                 # Test script for Stooq data source
+│   ├── yfinance_test.py              # Test script for Yahoo Finance data source
+│   ├── yfinance_ratelimit.py         # Rate limiting utilities for Yahoo Finance API
+│   └── yfinance_ratelimit_test.py.bak # Backup of rate limiting test script
+├── tests/.............................
+│   ├── __init__.py                   # Makes tests discoverable
+│   ├── test_chronicler.py            # Tests logging functionality
+│   ├── test_configurator.py          # Tests configuration loading and validation
+│   ├── test_fastapi_pipeline.py      # Tests API endpoints and response formats
+│   ├── test_response_models.py       # Validates response model schemas
+│   └── test_yfinance_fetch.py        # Tests external market data fetching
+├── database/..........................
+│   └── migrations/                   # Database migration scripts (when database enabled)
+├── logs/..............................
+│   └── *.log                         # Application log files with timestamps
+├── outputs/...........................
+│   └── *                             # Pipeline output files and exported data
+├── timeseries_api.egg-info/...........
+│   └── *                             # Python package metadata
+└── .github/workflows/.................
+    └── cicd.yml                      # Automates testing, Docker image deployment, etc
 ```
 
 ### Testing
@@ -452,7 +478,7 @@ flowchart TB
         FastAPI["FastAPI Application<br>[Python]<br>Provides API endpoints"]:::container
         Dockerized["Docker Container<br>[Linux]<br>Containerized deployment"]:::container
         Config["Configuration<br>[YAML]<br>Configures pipeline params"]:::container
-Database["SQLite Database<br>[File]<br>Stores pipeline results"]:::container
+        Database["PostgreSQL Database<br>[Optional/Disabled by default]<br>Can store pipeline results"]:::container
         CIpipeline["CI/CD Pipeline<br>[GitHub Actions]<br>Automates testing"]:::container
     end
     
@@ -462,11 +488,10 @@ Database["SQLite Database<br>[File]<br>Stores pipeline results"]:::container
     %% Relationships
     User -- "Uses [HTTP/JSON]" --> FastAPI
     FastAPI -- "Reads" --> Config
-    FastAPI -- "Stores results in" --> Database
+    FastAPI -- "Can store results in" --> Database
     FastAPI -- "Packaged into" --> Dockerized
     CIpipeline -- "Builds and tests" --> Dockerized
-    ExternalDataSource -- "Provides market data [yfinance]" --> FastAPI
-    FastAPI -- "Can export to" --> ExistingAnalysisTool
+    ExternalDataSource -- "Provides market data [yfinance/stooq]" --> FastAPI
 ```
 
 #### level 3: Component Diagram
@@ -489,25 +514,36 @@ flowchart TB
         APIRouters["API Routers<br>[Python]<br>Manages endpoints"]:::component
         DataService["Data Service<br>[Python]<br>Data transformations"]:::component
         ModelsService["Models Service<br>[Python]<br>Statistical models"]:::component
+        SpillloverService["Spillover Service<br>[Python]<br>Spillover analysis & causality"]:::component
         MarketDataService["Market Data Service<br>[Python]<br>Fetches external data"]:::component
         ChroniclerUtil["Chronicler<br>[Python]<br>Handles logging"]:::component
         ConfigUtil["Configurator<br>[Python]<br>Manages config"]:::component
         InterpretationService["Interpretation Service<br>[Python]<br>Interprets results"]:::component
         JsonHandling["JSON Handling<br>[Python]<br>JSON serialization"]:::component
+        GraphQLComponents["GraphQL Components<br>[Python]<br>Schema, resolvers, types"]:::component
+        Middleware["Rate Limiting Middleware<br>[Python]<br>API rate limiting"]:::component
+        DatabaseModels["Database Models<br>[Python]<br>SQLAlchemy models (optional)"]:::component
         
         %% Component relationships
         APIRouters --> DataService
         APIRouters --> ModelsService
+        APIRouters --> SpillloverService
         APIRouters --> MarketDataService
         APIRouters --> InterpretationService
+        APIRouters --> Middleware
         DataService --> MarketDataService
         DataService --> ChroniclerUtil
         ModelsService --> ChroniclerUtil
+        SpillloverService --> ChroniclerUtil
         DataService --> ConfigUtil
         ModelsService --> ConfigUtil
+        SpillloverService --> ConfigUtil
         APIRouters --> JsonHandling
+        APIRouters --> GraphQLComponents
+        APIRouters --> DatabaseModels
         DataService --> InterpretationService
         ModelsService --> InterpretationService
+        SpillloverService --> InterpretationService
     end
     
     %% External
@@ -552,6 +588,12 @@ classDiagram
         +run_pipeline_endpoint(pipeline_input)
     }
     
+    class SpilloverRouter {
+        +router: APIRouter
+        +analyze_spillover_endpoint(input_data)
+        +rolling_spillover_endpoint(input_data)
+    }
+    
     %% Service Classes
     class DataService {
         +generate_data_step(pipeline_input, config)
@@ -559,6 +601,8 @@ classDiagram
         +scale_data_step(df, config)
         +stationarize_data_step(df, config)
         +test_stationarity_step(df, config)
+        +convert_to_returns_step(df, config)
+        +scale_for_garch_step(df, config)
     }
     
     class MarketDataService {
@@ -574,6 +618,14 @@ classDiagram
         +interpret_stationarity_test(adf_results, p_value_threshold)
         +interpret_arima_results(model_summary, forecast)
         +interpret_garch_results(model_summary, forecast)
+    }
+    
+    class SpilloverService {
+        +analyze_spillover(df, config)
+        +rolling_spillover(df, window, config)
+        +granger_causality(df, max_lag, config)
+        +perform_granger_causality(df, max_lag, config)
+        +get_var_results_from_spillover(spillover_results)
     }
     
     %% Utility Classes
@@ -724,6 +776,12 @@ classDiagram
     PipelineRouter --> PipelineInput: accepts
     PipelineRouter --> PipelineResponse: returns
     
+    SpilloverRouter --> SpilloverService: uses
+    SpilloverRouter --> DataService: uses
+    SpilloverRouter --> PipelineService: uses
+    SpilloverRouter --> SpilloverInput: accepts
+    SpilloverRouter --> SpilloverResponse: returns
+    
     DataService --> InterpretationService: uses
     DataService --> Configurator: uses
     DataService --> Chronicler: uses
@@ -860,14 +918,14 @@ flowchart TD
     SpilloverMetrics["Spillover Metrics<br/>• Total Spillover Index<br/>• Directional Spillovers<br/>• Net Spillovers<br/>• Pairwise Spillovers"]:::analysis
     
     %% Enhanced Granger Causality
-    GrangerEnhanced["🆕 Enhanced Granger Causality<br/>• Multi-level significance (1%, 5%)<br/>• Optimal lag detection<br/>• Comprehensive p-value analysis<br/>• Robust test statistics"]:::enhanced
+    GrangerEnhanced["Enhanced Granger Causality<br/>• Multi-level significance (1%, 5%)<br/>• Optimal lag detection<br/>• Comprehensive p-value analysis<br/>• Robust test statistics"]:::enhanced
     
     %% Results and Interpretations
     SpilloverResults["Spillover Results<br/>• Spillover indices<br/>• FEVD table<br/>• Network effects"]:::output
     
-    GrangerResults["🆕 Multi-Level Granger Results<br/>• Highly significant (1% level)<br/>• Significant (5% level)<br/>• Optimal lags per relationship<br/>• Minimum p-values"]:::enhanced
+    GrangerResults["Multi-Level Granger Results<br/>• Highly significant (1% level)<br/>• Significant (5% level)<br/>• Optimal lags per relationship<br/>• Minimum p-values"]:::enhanced
     
-    InterpretationEngine["🆕 Enhanced Interpretation Engine<br/>• Business-relevant explanations<br/>• Market context analysis<br/>• Risk assessment insights<br/>• Trading implications"]:::enhanced
+    InterpretationEngine["Enhanced Interpretation Engine<br/>• Business-relevant explanations<br/>• Market context analysis<br/>• Risk assessment insights<br/>• Trading implications"]:::enhanced
     
     %% Final Output
     ComprehensiveReport["Comprehensive Analysis Report<br/>• Spillover analysis<br/>• Causality relationships<br/>• Human-readable interpretations<br/>• Actionable insights"]:::output
@@ -903,19 +961,19 @@ flowchart LR
         SeriesPair["Market Pair<br/>X → Y"]:::input
     end
     
-    subgraph "🆕 Multi-Level Testing"
+    subgraph "Multi-Level Testing"
         Test1pct["1% Significance Test<br/>α = 0.01<br/>High Confidence"]:::enhanced
         Test5pct["5% Significance Test<br/>α = 0.05<br/>Standard Confidence"]:::enhanced
         OptimalLag["Optimal Lag Detection<br/>Best predictive lag<br/>Minimize p-value"]:::enhanced
     end
     
     subgraph "Enhanced Results"
-        Result1pct["⭐ Highly Significant<br/>Strong predictive power<br/>Robust relationship"]:::result
-        Result5pct["✓ Significant<br/>Meaningful relationship<br/>Standard confidence"]:::result
-        ResultNone["✗ No Significance<br/>No predictive power<br/>Independent series"]:::result
+        Result1pct["Highly Significant<br/>Strong predictive power<br/>Robust relationship"]:::result
+        Result5pct["Significant<br/>Meaningful relationship<br/>Standard confidence"]:::result
+        ResultNone["No Significance<br/>No predictive power<br/>Independent series"]:::result
     end
     
-    subgraph "🆕 Business Interpretation"
+    subgraph "Business Interpretation"
         LeadingIndicator["Leading Indicator<br/>X predicts Y movements<br/>Trading opportunity"]:::enhanced
         MarketEfficiency["Market Efficiency<br/>No predictable patterns<br/>Random walk hypothesis"]:::enhanced
         RiskManagement["Risk Management<br/>Contagion effects<br/>Diversification impact"]:::enhanced
@@ -937,62 +995,3 @@ flowchart LR
     Result1pct --> RiskManagement
     Result5pct --> RiskManagement
 ```
-
-#### API Response Enhancements
-
-The spillover analysis endpoints now return enhanced results with multi-level significance testing:
-
-**Enhanced Spillover Response Structure:**
-```json
-{
-  "spillover_results": {
-    "total_spillover_index": 45.67,
-    "directional_spillover": {
-      "AAPL_to_others": 15.23,
-      "GOOGL_to_others": 18.45,
-      "MSFT_to_others": 12.99
-    },
-    "net_spillover": {
-      "AAPL": 2.34,
-      "GOOGL": -1.23,
-      "MSFT": -1.11
-    },
-    "granger_causality": {
-      "AAPL->GOOGL": {
-        "causality_1pct": true,
-        "causality_5pct": true,
-        "optimal_lag_1pct": 2,
-        "optimal_lag_5pct": 2,
-        "significance_summary": {
-          "min_p_value": 0.0089
-        }
-      }
-    },
-    "interpretation": "🆕 Enhanced market analysis with business insights..."
-  },
-  "granger_causality_results": {
-    "causality_results": {
-      "AAPL->GOOGL": {
-        "causality_1pct": true,
-        "causality_5pct": true,
-        "optimal_lag_1pct": 2,
-        "optimal_lag_5pct": 2,
-        "significance_summary": {"min_p_value": 0.0089}
-      }
-    },
-    "interpretations": {
-      "AAPL->GOOGL": "⭐ Highly Significant Causality (1% level): AAPL strongly Granger-causes GOOGL, indicating robust predictive power..."
-    },
-    "metadata": {
-      "max_lag": 5,
-      "n_pairs_tested": 6,
-      "significance_levels": ["1%", "5%"],
-      "config_enabled": true
-    }
-  }
-}
-```
-
-2. The client will automatically discover all available tools and their schemas
-
-3. You can then ask the AI assistant to perform time series analysis using natural language
