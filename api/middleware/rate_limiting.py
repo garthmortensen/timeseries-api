@@ -12,19 +12,19 @@ import logging as l
 # =================================================================
 
 # Global rate limits (applies to all endpoints)
-GLOBAL_REQUESTS_PER_MINUTE = "100/minute"  # x requests per minute per IP
-GLOBAL_REQUESTS_PER_HOUR = "100/hour"    # x requests per hour per IP
+GLOBAL_REQUESTS_PER_MINUTE = "6/minute"  # x requests per minute per IP
+GLOBAL_REQUESTS_PER_HOUR = "20/hour"    # x requests per hour per IP
 
 # Heavy computation endpoints (pipeline, models, spillover)
-HEAVY_COMPUTATION_PER_MINUTE = "100/minute"   # Very restrictive for expensive operations
-HEAVY_COMPUTATION_PER_HOUR = "100/hour"     # x heavy operations per hour max
+HEAVY_COMPUTATION_PER_MINUTE = "6/minute"   # Very restrictive for expensive operations
+HEAVY_COMPUTATION_PER_HOUR = "20/hour"     # x heavy operations per hour max
 
 # Data endpoints (generate_data, fetch_market_data)
-DATA_ENDPOINTS_PER_MINUTE = "100/minute"    # Moderate limit for data operations
-DATA_ENDPOINTS_PER_HOUR = "100/hour"       # x data requests per hour
+DATA_ENDPOINTS_PER_MINUTE = "6/minute"    # Moderate limit for data operations
+DATA_ENDPOINTS_PER_HOUR = "20/hour"       # x data requests per hour
 
 # Health check and light endpoints
-LIGHT_ENDPOINTS_PER_MINUTE = "100/minute"   # More generous for health checks
+LIGHT_ENDPOINTS_PER_MINUTE = "20/minute"   # More generous for health checks
 
 # =================================================================
 
